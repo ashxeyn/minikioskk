@@ -10,145 +10,7 @@ class Order
         $this->db = new Database();
     }
 
-
-    // function addToCart($user_id, $product_id, $quantity)
-    // {
-    //     try {
-    //         $sql = "SELECT order_id FROM orders WHERE user_id = :user_id AND status = 'pending' LIMIT 1";
-    //         $query = $this->db->connect()->prepare($sql);
-    //         $query->bindParam(':user_id', $user_id);
-    //         $query->execute();
-    //         $order = $query->fetch();
-    
-    //         if (!$order) {
-    //             $sql = "INSERT INTO orders (user_id, status) VALUES (:user_id, 'pending')";
-    //             $query = $this->db->connect()->prepare($sql);
-    //             $query->bindParam(':user_id', $user_id);
-    //             $query->execute();
-    //             $order_id = $this->db->connect()->lastInsertId();
-    
-    //             if (!$order_id) {
-    //                 throw new Exception("Failed to create a new order.");
-    //             }
-    //         } else {
-    //             $order_id = $order['order_id'];
-    //         }
-    
-    //         $product = $this->getProductById($product_id);
-    //         if (!$product) {
-    //             throw new Exception("Product not found.");
-    //         }
-    
-    //         $total_price = $product['price'] * $quantity;
-    
-    //         $sql = "INSERT INTO order_items (order_id, product_id, quantity, total_price) 
-    //                 VALUES (:order_id, :product_id, :quantity, :total_price)";
-    //         $query = $this->db->connect()->prepare($sql);
-    //         $query->bindParam(':order_id', $order_id);
-    //         $query->bindParam(':product_id', $product_id);
-    //         $query->bindParam(':quantity', $quantity);
-    //         $query->bindParam(':total_price', $total_price);
-    //         $query->execute();
-    //     } catch (Exception $e) {
-    //         die("Error adding to cart: " . $e->getMessage());
-    //     }
-    // }
-
-
-    // function getCartItems($user_id)
-    // {
-    //     $sql = "SELECT oi.*, p.name, p.price FROM order_items oi
-    //             JOIN products p ON oi.product_id = p.product_id
-    //             WHERE oi.order_id IN (SELECT order_id FROM orders WHERE user_id = :user_id AND status = 'pending')";
-    //     $query = $this->db->connect()->prepare($sql);
-    //     $query->bindParam(':user_id', $user_id);
-    //     $query->execute();
-    //     return $query->fetchAll();
-    // }
-
-    // function placeOrder($user_id, $cartItems)
-    // {
-    //     // Update the order status to "accepted" and finalize the order
-    //     $sql = "UPDATE orders SET status = 'accepted' WHERE user_id = :user_id AND status = 'pending'";
-    //     $query = $this->db->connect()->prepare($sql);
-    //     $query->bindParam(':user_id', $user_id);
-    //     $query->execute();
-    // }
-
-    // function getOrderStatus($user_id)
-    // {
-    //     $sql = "SELECT * FROM orders WHERE user_id = :user_id ORDER BY created_at DESC LIMIT 1";
-    //     $query = $this->db->connect()->prepare($sql);
-    //     $query->bindParam(':user_id', $user_id);
-    //     $query->execute();
-    //     return $query->fetch();
-    // }
-
-    // private function getProductById($product_id)
-    // {
-    //     $sql = "SELECT * FROM products WHERE product_id = :product_id";
-    //     $query = $this->db->connect()->prepare($sql);
-    //     $query->bindParam(':product_id', $product_id);
-    //     $query->execute();
-    //     return $query->fetch();
-    // }
-    
-    // function removeFromCart($user_id, $product_id)
-    // {
-    //     $sql = "SELECT order_id FROM orders WHERE user_id = :user_id AND status = 'pending' LIMIT 1";
-    //     $query = $this->db->connect()->prepare($sql);
-    //     $query->bindParam(':user_id', $user_id);
-    //     $query->execute();
-    //     $order = $query->fetch();
-
-    //     if (!$order) {
-    //         throw new Exception("No pending order found for this user.");
-    //     }
-
-    //     $order_id = $order['order_id'];
-
-    //     $sql = "DELETE FROM order_items WHERE order_id = :order_id AND product_id = :product_id";
-    //     $query = $this->db->connect()->prepare($sql);
-    //     $query->bindParam(':order_id', $order_id);
-    //     $query->bindParam(':product_id', $product_id);
-    //     $query->execute();
-    // }
-    
-    // function updateCartQuantity($user_id, $product_id, $new_quantity)
-    // {
-    //     $sql = "SELECT order_id FROM orders WHERE user_id = :user_id AND status = 'pending' LIMIT 1";
-    //     $query = $this->db->connect()->prepare($sql);
-    //     $query->bindParam(':user_id', $user_id);
-    //     $query->execute();
-    //     $order = $query->fetch();
-
-    //     if (!$order) {
-    //         throw new Exception("No pending order found for the user.");
-    //     }
-
-    //     $order_id = $order['order_id'];
-
-    //     $product = $this->getProductById($product_id);
-    //     if (!$product) {
-    //         throw new Exception("Product not found.");
-    //     }
-
-    //     $total_price = $product['price'] * $new_quantity;
-
-    //     error_log("Updating order: order_id = $order_id, product_id = $product_id, quantity = $new_quantity, total_price = $total_price");
-
-    //     $sql = "UPDATE order_items 
-    //             SET quantity = :quantity, total_price = :total_price 
-    //             WHERE order_id = :order_id AND product_id = :product_id";
-    //     $query = $this->db->connect()->prepare($sql);
-    //     $query->bindParam(':quantity', $new_quantity);
-    //     $query->bindParam(':total_price', $total_price);
-    //     $query->bindParam(':order_id', $order_id);
-    //     $query->bindParam(':product_id', $product_id);
-    //     $query->execute();
-    // }
-
-    public function fetchOrdersByCanteen($canteenId)
+    function fetchOrdersByCanteen($canteenId)
     {
         $sql = "SELECT o.order_id, 
                            u.username, 
@@ -174,7 +36,8 @@ class Order
     
         return $query->fetchAll();
     }
-    public function fetchOrders()
+    
+    function fetchOrders()
     {
         $sql = "SELECT o.order_id, 
                            u.username, 
@@ -600,6 +463,143 @@ class Order
 //     $result = $query->fetch(PDO::FETCH_ASSOC);
 //     return $result ? $result['quantity'] : 0;
 // }
+
+// function addToCart($user_id, $product_id, $quantity)
+    // {
+    //     try {
+    //         $sql = "SELECT order_id FROM orders WHERE user_id = :user_id AND status = 'pending' LIMIT 1";
+    //         $query = $this->db->connect()->prepare($sql);
+    //         $query->bindParam(':user_id', $user_id);
+    //         $query->execute();
+    //         $order = $query->fetch();
+    
+    //         if (!$order) {
+    //             $sql = "INSERT INTO orders (user_id, status) VALUES (:user_id, 'pending')";
+    //             $query = $this->db->connect()->prepare($sql);
+    //             $query->bindParam(':user_id', $user_id);
+    //             $query->execute();
+    //             $order_id = $this->db->connect()->lastInsertId();
+    
+    //             if (!$order_id) {
+    //                 throw new Exception("Failed to create a new order.");
+    //             }
+    //         } else {
+    //             $order_id = $order['order_id'];
+    //         }
+    
+    //         $product = $this->getProductById($product_id);
+    //         if (!$product) {
+    //             throw new Exception("Product not found.");
+    //         }
+    
+    //         $total_price = $product['price'] * $quantity;
+    
+    //         $sql = "INSERT INTO order_items (order_id, product_id, quantity, total_price) 
+    //                 VALUES (:order_id, :product_id, :quantity, :total_price)";
+    //         $query = $this->db->connect()->prepare($sql);
+    //         $query->bindParam(':order_id', $order_id);
+    //         $query->bindParam(':product_id', $product_id);
+    //         $query->bindParam(':quantity', $quantity);
+    //         $query->bindParam(':total_price', $total_price);
+    //         $query->execute();
+    //     } catch (Exception $e) {
+    //         die("Error adding to cart: " . $e->getMessage());
+    //     }
+    // }
+
+
+    // function getCartItems($user_id)
+    // {
+    //     $sql = "SELECT oi.*, p.name, p.price FROM order_items oi
+    //             JOIN products p ON oi.product_id = p.product_id
+    //             WHERE oi.order_id IN (SELECT order_id FROM orders WHERE user_id = :user_id AND status = 'pending')";
+    //     $query = $this->db->connect()->prepare($sql);
+    //     $query->bindParam(':user_id', $user_id);
+    //     $query->execute();
+    //     return $query->fetchAll();
+    // }
+
+    // function placeOrder($user_id, $cartItems)
+    // {
+    //     // Update the order status to "accepted" and finalize the order
+    //     $sql = "UPDATE orders SET status = 'accepted' WHERE user_id = :user_id AND status = 'pending'";
+    //     $query = $this->db->connect()->prepare($sql);
+    //     $query->bindParam(':user_id', $user_id);
+    //     $query->execute();
+    // }
+
+    // function getOrderStatus($user_id)
+    // {
+    //     $sql = "SELECT * FROM orders WHERE user_id = :user_id ORDER BY created_at DESC LIMIT 1";
+    //     $query = $this->db->connect()->prepare($sql);
+    //     $query->bindParam(':user_id', $user_id);
+    //     $query->execute();
+    //     return $query->fetch();
+    // }
+
+    // private function getProductById($product_id)
+    // {
+    //     $sql = "SELECT * FROM products WHERE product_id = :product_id";
+    //     $query = $this->db->connect()->prepare($sql);
+    //     $query->bindParam(':product_id', $product_id);
+    //     $query->execute();
+    //     return $query->fetch();
+    // }
+    
+    // function removeFromCart($user_id, $product_id)
+    // {
+    //     $sql = "SELECT order_id FROM orders WHERE user_id = :user_id AND status = 'pending' LIMIT 1";
+    //     $query = $this->db->connect()->prepare($sql);
+    //     $query->bindParam(':user_id', $user_id);
+    //     $query->execute();
+    //     $order = $query->fetch();
+
+    //     if (!$order) {
+    //         throw new Exception("No pending order found for this user.");
+    //     }
+
+    //     $order_id = $order['order_id'];
+
+    //     $sql = "DELETE FROM order_items WHERE order_id = :order_id AND product_id = :product_id";
+    //     $query = $this->db->connect()->prepare($sql);
+    //     $query->bindParam(':order_id', $order_id);
+    //     $query->bindParam(':product_id', $product_id);
+    //     $query->execute();
+    // }
+    
+    // function updateCartQuantity($user_id, $product_id, $new_quantity)
+    // {
+    //     $sql = "SELECT order_id FROM orders WHERE user_id = :user_id AND status = 'pending' LIMIT 1";
+    //     $query = $this->db->connect()->prepare($sql);
+    //     $query->bindParam(':user_id', $user_id);
+    //     $query->execute();
+    //     $order = $query->fetch();
+
+    //     if (!$order) {
+    //         throw new Exception("No pending order found for the user.");
+    //     }
+
+    //     $order_id = $order['order_id'];
+
+    //     $product = $this->getProductById($product_id);
+    //     if (!$product) {
+    //         throw new Exception("Product not found.");
+    //     }
+
+    //     $total_price = $product['price'] * $new_quantity;
+
+    //     error_log("Updating order: order_id = $order_id, product_id = $product_id, quantity = $new_quantity, total_price = $total_price");
+
+    //     $sql = "UPDATE order_items 
+    //             SET quantity = :quantity, total_price = :total_price 
+    //             WHERE order_id = :order_id AND product_id = :product_id";
+    //     $query = $this->db->connect()->prepare($sql);
+    //     $query->bindParam(':quantity', $new_quantity);
+    //     $query->bindParam(':total_price', $total_price);
+    //     $query->bindParam(':order_id', $order_id);
+    //     $query->bindParam(':product_id', $product_id);
+    //     $query->execute();
+    // }
 
  }
  ?>
