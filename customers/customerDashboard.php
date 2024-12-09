@@ -30,7 +30,6 @@ require_once '../includes/_head.php';
         <div class="col py-3">
             <div id="contentArea" class="container mt-4">
                 <h3><?php echo "Welcome to Dashboard, {$_SESSION['username']}!"; ?><br></h3>
-                <?php require_once 'view_dashboard.php' ?>
             </div>
         </div>
     </div>
