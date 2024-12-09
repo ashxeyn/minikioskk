@@ -1,0 +1,59 @@
+<div class="modal fade" id="editOrderModal" tabindex="-1" aria-labelledby="editOrderModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editOrderModalLabel">Edit Order</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editOrderForm" method="post">
+                    <input type="hidden" name="order_id" id="editOrderId">
+                    <div class="mb-3">
+                        <label for="edit_status" class="form-label">Status</label>
+                        <select id="edit_status" name="status" class="form-control" required>
+                            <option value="pending">Pending</option>
+                            <option value="accepted">Accepted</option>
+                            <option value="cancelled">Cancelled</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_queue_number" class="form-label">Queue Number</label>
+                        <input type="number" id="edit_queue_number" name="queue_number" class="form-control" required>
+                    </div>
+
+                    <!-- Current Products Section -->
+                    <div class="mb-4">
+                        <h6>Current Products</h6>
+                        <div id="current-products" class="list-group mb-3">
+                            <!-- Dynamically populated list -->
+                        </div>
+                    </div>
+
+                    <!-- Add New Products Section -->
+                    <div class="mb-3">
+                        <h6>Add New Products</h6>
+                        <div id="new-products-container">
+                            <div class="row mb-2">
+                                <div class="col-md-6">
+                                    <select class="form-select product-select" name="new_products[]">
+                                        <option value="">Select a product</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <input type="number" class="form-control quantity-input" name="new_quantities[]" min="1" value="1" placeholder="Quantity">
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm mt-2" id="add-more-products">Add More Products</button>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

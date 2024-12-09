@@ -1,0 +1,34 @@
+<div class="modal fade" id="editQuantityModal" tabindex="-1" aria-labelledby="editQuantityModalLabel" aria-hidden="true">
+    <div class="modal-dialog custom-width"> <!-- Add a custom class here -->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editQuantityModalLabel">Edit Quantity</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post" action="cart.php" class="content">
+                    <input type="hidden" name="product_id" id="product_id" value="">
+                    <div class="mb-3">
+                        <label for="new_quantity" class="form-label">New Quantity</label>
+                        <input type="number" class="form-control" name="new_quantity" id="new_quantity" min="1" required>
+                    </div>
+                    <button type="submit" name="update_quantity" class="btn btn-success">Update Quantity</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.modal-content {
+    width: 100% !important;
+}
+
+/* Styling the form inside the modal */
+.content {
+    padding-right: 4% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+}
+</style>

@@ -1,0 +1,56 @@
+<!-- addManagerModal.php -->
+<div class="modal fade" id="addManagerModal" tabindex="-1" aria-labelledby="addManagerModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addManagerModalLabel">Add Manager</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addManagerForm" method="post">
+                    <div class="mb-3">
+                        <label for="last_name" class="form-label">Last Name</label>
+                        <input type="text" id="last_name" name="last_name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="given_name" class="form-label">Given Name</label>
+                        <input type="text" id="given_name" name="given_name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="middle_name" class="form-label">Middle Name</label>
+                        <input type="text" id="middle_name" name="middle_name" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" id="email" name="email" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" id="username" name="username" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" id="password" name="password" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="canteen_id" class="form-label">Canteen</label>
+                        <select id="canteen_id" name="canteen_id" class="form-select" required>
+                            <option value="" disabled selected>Select Canteen</option>
+                            <?php
+                            require_once '../classes/canteenClass.php';
+                            $canteenObj = new Canteen();
+                            $canteens = $canteenObj->fetchCanteens();
+                            foreach ($canteens as $canteen):
+                            ?>
+                                <option value="<?= $canteen['canteen_id'] ?>"><?= $canteen['name'] ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Add Manager</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

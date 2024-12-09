@@ -1,0 +1,101 @@
+.cart-container {
+    height: 600px;
+    width: 100%; /* Adjust width to simulate receipt size */
+    padding: 40px;
+    border-radius: 10px;
+    background-color: #fff;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+    overflow-y: scroll;
+}
+
+.cart-item {
+    display: flex; /* Use flexbox for alignment */
+    justify-content: space-between; /* Items are spaced apart */
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.item-name {
+    padding: 15px;
+    font-weight: bold;
+    font-size: 25px;
+    margin: 0;
+}
+
+.item-details {
+    font-size: 18px;
+    text-align: left;
+}
+
+.cart-total {
+    color: #1C666F;
+    font-size: 30px;
+    padding-right: 5%;
+    text-align: right;
+    font-weight: bold;
+    margin-top: 15px;
+}
+
+form {
+    padding-right: 4%;
+    display: flex;
+    align-items: end;
+    flex-direction: row;
+    justify-content: flex-end;
+}
+
+.btn.checkout {
+    width: 200px;
+    color: white;
+    padding: 10px 10px;
+    background-color: #FF1B1C;
+    text-align: center;
+    border: none;
+    border-radius: 5px;
+    transition: all 0.3s ease; 
+    cursor: pointer;
+}
+
+.btn.checkout:hover {
+    color: #ffffff;
+    background-color: #D41718; /* Darker red on hover */
+    transform: scale(1.05); /* Slightly enlarges the button */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Adds a shadow for a lifted effect */
+}
+
+p {
+    margin-bottom: 5px !important;
+}
+
+.description {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.bi.bi-trash {
+    color: #D41718;
+    padding: 5px;
+}
+
+.total {
+    font-weight: bold;
+}
+
+.quantity {
+    color: #a1a1a1;
+}
+
+.bi.bi-pencil {
+    color: #1100cb;
+}
+
+.btn.description {
+    padding: 5px;
+}
+
+h2 {
+    margin-top: 30px !important;
+}
+

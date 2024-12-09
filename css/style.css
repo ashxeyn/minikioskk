@@ -1,0 +1,138 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* General Navbar Styling */
+body {
+    overflow: hidden;
+    background-color: #F6F6F6 !important;
+}
+
+.navbar {
+    background-color: #FF7F11;
+    margin: 0;
+}
+
+.dropdown-menu {
+    position: absolute !important;
+    right: 0 !important;
+    left: auto !important;
+    max-width: 250px;  /* Set a reasonable max-width */
+    overflow-x: hidden;
+    color: #33363F;
+    background-color: #BEB7A4;
+    z-index: 1050; /* Ensure it's on top of other elements */
+}
+
+@media (max-width: 768px) {
+    .dropdown-menu {
+        left: 0;
+    }
+}
+
+
+.dropdown-item {
+    color: #33363F;
+}
+
+.dropdown-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-link {
+    padding: 0 !important;
+    color: #fff;
+}
+
+.nav-link:hover {
+    color: #FF1B1C;
+}
+
+.navbar-dark .navbar-brand {
+    color: #fff;
+}
+
+.nav-link.active,
+.nav-link:focus,
+.nav-link:hover {
+    color: #087F8C !important;
+}
+
+/* Sidebar Styling */
+.col-md-3 {
+    background: linear-gradient(to top, #BEB7A4, #FF7F11);
+    flex: 0 0 auto;
+    width: max-content;
+    height: calc(100vh - 55px);
+}
+
+.col.py-3 {
+    display: flex !important;
+    width: 100% !important;
+    height: calc(100vh - 55px) !important;
+    overflow-y: auto !important;
+    justify-content: center !important;
+    align-items: center !important;
+    align-content: flex-start !important;
+    flex-wrap: wrap !important;
+    padding: 0 !important;
+    color: #33363F;
+}
+
+
+/* Side Navigation Title Styling */
+.side-nav-title {
+    color: #ddd5be;
+    text-transform: uppercase;
+    font-weight: bold;
+    text-align: left;
+    font-size: 0.9rem;
+    letter-spacing: 0.05em;
+    padding-top: 20px;
+    padding-bottom: 10px;
+}
+
+/* Navigation Item Styling */
+.nav-pills {
+    color: #FFFFFF;
+    margin-top: 5px;
+    padding: 10px;
+}
+
+
+.nav-pills .nav-link {
+    color: #FFFFFF !important; /* White for default text */
+    font-size: 0.9rem;
+    padding: 10px 15px;
+    margin: 5px 0;
+    border-radius: 5px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.nav-pills .nav-link:hover,
+.nav-pills .nav-link:focus {
+    background-color: rgba(255, 255, 255, 0.1); /* Subtle hover effect */
+    color: #087F8C;
+}
+
+.nav-pills .nav-link.active {
+    background-color: #BEB7A4;
+    color: #33363F;
+    font-weight: bold;
+}
+
+/* Content Area */
+.container.mt-4 {
+    padding: 0px !important;
+    margin: 20px !important;
+    width: 100%;
+}
+
+.col-12 {
+    margin: 10px;
+}
+
+/* CUSTOMER DASHBOARD */
+

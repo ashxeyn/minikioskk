@@ -1,0 +1,61 @@
+<?php
+session_start();  
+?>
+
+<div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addProductModalLabel">Add Product</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addProductForm" method="post">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Product Name</label>
+                        <input type="text" id="name" name="name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="category" class="form-label">Category</label>
+                        <select id="category" name="category" class="form-select" required>
+                            <option value="" disabled selected>Select Category</option>
+                            <option value="Drinks and Beverages">Drinks and Beverages</option>
+                            <option value="Snacks">Snacks</option>
+                            <option value="Meals">Meals</option>
+                            <option value="Fruits">Fruits</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea id="description" name="description" class="form-control" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="price" class="form-label">Price</label>
+                        <input type="number" id="price" name="price" step="0.01" class="form-control" required>
+                    </div>
+
+                    <?php if (isset($_SESSION['role']) && $_SESSION['role'] == 'admin'): ?>
+                        <div class="mb-3">
+                            <label for="canteen_id" class="form-label">Canteen</label>
+                            <select id="canteen_id" name="canteen_id" class="form-select" required>
+                                <option value="" disabled selected>Select Canteen</option>
+                                <?php
+                                require_once '../classes/canteenClass.php';
+                                $canteenObj = new Canteen();
+                                $canteens = $canteenObj->fetchCanteens();
+                                foreach ($canteens as $canteen):
+                                ?>
+                                    <option value="<?= $canteen['canteen_id'] ?>"><?= $canteen['name'] ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    <?php endif; ?>
+                    
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Add Product</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
