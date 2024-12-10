@@ -25,6 +25,7 @@ require_once '../includes/_head.php';
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="../js/admin.js"></script> 
     <script src="../js/canteen.js"></script> 
+    <script src="../js/search.js"></script> 
 </head>
 <body>
     <?php require_once '../includes/_topnav.php'; ?>
