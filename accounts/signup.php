@@ -267,6 +267,7 @@ body {
         <div class="links">
             <p>Already have an account?</p>
             <a href="login.php">Login here.</a>
+            <a href="register.php">Register</a>
         </div>
     </div>
 </body>

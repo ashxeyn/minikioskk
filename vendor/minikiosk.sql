@@ -203,7 +203,7 @@ INSERT INTO `stocks` (`product_id`, `quantity`, `status`) VALUES
 
 CREATE TABLE `users` (
   `user_id` int(11) NOT NULL,
-  `email` varchar(255) NOT NULL,
+  `email` varchar(255) NULL,
   `username` varchar(255) NOT NULL,
   `password` varchar(255) NOT NULL,
   `last_name` varchar(255) NOT NULL,
@@ -217,7 +217,7 @@ CREATE TABLE `users` (
   `is_admin` tinyint(1) DEFAULT 0,
   `is_guest` tinyint(1) DEFAULT 0,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `role` enum('admin','manager','employee','student','guest') DEFAULT 'guest'
+  `role` enum('admin','manager','employee','student','guest','pending_manager') DEFAULT 'pending_manager'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -248,8 +248,10 @@ CREATE TRIGGER `set_user_role` BEFORE INSERT ON `users` FOR EACH ROW BEGIN
         SET NEW.role = 'employee';
     ELSEIF NEW.is_student = 1 THEN
         SET NEW.role = 'student';
-    ELSE
+    ELSEIF NEW.is_guest = 1 THEN
         SET NEW.role = 'guest';
+    ELSE
+        SET NEW.role = 'pending_manager';
     END IF;
 END
 $$

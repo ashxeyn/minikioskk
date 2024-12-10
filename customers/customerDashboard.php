@@ -7,7 +7,7 @@ require_once '../classes/accountClass.php';
 //     exit();
 // }
 
-// $account = new Account();
+$account = new Account();
 // $account->user_id = $_SESSION['user_id'];
 // $userInfo = $account->UserInfo();
 

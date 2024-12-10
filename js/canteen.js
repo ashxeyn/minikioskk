@@ -96,6 +96,28 @@ $('#confirmDeleteCanteen').click(function () {
     });
 });
 
+function approveManager(userId) {
+    $.post('../canteen/approveRegistration.php', { user_id: userId }, function(response) {
+        if (response === 'success') {
+            location.reload();
+        } else {
+            alert('Failed to approve manager. Please try again.');
+        }
+    });
+}
+
+function rejectManager(userId) {
+    if (confirm('Are you sure you want to reject this registration?')) {
+        $.post('../canteen/rejectRegistration.php', { user_id: userId }, function(response) {
+            if (response === 'success') {
+                location.reload();
+            } else {
+                alert('Failed to reject manager. Please try again.');
+            }
+        });
+    }
+}
+
 function initializeCanteenButtons() {
     // Initialize edit buttons
     let editButtons = document.querySelectorAll('.editBtn');

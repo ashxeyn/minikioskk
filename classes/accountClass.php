@@ -236,5 +236,80 @@ class Account
 
         return null; 
     }
+
+    public function getPendingManagers() {
+        $sql = "SELECT u.user_id, u.last_name, u.given_name, u.middle_name,u.email, c.name AS canteen_name
+            FROM Users u
+            JOIN Canteens c ON u.canteen_id = c.canteen_id
+            WHERE u.role = 'pending_manager'
+        ";
+        $query = $this->db->connect()->prepare($sql);
+        $query->execute();
+    
+        return $query->fetchAll();
+    }
+
+    function approveManager($user_id) {
+        $sql = "UPDATE Users SET is_manager = 1, role = 'manager' WHERE user_id = :user_id";
+        
+        $query = $this->db->connect()->prepare($sql);
+        $query->bindParam(':user_id', $user_id);
+        
+        return $query->execute();
+    }
+    
+    function reject($user_id) {
+        $sql = "SELECT canteen_id FROM Users WHERE user_id = :user_id AND role = 'pending_manager'";
+        $query = $this->db->connect()->prepare($sql);
+        
+        $query->bindParam(':user_id', $user_id);
+        $query->execute();
+        
+        $canteen = $query->fetch(PDO::FETCH_ASSOC);
+    
+        if ($canteen) {
+            $canteen_id = $canteen['canteen_id'];
+    
+            $deleteCanteenSql = "DELETE FROM canteens WHERE canteen_id = :canteen_id";
+            $deleteCanteenQuery = $this->db->connect()->prepare($deleteCanteenSql);
+    
+            $deleteCanteenQuery->bindParam(':canteen_id', $canteen_id);
+            $deleteCanteenQuery->execute();
+        }
+    
+        $deleteUserSql = "DELETE FROM Users WHERE user_id = :user_id AND role = 'pending_manager'";
+        $deleteUserQuery = $this->db->connect()->prepare($deleteUserSql);
+    
+        $deleteUserQuery->bindParam(':user_id', $user_id);
+        $deleteUserQuery->execute();
+    
+        return true;
+    }
+    
+
+
+
+    function addPendingManager($canteen_id) {
+        $sql = "INSERT INTO Users (last_name, given_name, middle_name, email, username, password, canteen_id, is_manager, role) 
+                VALUES (:last_name, :given_name, :middle_name, :email, :username, :password, :canteen_id, 0, 'pending_manager')";
+        
+        $query = $this->db->connect()->prepare($sql);
+    
+        $hashedPassword = password_hash($this->password, PASSWORD_DEFAULT);
+    
+        $query->bindParam(':last_name', $this->last_name);
+        $query->bindParam(':given_name', $this->given_name);
+        $query->bindParam(':middle_name', $this->middle_name);
+        $query->bindParam(':email', $this->email);
+        $query->bindParam(':username', $this->username);
+        $query->bindParam(':password', $hashedPassword);
+        $query->bindParam(':canteen_id', $canteen_id);
+    
+        return $query->execute(); 
+    }
+    
+    
+    
+    
 }
 ?>

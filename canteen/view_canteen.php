@@ -46,3 +46,4 @@ $canteens = $canteenObj->searchCanteens($keyword);
 </div>
 
 <script src="../js/search.js"></script>
+

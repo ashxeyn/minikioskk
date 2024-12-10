@@ -95,5 +95,23 @@ class Canteen
         return $query->fetchAll();
     }  
 
+    function registerCanteen()
+{
+    $db = $this->db->connect();
+
+    $sql = "INSERT INTO Canteens (name, campus_location) VALUES (:name, :campus_location)";
+    $query = $db->prepare($sql);
+
+    $query->bindParam(':name', $this->name, PDO::PARAM_STR);
+    $query->bindParam(':campus_location', $this->campus_location, PDO::PARAM_STR);
+
+    if ($query->execute()) {
+        return $db->lastInsertId(); // Ensure we use the same $db connection
+    } else {
+        return false;
+    }
+}
+
+
 }
 ?>

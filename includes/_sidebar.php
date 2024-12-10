@@ -43,6 +43,12 @@ require_once '../classes/accountClass.php';
                         <span class="ms-1 d-none d-sm-inline">Programs</span>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link align-middle px-0" id="registrationButton" onclick="loadRegistrationSection()">
+                        <i class="fs-5 bi-collection"></i>
+                        <span class="ms-1 d-none d-sm-inline">Registrations</span>
+                    </a>
+                </li>
             </ul>
             <hr>
         </div>

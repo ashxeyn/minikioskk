@@ -82,6 +82,20 @@ function loadOrderSection() {
     });
 }
 
+function loadRegistrationSection() {
+    $.ajax({
+        url: "../canteen/canteenRegistration.php",
+        method: 'GET',
+        success: function (response) {
+            $('#contentArea').html(response);
+        },
+        error: function (xhr, status, error) {
+            console.error('Error loading accounts section:', error);
+            $('#contentArea').html('<p class="text-danger">Failed to load Accounts section. Please try again.</p>');
+        }
+    });
+}
+
 document.addEventListener("DOMContentLoaded", function () {
     const ctx = document.getElementById('ordersByCollegeChart').getContext('2d');
 
