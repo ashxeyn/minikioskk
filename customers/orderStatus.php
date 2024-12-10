@@ -21,7 +21,6 @@ if (isset($_SESSION['user_id'])) {
     <title>Order Status</title>
     <link rel="stylesheet" href="../css/customer-order.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="../js/customer.js"></script>
 </head>
 <body>
 <div id="contentArea" class="container mt-4">
