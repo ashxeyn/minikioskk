@@ -1,5 +1,5 @@
 <head>
-  <link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="../css/style.css?v=1.0">
 </head>
 
 <nav class="navbar navbar-dark">
@@ -18,3 +18,4 @@
         </div>
     </div>
 </nav>
+
