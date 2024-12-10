@@ -6,56 +6,41 @@ require_once '../classes/accountClass.php';
 $orderObj = new Order();
 $account = new Account();
 
-// Check if the user is logged in
+// Fetch user ID and user-related data directly
 $user_id = $_SESSION['user_id'] ?? null;
-$userInfo = $user_id ? $account->UserInfo($user_id) : null;
+$userInfo = $account->UserInfo($user_id);
 
-// Handle cart items based on login status
-$cartItems = $user_id ? $orderObj->getCartItems($user_id) : [];
+// Fetch cart items directly based on the logged-in user's ID
+$cartItems = $orderObj->getCartItems($user_id);
 $total = 0;
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_POST['checkout'])) {
-        if ($user_id) {
-            $orderObj->placeOrder($user_id, $cartItems);
-            header('Location: order_status.php');
-            exit;
-        } else {
-            header('Location: login.php');
-            exit;
-        }
+        $orderObj->placeOrder($user_id, $cartItems);
+        header('Location: order_status.php');
+        exit;
     }
 
     if (isset($_POST['remove_item'])) {
-        if ($user_id) {
-            $product_id = $_POST['product_id'];
-            $orderObj->removeFromCart($user_id, $product_id);
-            header('Location: cart.php');
-            exit;
-        } else {
-            header('Location: login.php');
-            exit;
-        }
+        $product_id = $_POST['product_id'];
+        $orderObj->removeFromCart($user_id, $product_id);
+        header('Location: cart.php');
+        exit;
     }
 
     if (isset($_POST['update_quantity'])) {
-        if ($user_id) {
-            $product_id = $_POST['product_id'];
-            $new_quantity = $_POST['new_quantity'];
+        $product_id = $_POST['product_id'];
+        $new_quantity = $_POST['new_quantity'];
 
-            if ($new_quantity > 0) {
-                try {
-                    $orderObj->updateCartQuantity($user_id, $product_id, $new_quantity);
-                } catch (Exception $e) {
-                    echo "Error: " . $e->getMessage();
-                }
+        if ($new_quantity > 0) {
+            try {
+                $orderObj->updateCartQuantity($user_id, $product_id, $new_quantity);
+            } catch (Exception $e) {
+                echo "Error: " . $e->getMessage();
             }
-            header('Location: cart.php');
-            exit;
-        } else {
-            header('Location: login.php');
-            exit;
         }
+        header('Location: cart.php');
+        exit;
     }
 }
 ?>
@@ -98,13 +83,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <div class="cart-total">
             <p>Total: <?= number_format($total, 2); ?></p>
         </div>
-        <?php if ($user_id): ?>
-            <form method="post" action="">
-                <button type="submit" name="checkout" class="btn checkout">Proceed to Checkout</button>
-            </form>
-        <?php else: ?>
-            <p>Please <a href="login.php">log in</a> to proceed with checkout.</p>
-        <?php endif; ?>
+        
+        <!-- Checkout button -->
+        <form method="post" action="">
+            <button type="submit" name="checkout" class="btn checkout">Proceed to Checkout</button>
+        </form>
     </div>
 </body>
 </html>

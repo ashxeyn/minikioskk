@@ -5,16 +5,12 @@ require_once '../classes/accountClass.php';
 // Initialize account object
 $account = new Account();
 
-// Check if session user_id exists; if not, handle as guest
-if (isset($_SESSION['user_id'])) {
-    $account->user_id = $_SESSION['user_id'];
-    $userInfo = $account->UserInfo();
-} else {
-    $userInfo = null; // Or handle logic for a guest user
-}
+// Attempt to fetch user info regardless of session status
+$account->user_id = $_SESSION['user_id'] ?? null;
+$userInfo = $account->UserInfo();
 
 // Default navigation bar file logic
-$topNavFile = isset($_SESSION['user_id']) ? '../includes/_topnav.php' : '../includes/_topnav2.php';
+$topNavFile = '../includes/_topnav2.php';
 require_once '../includes/_head.php';
 ?>
 
@@ -43,11 +39,15 @@ require_once '../includes/_head.php';
         <?php require_once '../includes/_sidebar3.php'; ?>
         <div class="col py-3">
             <div id="contentArea" class="container mt-4">
-                <?php if ($userInfo): ?>
-                    <p>Welcome back, <?php echo htmlspecialchars($userInfo['name']); ?>!</p>
-                <?php else: ?>
-                    <p>Welcome, guest! You can explore our features as a guest user.</p>
-                <?php endif; ?>
+                <p>
+                    <?php 
+                    if ($userInfo) {
+                        echo "Welcome back, " . htmlspecialchars($userInfo['name']) . "!";
+                    } else {
+                        echo "Welcome to our dashboard!";
+                    }
+                    ?>
+                </p>
             </div>
         </div>
     </div>
