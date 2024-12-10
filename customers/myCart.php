@@ -2,30 +2,22 @@
 session_start();
 require_once '../classes/orderClass.php';
 require_once '../classes/accountClass.php';
+
 $orderObj = new Order();
-
 $account = new Account();
-$isLoggedIn = isset($_SESSION['user_id']);
-if ($isLoggedIn) {
-    $account->user_id = $_SESSION['user_id'];
-    $userInfo = $account->UserInfo();
-} else {
-    $userInfo = null;
-}
 
-// Handle cases when the user isn't logged in
-if (!$isLoggedIn) {
-    $cartItems = [];
-} else {
-    $cartItems = $orderObj->getCartItems($_SESSION['user_id']);
-}
+// Check if the user is logged in
+$user_id = $_SESSION['user_id'] ?? null;
+$userInfo = $user_id ? $account->UserInfo($user_id) : null;
 
+// Handle cart items based on login status
+$cartItems = $user_id ? $orderObj->getCartItems($user_id) : [];
 $total = 0;
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_POST['checkout'])) {
-        if ($isLoggedIn) {
-            $orderObj->placeOrder($_SESSION['user_id'], $cartItems);
+        if ($user_id) {
+            $orderObj->placeOrder($user_id, $cartItems);
             header('Location: order_status.php');
             exit;
         } else {
@@ -35,9 +27,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 
     if (isset($_POST['remove_item'])) {
-        if ($isLoggedIn) {
+        if ($user_id) {
             $product_id = $_POST['product_id'];
-            $orderObj->removeFromCart($_SESSION['user_id'], $product_id);
+            $orderObj->removeFromCart($user_id, $product_id);
             header('Location: cart.php');
             exit;
         } else {
@@ -47,13 +39,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 
     if (isset($_POST['update_quantity'])) {
-        if ($isLoggedIn) {
+        if ($user_id) {
             $product_id = $_POST['product_id'];
             $new_quantity = $_POST['new_quantity'];
 
             if ($new_quantity > 0) {
                 try {
-                    $orderObj->updateCartQuantity($_SESSION['user_id'], $product_id, $new_quantity);
+                    $orderObj->updateCartQuantity($user_id, $product_id, $new_quantity);
                 } catch (Exception $e) {
                     echo "Error: " . $e->getMessage();
                 }
@@ -66,7 +58,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     }
 }
-
 ?>
 
 <!DOCTYPE html>
@@ -107,7 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <div class="cart-total">
             <p>Total: <?= number_format($total, 2); ?></p>
         </div>
-        <?php if ($isLoggedIn): ?>
+        <?php if ($user_id): ?>
             <form method="post" action="">
                 <button type="submit" name="checkout" class="btn checkout">Proceed to Checkout</button>
             </form>

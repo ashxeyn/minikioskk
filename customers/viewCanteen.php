@@ -5,17 +5,10 @@ require_once '../classes/productClass.php';
 require_once '../classes/accountClass.php';
 require_once '../classes/orderClass.php';
 
-// Start session to handle user authentication
+// Start session
 session_start();
 
-// Handle user authentication check
-$account = new Account();
-$isLoggedIn = isset($_SESSION['user_id']);
-if ($isLoggedIn) {
-    $account->user_id = $_SESSION['user_id'];
-    $userInfo = $account->UserInfo();
-}
-
+// Initialize objects
 $canteenObj = new Canteen();
 $productObj = new Product();
 $orderObj = new Order();
@@ -30,14 +23,6 @@ if (!$canteen_id) {
 
 $canteen = $canteenObj->fetchCanteenById($canteen_id);
 $products = $productObj->fetchProductsByCanteen($canteen_id);
-
-// Fetch user's orders if logged in
-try {
-    $orders = $isLoggedIn ? $orderObj->getAllOrders($_SESSION['user_id']) : [];
-} catch (Exception $e) {
-    error_log("Error fetching user orders: " . $e->getMessage());
-    $orders = [];
-}
 ?>
 
 <div class="canteen-imgcover">
@@ -51,9 +36,10 @@ try {
                 <h4><?= htmlspecialchars($product['name']); ?></h4>
                 <p class="description"><?= htmlspecialchars($product['description']); ?></p>
                 <p class="price">Price: <?= htmlspecialchars($product['price']); ?></p>
-                <button onclick="loadAddToCartModal()" class="btn btn-primary">Open Add to Cart Modal</button>
+                <button class="btn btn-primary">
+                    Open Add to Cart Modal
+                </button>
             </div>
         <?php endforeach; ?>
     </div>
 </div>
-

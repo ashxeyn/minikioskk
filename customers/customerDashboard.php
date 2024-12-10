@@ -2,20 +2,19 @@
 session_start();
 require_once '../classes/accountClass.php';
 
-if (!isset($_SESSION['user_id'])) {
-header("Location: ../accounts/login.php");
-exit();
-}
-
+// Initialize account object
 $account = new Account();
-$account->user_id = $_SESSION['user_id'];
-$userInfo = $account->UserInfo();
-$isLoggedIn = isset($_SESSION['user_id']);
 
-if ($isLoggedIn) {
+// Check if session user_id exists; if not, handle as guest
+if (isset($_SESSION['user_id'])) {
     $account->user_id = $_SESSION['user_id'];
     $userInfo = $account->UserInfo();
+} else {
+    $userInfo = null; // Or handle logic for a guest user
 }
+
+// Default navigation bar file logic
+$topNavFile = isset($_SESSION['user_id']) ? '../includes/_topnav.php' : '../includes/_topnav2.php';
 ?>
 
 <!DOCTYPE html>
@@ -35,19 +34,19 @@ if ($isLoggedIn) {
 </head>
 <body>
 
-<?php
-if ($isLoggedIn) {
-    require_once '../includes/_topnav.php';
-} else {
-    require_once '../includes/_topnav2.php';
-}
-?>
+<!-- Dynamically include the correct top navigation bar -->
+<?php require_once $topNavFile; ?>
 
 <div class="container-fluid">
     <div class="row">
-        <?php require_once '../includes/_sidebar3.php' ?>
+        <?php require_once '../includes/_sidebar3.php'; ?>
         <div class="col py-3">
             <div id="contentArea" class="container mt-4">
+                <?php if ($userInfo): ?>
+                    <p>Welcome back, <?php echo htmlspecialchars($userInfo['name']); ?>!</p>
+                <?php else: ?>
+                    <p>Welcome, guest! You can explore our features as a guest user.</p>
+                <?php endif; ?>
             </div>
         </div>
     </div>

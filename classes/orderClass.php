@@ -350,5 +350,133 @@ function getCurrentQuantity($order_id, $product_id) {
         $query->execute();
         return $query->fetch();
     }
+    
+    function getAllOrders($user_id)
+    {
+    $sql = "SELECT * FROM orders WHERE user_id = :user_id ORDER BY created_at DESC";
+    $query = $this->db->connect()->prepare($sql);
+    $query->bindParam(':user_id', $user_id);
+    $query->execute();
+    return $query->fetchAll();
+    }
+    
+    function placeOrder($user_id, $cartItems)
+    {
+
+    $sql = "SELECT order_id FROM orders WHERE user_id = :user_id AND status = 'pending'";
+    $query = $this->db->connect()->prepare($sql);
+    $query->bindParam(':user_id', $user_id);
+    $query->execute();
+    $order = $query->fetch();
+
+    if (!$order) {
+        throw new Exception("No pending order found.");
+    }
+
+    $order_id = $order['order_id'];
+
+    $sql = "UPDATE orders SET status = 'completed' WHERE order_id = :order_id";
+    $query = $this->db->connect()->prepare($sql);
+    $query->bindParam(':order_id', $order_id);
+    $query->execute();
+
+    $sql = "DELETE FROM order_items WHERE order_id = :order_id";
+    $query = $this->db->connect()->prepare($sql);
+    $query->bindParam(':order_id', $order_id);
+    $query->execute();
+    }
+
+    function getOrderStatus($user_id)
+    {
+        $sql = "SELECT * FROM orders WHERE user_id = :user_id ORDER BY created_at DESC LIMIT 1";
+        $query = $this->db->connect()->prepare($sql);
+        $query->bindParam(':user_id', $user_id);
+        $query->execute();
+        return $query->fetch();
+    }
+    
+    function removeFromCart($user_id, $product_id)
+    {
+        $sql = "SELECT order_id FROM orders WHERE user_id = :user_id AND status = 'pending' LIMIT 1";
+        $query = $this->db->connect()->prepare($sql);
+        $query->bindParam(':user_id', $user_id);
+        $query->execute();
+        $order = $query->fetch();
+
+        if (!$order) {
+            throw new Exception("No pending order found for this user.");
+        }
+
+        $order_id = $order['order_id'];
+
+        $sql = "DELETE FROM order_items WHERE order_id = :order_id AND product_id = :product_id";
+        $query = $this->db->connect()->prepare($sql);
+        $query->bindParam(':order_id', $order_id);
+        $query->bindParam(':product_id', $product_id);
+        $query->execute();
+    }
+    
+    function updateCartQuantity($user_id, $product_id, $new_quantity)
+    {
+        $sql = "SELECT order_id FROM orders WHERE user_id = :user_id AND status = 'pending' LIMIT 1";
+        $query = $this->db->connect()->prepare($sql);
+        $query->bindParam(':user_id', $user_id);
+        $query->execute();
+        $order = $query->fetch();
+
+        if (!$order) {
+            throw new Exception("No pending order found for the user.");
+        }
+
+        $order_id = $order['order_id'];
+
+        $product = $this->getProductById($product_id);
+        if (!$product) {
+            throw new Exception("Product not found.");
+        }
+
+        $total_price = $product['price'] * $new_quantity;
+
+        error_log("Updating order: order_id = $order_id, product_id = $product_id, quantity = $new_quantity, total_price = $total_price");
+
+        $sql = "UPDATE order_items 
+                SET quantity = :quantity, total_price = :total_price 
+                WHERE order_id = :order_id AND product_id = :product_id";
+        $query = $this->db->connect()->prepare($sql);
+        $query->bindParam(':quantity', $new_quantity);
+        $query->bindParam(':total_price', $total_price);
+        $query->bindParam(':order_id', $order_id);
+        $query->bindParam(':product_id', $product_id);
+        $query->execute();
+    }
+    
+    function getCartItems($user_id)
+    {
+    $sql = "SELECT oi.*, p.name, p.price FROM order_items oi
+                 JOIN products p ON oi.product_id = p.product_id
+                 WHERE oi.order_id IN (SELECT order_id FROM orders WHERE user_id = :user_id AND status = 'pending')";
+         $query = $this->db->connect()->prepare($sql);
+         $query->bindParam(':user_id', $user_id);
+         $query->execute();
+         return $query->fetchAll();
+    }
+
+    
+    function viewItems($order_id)
+    {
+        $query = $this->db->prepare("
+            SELECT p.name, oi.quantity, (p.price * oi.quantity) AS total_price
+            FROM order_items oi
+            INNER JOIN products p ON oi.product_id = p.id
+            WHERE oi.order_id = :order_id
+        ");
+
+        $query->bindParam(':order_id', $order_id, PDO::PARAM_INT);
+        $query->execute();
+
+        return $query->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
+
+    
 ?>
