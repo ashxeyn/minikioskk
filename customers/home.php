@@ -51,7 +51,7 @@ foreach ($searchResults as $result) {
         if ($isLoggedIn) {
             echo "Welcome to Dashboard, {$_SESSION['username']}!";
         } else {
-            echo "Welcome to Dashboard, Guest!";
+            echo "Welcome to Dashboard!";
         }
         ?>
     </h3>

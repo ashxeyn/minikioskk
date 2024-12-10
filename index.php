@@ -9,6 +9,6 @@ $uri .= $_SERVER['HTTP_HOST'];
 
 $uri .= $_SERVER["REQUEST_URI"];
 
-header('Location: ' . $uri . "accounts/login.php");
+header('Location: ' . $uri . "customers/customerDashboard.php");
 
 exit;

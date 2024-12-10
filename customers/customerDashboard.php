@@ -1,15 +1,13 @@
 <?php
 session_start();
 require_once '../classes/accountClass.php';
+require_once '../tools/functions.php';
 
-// Initialize account object
 $account = new Account();
 
-// Attempt to fetch user info regardless of session status
 $account->user_id = $_SESSION['user_id'] ?? null;
 $userInfo = $account->UserInfo();
 
-// Default navigation bar file logic
 $topNavFile = '../includes/_topnav2.php';
 require_once '../includes/_head.php';
 ?>
@@ -42,7 +40,7 @@ require_once '../includes/_head.php';
                 <p>
                     <?php 
                     if ($userInfo) {
-                        echo "Welcome back, " . htmlspecialchars($userInfo['name']) . "!";
+                        echo "Welcome back, " . clean_input($userInfo['name']) . "!";
                     } else {
                         echo "Welcome to our dashboard!";
                     }
