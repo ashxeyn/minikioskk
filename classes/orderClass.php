@@ -460,23 +460,6 @@ function getCurrentQuantity($order_id, $product_id) {
          $query->execute();
          return $query->fetchAll();
     }
-
-    
-    function viewItems($order_id)
-    {
-        $query = $this->db->prepare("
-            SELECT p.name, oi.quantity, (p.price * oi.quantity) AS total_price
-            FROM order_items oi
-            INNER JOIN products p ON oi.product_id = p.id
-            WHERE oi.order_id = :order_id
-        ");
-
-        $query->bindParam(':order_id', $order_id, PDO::PARAM_INT);
-        $query->execute();
-
-        return $query->fetchAll(PDO::FETCH_ASSOC);
-    }
 }
 
-    
 ?>

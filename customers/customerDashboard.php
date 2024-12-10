@@ -15,6 +15,7 @@ if (isset($_SESSION['user_id'])) {
 
 // Default navigation bar file logic
 $topNavFile = isset($_SESSION['user_id']) ? '../includes/_topnav.php' : '../includes/_topnav2.php';
+require_once '../includes/_head.php';
 ?>
 
 <!DOCTYPE html>

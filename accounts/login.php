@@ -167,6 +167,7 @@ body {
 <head>
     <title>Login</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Amaranth">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="login-container">
