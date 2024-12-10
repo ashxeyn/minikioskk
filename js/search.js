@@ -1,14 +1,12 @@
 let search = document.getElementById("search");
 
 search.addEventListener("input", function() {
-    let searchValue = search.value.toUpperCase();
-    //console.log("Search Value:", searchValue); 
+    let searchValue = search.value.toUpperCase(); 
     let canteenItems = document.querySelectorAll(".canteen");
     let menuItems = document.querySelectorAll(".menu-item");
 
     canteenItems.forEach((canteen) => {
-        let canteenText = canteen.innerText.toUpperCase();
-        //console.log("Canteen Text:", canteenText); 
+        let canteenText = canteen.innerText.toUpperCase(); 
         if (canteenText.indexOf(searchValue) === -1) {
             canteen.classList.add("hidden");
         } else {
@@ -17,8 +15,7 @@ search.addEventListener("input", function() {
     });
 
     menuItems.forEach((menuItem) => {
-        let menuItemText = menuItem.innerText.toUpperCase();
-        //console.log("Menu Item Text:", menuItemText); 
+        let menuItemText = menuItem.innerText.toUpperCase(); 
         if (menuItemText.indexOf(searchValue) === -1) {
             menuItem.classList.add("hidden");
         } else {
@@ -69,7 +66,7 @@ function filterCategory() {
     const tableRows = document.querySelectorAll("#table tbody tr");
 
     tableRows.forEach(row => {
-        const roleCell = row.querySelector("td:nth-child(7)"); // Assuming the role is in the 7th column
+        const roleCell = row.querySelector("td:nth-child(7)"); 
         if (roleCell) {
             const roleText = roleCell.textContent.toUpperCase();
             if (category === "" || roleText === category) {
@@ -90,6 +87,23 @@ function filterProductCategory() {
         if (categoryCell) {
             const categoryText = categoryCell.textContent.toUpperCase();
             if (category === "" || categoryText === category) {
+                row.style.display = "";
+            } else {
+                row.style.display = "none";
+            }
+        }
+    });
+}
+
+function filterOrderStatus() {
+    const status = document.getElementById('status').value.toUpperCase();
+    const tableRows = document.querySelectorAll("#orderTable tbody tr");
+
+    tableRows.forEach(row => {
+        const statusCell = row.querySelector("td:nth-child(8)"); // Assuming the status is in the 8th column
+        if (statusCell) {
+            const statusText = statusCell.textContent.toUpperCase();
+            if (status === "" || statusText === status) {
                 row.style.display = "";
             } else {
                 row.style.display = "none";
