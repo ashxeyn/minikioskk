@@ -5,7 +5,7 @@ require_once '../tools/functions.php';
 require_once '../classes/accountClass.php';
 
 $accountObj = new Account();
-$username = 'guest'; 
+$username = 'Guest'; 
 $program_id = null;
 $is_student = 0;
 $is_employee = 0;
