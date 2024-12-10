@@ -34,12 +34,6 @@ foreach ($totalOrdersByCollege as $data) {
                             </div>
                             <h5 class="card-label fw-normal mt-0" title="Number of Customers">Customers</h5>
                             <h3 class="my-3"><?php echo ($reportData['user_count']); ?></h3> 
-                            <p class="mb-0 text-muted">
-                                <span class="text-<?php echo $reportData['user_percentage_change'] >= 0 ? 'success' : 'danger'; ?> me-2">
-                                    <i class="bi bi-arrow-<?php echo $reportData['user_percentage_change'] >= 0 ? 'up' : 'down'; ?>"></i> 
-                                    <?php echo abs($reportData['user_percentage_change']), 2; ?>%
-                                </span>
-                            </p>
                             <p class="mb-0 text-muted pt-2">
                                 <span class="text-nowrap">Since last month</span>
                             </p>
@@ -55,12 +49,6 @@ foreach ($totalOrdersByCollege as $data) {
                             </div>
                             <h5 class="card-label fw-normal mt-0" title="Number of Orders">Completed orders</h5>
                             <h3 class="my-3"><?php echo ($reportData['order_count']); ?></h3>
-                            <p class="mb-0 text-muted">
-                                <span class="text-<?php echo $reportData['order_percentage_change'] >= 0 ? 'success' : 'danger'; ?> me-2">
-                                    <i class="bi bi-arrow-<?php echo $reportData['order_percentage_change'] >= 0 ? 'up' : 'down'; ?>"></i> 
-                                    <?php echo abs($reportData['order_percentage_change']), 2; ?>%
-                                </span>
-                            </p>
                             <p class="mb-0 text-muted pt-2">
                                 <span class="text-nowrap">Since last month</span>
                             </p>
@@ -76,12 +64,6 @@ foreach ($totalOrdersByCollege as $data) {
                             </div>
                             <h5 class="card-label fw-normal mt-0" title="Number of Canteens">Canteens</h5>
                             <h3 class="my-3"><?php echo ($reportData['canteen_count']); ?></h3> 
-                            <p class="mb-0 text-muted">
-                                <span class="text-<?php echo $reportData['canteen_percentage_change'] >= 0 ? 'success' : 'danger'; ?> me-2">
-                                    <i class="bi bi-arrow-<?php echo $reportData['canteen_percentage_change'] >= 0 ? 'up' : 'down'; ?>"></i> 
-                                    <?php echo abs($reportData['canteen_percentage_change']), 2; ?>%
-                                </span>
-                            </p>
                             <p class="mb-0 text-muted pt-2">
                                 <span class="text-nowrap">Since last month</span>
                             </p>
