@@ -14,6 +14,16 @@ if (isset($_SESSION['role']) && $_SESSION['role'] == 'manager') {
 
 <div id="orderTable">
     <h4>All Orders</h4>
+    <div class="filter-group">
+        <label for="status">Status</label>
+        <select id="status" class="form-select w-auto" onchange="filterOrderStatus()">
+            <option value="">All Statuses</option>
+            <option value="pending">Pending</option>
+            <option value="accepted">Accepted</option>
+            <option value="cancelled">Cancelled</option>
+            <option value="completed">Completed</option>
+        </select>
+    </div>
     <table class="table table-bordered">
         <thead>
             <tr>
@@ -60,3 +70,5 @@ if (isset($_SESSION['role']) && $_SESSION['role'] == 'manager') {
         </tbody>
     </table>
 </div>
+
+<script src="../js/search.js"></script>
