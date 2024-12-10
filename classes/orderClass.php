@@ -64,7 +64,7 @@ class Order
     }
     
 
-    public function fetchOrderById($order_id)
+     function fetchOrderById($order_id)
 {
     $query = "SELECT o.order_id, o.status, o.queue_number, o.user_id, o.canteen_id, 
                      p.name AS product_names 
@@ -85,7 +85,6 @@ class Order
     // Delete an order
     function deleteOrder($order_id)
     {
-        try {
             // Delete associated order items first
             $sql = "DELETE FROM order_items WHERE order_id = :order_id";
             $query = $this->db->connect()->prepare($sql);
@@ -99,14 +98,10 @@ class Order
             $query->execute();
 
             return true;
-        } catch (Exception $e) {
-            return false;
-        }
     }
 
      function updateOrder($order_id, $status, $queue_number)
     {
-        try {
             $sql = "UPDATE orders SET status = :status, queue_number = :queue_number WHERE order_id = :order_id";
             $query = $this->db->connect()->prepare($sql);
             $query->bindParam(':status', $status);
@@ -115,14 +110,10 @@ class Order
             $query->execute();
 
             return true;
-        } catch (Exception $e) {
-            return false;
-        }
     }
 
     function addOrder($user_id)
     {
-        try {
             // Check if there is an existing pending order for the user
             $sql = "SELECT order_id FROM orders WHERE user_id = :user_id AND status = 'pending' LIMIT 1";
             $query = $this->db->connect()->prepare($sql);
@@ -146,13 +137,10 @@ class Order
             }
 
             return $order_id;  // Return the order ID of the new or existing order
-        } catch (Exception $e) {
-            die("Error adding order: " . $e->getMessage());
-        }
     }
         
 
-    public function getAvailableProductsByCanteen($canteen_id)
+     function getAvailableProductsByCanteen($canteen_id)
     {
         $sql = "SELECT * FROM products WHERE canteen_id = :canteen_id";
         $query = $this->db->connect()->prepare($sql);
@@ -164,7 +152,6 @@ class Order
 
     function addProductToOrder($order_id, $product_id, $quantity)
 {
-    try {
         // Get product details
         $product = $this->getProductById($product_id);
         if (!$product) {
@@ -209,10 +196,6 @@ class Order
             $query->bindParam(':total_price', $total_price);
             $query->execute();
         }
-
-    } catch (Exception $e) {
-        die("Error adding product to order: " . $e->getMessage());
-    }
 }
 
     
@@ -229,99 +212,13 @@ function getOrderProducts($order_id)
     return $query->fetchAll();
 }
 
-public function updateProductInOrder($order_id, $product_id, $quantity)
-{
-    try {
-        // Step 1: Check if the product exists in the order
-        $sql = "SELECT quantity FROM order_items WHERE order_id = :order_id AND product_id = :product_id";
-        $query = $this->db->connect()->prepare($sql);
-        $query->bindParam(':order_id', $order_id);
-        $query->bindParam(':product_id', $product_id);
-        $query->execute();
-        
 
-        // Fetch the current quantity of the product in the order
-        $currentQuantity = $query->fetchColumn();
-
-        // Get product details to calculate total price
-        $product = $this->getProductById($product_id);
-        if (!$product) {
-            throw new Exception("Product not found.");
-        }
-        $productPrice = $product['price'];
-
-        if ($currentQuantity !== false) {
-            // Product exists in the order
-            if ($quantity < 0 && abs($quantity) <= $currentQuantity) {
-                // Step 2: Removing products
-                $newQuantity = $currentQuantity + $quantity;  // Subtract the quantity to remove
-                $newTotalPrice = $newQuantity * $productPrice;  // Recalculate the total price for the updated quantity
-
-                // Step 3: If quantity is still greater than 0, update the product quantity and price
-                if ($newQuantity > 0) {
-                    $sql = "UPDATE order_items 
-                            SET quantity = :quantity, total_price = :total_price 
-                            WHERE order_id = :order_id AND product_id = :product_id";
-                    $query = $this->db->connect()->prepare($sql);
-                    $query->bindParam(':quantity', $newQuantity);
-                    $query->bindParam(':total_price', $newTotalPrice);
-                    $query->bindParam(':order_id', $order_id);
-                    $query->bindParam(':product_id', $product_id);
-                    return $query->execute();
-                } else {
-                    // If quantity becomes 0, delete the product from the order
-                    $sql = "DELETE FROM order_items WHERE order_id = :order_id AND product_id = :product_id";
-                    $query = $this->db->connect()->prepare($sql);
-                    $query->bindParam(':order_id', $order_id);
-                    $query->bindParam(':product_id', $product_id);
-                    return $query->execute();
-                }
-            } elseif ($quantity > 0) {
-                // Step 4: Adding products
-                $newQuantity = $currentQuantity + $quantity;  // Add the quantity to the existing one
-                $newTotalPrice = $newQuantity * $productPrice;  // Recalculate the total price for the updated quantity
-
-                // Step 5: Update the product quantity and total price
-                $sql = "UPDATE order_items 
-                        SET quantity = :quantity, total_price = :total_price 
-                        WHERE order_id = :order_id AND product_id = :product_id";
-                $query = $this->db->connect()->prepare($sql);
-                $query->bindParam(':quantity', $newQuantity);
-                $query->bindParam(':total_price', $newTotalPrice);
-                $query->bindParam(':order_id', $order_id);
-                $query->bindParam(':product_id', $product_id);
-                return $query->execute();
-            }
-        } else {
-            // Step 6: If the product does not exist in the order, add it
-            if ($quantity > 0) {
-                $newTotalPrice = $quantity * $productPrice;  // Calculate the total price for the new product quantity
-                $sql = "INSERT INTO order_items (order_id, product_id, quantity, total_price) 
-                        VALUES (:order_id, :product_id, :quantity, :total_price)";
-                $query = $this->db->connect()->prepare($sql);
-                $query->bindParam(':order_id', $order_id);
-                $query->bindParam(':product_id', $product_id);
-                $query->bindParam(':quantity', $quantity);
-                $query->bindParam(':total_price', $newTotalPrice);
-                return $query->execute();
-            }
-        }
-
-        return false;  // Return false if the quantity is invalid
-    } catch (Exception $e) {
-        die("Error updating product in order: " . $e->getMessage());
-    }
-}
-
-public function addQuantityToProduct($order_id, $product_id, $quantity) {
-    try {
-        // Get product details
+  function addQuantityToProduct($order_id, $product_id, $quantity) {
         $product = $this->getProductById($product_id);
         if (!$product) {
             throw new Exception("Product not found");
         }
 
-        // Get current quantity
         $sql = "SELECT quantity, total_price FROM order_items 
                 WHERE order_id = :order_id AND product_id = :product_id";
         $query = $this->db->connect()->prepare($sql);
@@ -362,14 +259,9 @@ public function addQuantityToProduct($order_id, $product_id, $quantity) {
         }
 
         return $result;
-    } catch (Exception $e) {
-        throw new Exception("Error adding quantity: " . $e->getMessage());
-    }
 }
 
-public function removeQuantityFromProduct($order_id, $product_id, $quantity) {
-    try {
-        // Get current quantity and product details
+ function removeQuantityFromProduct($order_id, $product_id, $quantity) {
         $sql = "SELECT oi.quantity, oi.total_price, p.price 
                 FROM order_items oi
                 JOIN products p ON p.product_id = oi.product_id
@@ -412,12 +304,9 @@ public function removeQuantityFromProduct($order_id, $product_id, $quantity) {
         }
 
         return $result;
-    } catch (Exception $e) {
-        throw new Exception("Error removing quantity: " . $e->getMessage());
-    }
 }
 
-private function updateOrderTotalPrice($order_id)
+ function updateOrderTotalPrice($order_id)
 {
     try {
         $sql = "UPDATE orders o 
@@ -437,7 +326,7 @@ private function updateOrderTotalPrice($order_id)
     }
 }
 
-public function removeProductFromOrder($order_id, $product_id) {
+ function removeProductFromOrder($order_id, $product_id) {
     try {
         $sql = "DELETE FROM order_items 
                 WHERE order_id = :order_id AND product_id = :product_id";
@@ -452,7 +341,7 @@ public function removeProductFromOrder($order_id, $product_id) {
     }
 }
 
-private function getCurrentQuantity($order_id, $product_id) {
+ function getCurrentQuantity($order_id, $product_id) {
     $sql = "SELECT quantity FROM order_items 
             WHERE order_id = :order_id AND product_id = :product_id";
     
@@ -465,80 +354,8 @@ private function getCurrentQuantity($order_id, $product_id) {
     return $result ? $result['quantity'] : 0;
 }
 
-function addToCart($user_id, $product_id, $quantity)
-    {
-        try {
-            $sql = "SELECT order_id FROM orders WHERE user_id = :user_id AND status = 'pending' LIMIT 1";
-            $query = $this->db->connect()->prepare($sql);
-            $query->bindParam(':user_id', $user_id);
-            $query->execute();
-            $order = $query->fetch();
-    
-            if (!$order) {
-                $sql = "INSERT INTO orders (user_id, status) VALUES (:user_id, 'pending')";
-                $query = $this->db->connect()->prepare($sql);
-                $query->bindParam(':user_id', $user_id);
-                $query->execute();
-                $order_id = $this->db->connect()->lastInsertId();
-    
-                if (!$order_id) {
-                    throw new Exception("Failed to create a new order.");
-                }
-            } else {
-                $order_id = $order['order_id'];
-            }
-    
-            $product = $this->getProductById($product_id);
-            if (!$product) {
-                throw new Exception("Product not found.");
-            }
-    
-            $total_price = $product['price'] * $quantity;
-    
-            $sql = "INSERT INTO order_items (order_id, product_id, quantity, total_price) 
-                    VALUES (:order_id, :product_id, :quantity, :total_price)";
-            $query = $this->db->connect()->prepare($sql);
-            $query->bindParam(':order_id', $order_id);
-            $query->bindParam(':product_id', $product_id);
-            $query->bindParam(':quantity', $quantity);
-            $query->bindParam(':total_price', $total_price);
-            $query->execute();
-        } catch (Exception $e) {
-            die("Error adding to cart: " . $e->getMessage());
-        }
-    }
 
-
-    function getCartItems($user_id)
-    {
-        $sql = "SELECT oi.*, p.name, p.price FROM order_items oi
-                JOIN products p ON oi.product_id = p.product_id
-                WHERE oi.order_id IN (SELECT order_id FROM orders WHERE user_id = :user_id AND status = 'pending')";
-        $query = $this->db->connect()->prepare($sql);
-        $query->bindParam(':user_id', $user_id);
-        $query->execute();
-        return $query->fetchAll();
-    }
-
-    function placeOrder($user_id, $cartItems)
-    {
-        // Update the order status to "accepted" and finalize the order
-        $sql = "UPDATE orders SET status = 'accepted' WHERE user_id = :user_id AND status = 'pending'";
-        $query = $this->db->connect()->prepare($sql);
-        $query->bindParam(':user_id', $user_id);
-        $query->execute();
-    }
-
-    function getOrderStatus($user_id)
-    {
-        $sql = "SELECT * FROM orders WHERE user_id = :user_id ORDER BY created_at DESC LIMIT 1";
-        $query = $this->db->connect()->prepare($sql);
-        $query->bindParam(':user_id', $user_id);
-        $query->execute();
-        return $query->fetch();
-    }
-
-    private function getProductById($product_id)
+     function getProductById($product_id)
     {
         $sql = "SELECT * FROM products WHERE product_id = :product_id";
         $query = $this->db->connect()->prepare($sql);
@@ -546,61 +363,6 @@ function addToCart($user_id, $product_id, $quantity)
         $query->execute();
         return $query->fetch();
     }
-    
-    function removeFromCart($user_id, $product_id)
-    {
-        $sql = "SELECT order_id FROM orders WHERE user_id = :user_id AND status = 'pending' LIMIT 1";
-        $query = $this->db->connect()->prepare($sql);
-        $query->bindParam(':user_id', $user_id);
-        $query->execute();
-        $order = $query->fetch();
-
-        if (!$order) {
-            throw new Exception("No pending order found for this user.");
-        }
-
-        $order_id = $order['order_id'];
-
-        $sql = "DELETE FROM order_items WHERE order_id = :order_id AND product_id = :product_id";
-        $query = $this->db->connect()->prepare($sql);
-        $query->bindParam(':order_id', $order_id);
-        $query->bindParam(':product_id', $product_id);
-        $query->execute();
-    }
-    
-    function updateCartQuantity($user_id, $product_id, $new_quantity)
-    {
-        $sql = "SELECT order_id FROM orders WHERE user_id = :user_id AND status = 'pending' LIMIT 1";
-        $query = $this->db->connect()->prepare($sql);
-        $query->bindParam(':user_id', $user_id);
-        $query->execute();
-        $order = $query->fetch();
-
-        if (!$order) {
-            throw new Exception("No pending order found for the user.");
-        }
-
-        $order_id = $order['order_id'];
-
-        $product = $this->getProductById($product_id);
-        if (!$product) {
-            throw new Exception("Product not found.");
-        }
-
-        $total_price = $product['price'] * $new_quantity;
-
-        error_log("Updating order: order_id = $order_id, product_id = $product_id, quantity = $new_quantity, total_price = $total_price");
-
-        $sql = "UPDATE order_items 
-                SET quantity = :quantity, total_price = :total_price 
-                WHERE order_id = :order_id AND product_id = :product_id";
-        $query = $this->db->connect()->prepare($sql);
-        $query->bindParam(':quantity', $new_quantity);
-        $query->bindParam(':total_price', $total_price);
-        $query->bindParam(':order_id', $order_id);
-        $query->bindParam(':product_id', $product_id);
-        $query->execute();
-    }
-
+  
  }
  ?>
