@@ -1,30 +1,3 @@
-let search = document.getElementById("search");
-
-search.addEventListener("input", function() {
-    let searchValue = search.value.toUpperCase(); 
-    let canteenItems = document.querySelectorAll(".canteen");
-    let menuItems = document.querySelectorAll(".menu-item");
-
-    canteenItems.forEach((canteen) => {
-        let canteenText = canteen.innerText.toUpperCase(); 
-        if (canteenText.indexOf(searchValue) === -1) {
-            canteen.classList.add("hidden");
-        } else {
-            canteen.classList.remove("hidden");
-        }
-    });
-
-    menuItems.forEach((menuItem) => {
-        let menuItemText = menuItem.innerText.toUpperCase(); 
-        if (menuItemText.indexOf(searchValue) === -1) {
-            menuItem.classList.add("hidden");
-        } else {
-            menuItem.classList.remove("hidden");
-        }
-    });
-});
-
-
 let searchInput = document.getElementById("search");
 let tableRows = document.querySelectorAll(".dataRow");
 
@@ -100,7 +73,7 @@ function filterOrderStatus() {
     const tableRows = document.querySelectorAll("#orderTable tbody tr");
 
     tableRows.forEach(row => {
-        const statusCell = row.querySelector("td:nth-child(8)"); // Assuming the status is in the 8th column
+        const statusCell = row.querySelector("td:nth-child(8)"); 
         if (statusCell) {
             const statusText = statusCell.textContent.toUpperCase();
             if (status === "" || statusText === status) {
