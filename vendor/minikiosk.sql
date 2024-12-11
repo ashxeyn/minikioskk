@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Dec 11, 2024 at 12:57 PM
+-- Generation Time: Dec 11, 2024 at 07:52 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -58,7 +58,11 @@ INSERT INTO `canteens` (`canteen_id`, `name`, `campus_location`) VALUES
 (30, 'basta', 'sheesh'),
 (33, 'test', 'Campus A fronting open field'),
 (38, 'Canteen ni Flow.G', 'Harap ng Sementeryo Near Social Work'),
-(39, 'DOngskie Eatery', 'malapit sa heart mu');
+(40, 'Mike ni Canteen', 'Near'),
+(41, 'Mike ni Canteen', 'Near'),
+(42, 'ASD', 'asd'),
+(43, 'dafsdasd', 'asdgsg'),
+(44, 'asdfsadghhg', 'g');
 
 -- --------------------------------------------------------
 
@@ -83,7 +87,7 @@ CREATE TABLE `orders` (
 INSERT INTO `orders` (`order_id`, `user_id`, `canteen_id`, `status`, `created_at`, `updated_at`, `queue_number`) VALUES
 (47, 22, 1, 'completed', '2024-11-17 05:27:07', '2024-12-06 15:36:00', 7),
 (54, 11, 1, 'pending', '2024-11-21 06:53:19', '2024-11-21 06:53:19', 8),
-(57, 22, NULL, 'pending', '2024-12-11 11:53:02', '2024-12-11 11:53:02', 1);
+(65, 22, NULL, 'pending', '2024-12-11 18:51:29', '2024-12-11 18:51:29', 1);
 
 -- --------------------------------------------------------
 
@@ -97,16 +101,17 @@ CREATE TABLE `order_items` (
   `product_id` int(11) DEFAULT NULL,
   `quantity` int(11) NOT NULL,
   `total_price` decimal(8,2) NOT NULL,
-  `price` decimal(10,2) NOT NULL DEFAULT 0.00
+  `price` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `canteen_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `order_items`
 --
 
-INSERT INTO `order_items` (`order_item_id`, `order_id`, `product_id`, `quantity`, `total_price`, `price`) VALUES
-(51, 47, 45, 1, 70.00, 0.00),
-(71, 57, 56, 5, 150.00, 30.00);
+INSERT INTO `order_items` (`order_item_id`, `order_id`, `product_id`, `quantity`, `total_price`, `price`, `canteen_id`) VALUES
+(51, 47, 45, 1, 70.00, 0.00, 2),
+(81, 65, 57, 1, 25.00, 25.00, NULL);
 
 -- --------------------------------------------------------
 
@@ -133,7 +138,7 @@ INSERT INTO `products` (`product_id`, `canteen_id`, `category`, `name`, `descrip
 (53, 9, 'Snacks', 'Lumpia', 'Crispy lumpia', 100.00),
 (54, 18, 'Snacks', 'Patir', 'sccsc', 222.00),
 (55, 1, 'Snacks', 'Empanada', 'Basta', 12.00),
-(56, 39, 'Snacks', 'burger', 'ang burger ni dongksie', 30.00);
+(57, 38, 'Snacks', 'burgir', 'kkk;l', 25.00);
 
 -- --------------------------------------------------------
 
@@ -179,7 +184,7 @@ INSERT INTO `stocks` (`product_id`, `quantity`, `status`) VALUES
 (52, 123, 'In Stock'),
 (53, 43, 'In Stock'),
 (55, 234, 'In Stock'),
-(56, 10, 'In Stock');
+(57, 20, 'In Stock');
 
 -- --------------------------------------------------------
 
@@ -202,6 +207,7 @@ CREATE TABLE `users` (
   `is_manager` tinyint(1) DEFAULT 0,
   `is_admin` tinyint(1) DEFAULT 0,
   `is_guest` tinyint(1) DEFAULT 0,
+  `status` enum('pending','approved','rejected') DEFAULT 'pending',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `role` enum('admin','manager','employee','student','guest','pending_manager') DEFAULT 'pending_manager'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -210,19 +216,37 @@ CREATE TABLE `users` (
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`user_id`, `email`, `username`, `password`, `last_name`, `given_name`, `middle_name`, `program_id`, `canteen_id`, `is_student`, `is_employee`, `is_manager`, `is_admin`, `is_guest`, `created_at`, `role`) VALUES
-(1, 'ashxeyn@gmail.com', 'ashxeynx', '$2y$10$mHj.aoz/eLqaREbsNiOt6.KK2UWUjLPviCLHdOEP424VCrE1pAp8W', 'Jimenez', 'Shane Hart', 'Duran', NULL, NULL, 0, 0, 0, 1, 0, '2024-11-01 14:27:12', 'admin'),
-(11, 'HZ202300259@wmsu.edu.ph', 'employee01', '$2y$10$g7lVRsgRqO/Kp6xgGwUbQOx9.yWor6oy7zyU5VxfDb8YXVNlUNcqW', 'Kulong', 'Rone Paullan', 'Gellecania', NULL, NULL, 0, 1, 0, 0, 0, '2024-11-01 20:49:45', 'employee'),
-(12, 'jazzypark456hd@gmail.com', 'manager12', '$2y$10$puaS8kbvyRyaU/ATlYou0OpDJmTgfp83ahKJGgR7IEoizmYGMmJJ.', 'Roque', 'Jazzper', 'Dimain', NULL, 1, 0, 0, 1, 0, 0, '2024-11-01 21:09:19', 'manager'),
-(13, 'margie@gmail.com', 'manager13', '$2y$10$wcKSQGn8m3WduTMiyr4C/esf7kqJmHMw7ZvZsTi.2TpZYP.2EN2hu', 'Clarion', 'Margie', 'Veracruz', NULL, 2, 0, 0, 1, 0, 0, '2024-11-01 21:35:21', 'manager'),
-(16, 'hz202300371@wmsu.edu.ph', 'ronron', '$2y$10$jp/VWPy1AZGSPzAr6H9J6Oq7a7SdcC7OLkKeDj9YyKQqn6bOQdPpC', 'Kulong', 'Rone Paullan', 'Gellecania', 1, NULL, 1, 0, 0, 0, 0, '2024-11-01 22:08:06', 'student'),
-(22, 'hz202301257@wmsu.edu.ph', 'JazzForYou', '$2y$10$7P2hyEf.y4H0blICcv4rCuFuYvw9aQq3/Vq9yEiutU1hP0j7fPUEm', 'Roque', 'Jazzper', 'Dimain', 1, NULL, 1, 0, 0, 0, 0, '2024-11-03 08:20:34', 'student'),
-(23, 'HZ202312339@wmsu.edu.ph', 'customer', '$2y$10$OIswgG9IcDnjK5yJnVMA6uCl8Fm2Dr6AqnvFPcUcR0g.r4fPPr9uO', 'Jimenez', 'John', 'Francisco', 1, NULL, 1, 0, 0, 0, 0, '2024-11-26 05:31:44', 'student'),
-(24, 'Sheesh@wmsu.edu.ph', 'sheesh', '$2y$10$1cNAe8nTcO1qlVE/dj67zuOlULkdgvlljWzk2BprdmMozbOk56JhS', 'Sheesh', 'Sheesh', 'Sheesh', NULL, NULL, 0, 1, 0, 0, 0, '2024-12-09 04:10:26', 'employee'),
-(25, '', '', '$2y$10$Fr6P3I/CovTyxD/H/WZ3iepO8cQaqVPNUXo9f5f3OXVYF9wn9wT5W', '', '', '', NULL, NULL, 0, 0, 0, 0, 1, '2024-12-09 05:05:19', ''),
-(27, 'flowg@gmail.com', 'flow.g', '$2y$10$v0m1JKDZf0h3OgaovCMcOuRDEDiHuywTNwq0MBAeLGwTWvX6oKc66', 'G', 'Flow', '.', NULL, 38, 0, 0, 0, 0, 0, '2024-12-10 14:48:11', 'pending_manager'),
-(28, 'dongskie@gmail.com', 'manager13', '$2y$10$LaGtwZBjuY88fd9/D0dPjuniC.Uhw6T4PSds3OvM47iNLUGN8bHwG', 'Mugs', 'Dongski', 'manager13', NULL, 39, 0, 0, 0, 0, 0, '2024-12-10 15:04:01', 'pending_manager'),
-(29, NULL, 'Guest', '$2y$10$1oG5jDaaa6BdTdE10.6G2eMXG5h5KjQHvv7Up4i2YWOZAkUFSaxSq', '', '', '', NULL, NULL, 0, 0, 0, 0, 1, '2024-12-11 09:53:03', 'guest');
+INSERT INTO `users` (`user_id`, `email`, `username`, `password`, `last_name`, `given_name`, `middle_name`, `program_id`, `canteen_id`, `is_student`, `is_employee`, `is_manager`, `is_admin`, `is_guest`, `status`, `created_at`, `role`) VALUES
+(1, 'ashxeyn@gmail.com', 'ashxeynx', '$2y$10$mHj.aoz/eLqaREbsNiOt6.KK2UWUjLPviCLHdOEP424VCrE1pAp8W', 'Jimenez', 'Shane Hart', 'Duran', NULL, NULL, 0, 0, 0, 1, 0, 'pending', '2024-11-01 14:27:12', 'admin'),
+(11, 'HZ202300259@wmsu.edu.ph', 'employee01', '$2y$10$g7lVRsgRqO/Kp6xgGwUbQOx9.yWor6oy7zyU5VxfDb8YXVNlUNcqW', 'Kulong', 'Rone Paullan', 'Gellecania', NULL, NULL, 0, 1, 0, 0, 0, 'pending', '2024-11-01 20:49:45', 'employee'),
+(12, 'jazzypark456hd@gmail.com', 'manager12', '$2y$10$puaS8kbvyRyaU/ATlYou0OpDJmTgfp83ahKJGgR7IEoizmYGMmJJ.', 'Roque', 'Jazzper', 'Dimain', NULL, 1, 0, 0, 1, 0, 0, 'pending', '2024-11-01 21:09:19', 'manager'),
+(13, 'margie@gmail.com', 'manager13', '$2y$10$wcKSQGn8m3WduTMiyr4C/esf7kqJmHMw7ZvZsTi.2TpZYP.2EN2hu', 'Clarion', 'Margie', 'Veracruz', NULL, 2, 0, 0, 1, 0, 0, 'pending', '2024-11-01 21:35:21', 'manager'),
+(16, 'hz202300371@wmsu.edu.ph', 'ronron', '$2y$10$jp/VWPy1AZGSPzAr6H9J6Oq7a7SdcC7OLkKeDj9YyKQqn6bOQdPpC', 'Kulong', 'Rone Paullan', 'Gellecania', 1, NULL, 1, 0, 0, 0, 0, 'pending', '2024-11-01 22:08:06', 'student'),
+(22, 'hz202301257@wmsu.edu.ph', 'JazzForYou', '$2y$10$7P2hyEf.y4H0blICcv4rCuFuYvw9aQq3/Vq9yEiutU1hP0j7fPUEm', 'Roque', 'Jazzper', 'Dimain', 1, NULL, 1, 0, 0, 0, 0, 'pending', '2024-11-03 08:20:34', 'student'),
+(23, 'HZ202312339@wmsu.edu.ph', 'customer', '$2y$10$OIswgG9IcDnjK5yJnVMA6uCl8Fm2Dr6AqnvFPcUcR0g.r4fPPr9uO', 'Jimenez', 'John', 'Francisco', 1, NULL, 1, 0, 0, 0, 0, 'pending', '2024-11-26 05:31:44', 'student'),
+(24, 'Sheesh@wmsu.edu.ph', 'sheesh', '$2y$10$1cNAe8nTcO1qlVE/dj67zuOlULkdgvlljWzk2BprdmMozbOk56JhS', 'Sheesh', 'Sheesh', 'Sheesh', NULL, NULL, 0, 1, 0, 0, 0, 'pending', '2024-12-09 04:10:26', 'employee'),
+(25, '', '', '$2y$10$Fr6P3I/CovTyxD/H/WZ3iepO8cQaqVPNUXo9f5f3OXVYF9wn9wT5W', '', '', '', NULL, NULL, 0, 0, 0, 0, 1, 'pending', '2024-12-09 05:05:19', ''),
+(27, 'flowg@gmail.com', 'flow.g', '$2y$10$v0m1JKDZf0h3OgaovCMcOuRDEDiHuywTNwq0MBAeLGwTWvX6oKc66', 'G', 'Flow', '.', NULL, 38, 0, 0, 1, 0, 0, 'pending', '2024-12-10 14:48:11', 'manager'),
+(29, NULL, 'Guest', '$2y$10$1oG5jDaaa6BdTdE10.6G2eMXG5h5KjQHvv7Up4i2YWOZAkUFSaxSq', '', '', '', NULL, NULL, 0, 0, 0, 0, 1, 'pending', '2024-12-11 09:53:03', 'guest'),
+(30, NULL, 'Guest3718', '$2y$10$mxZVgDtmoBNHCWj6vD46leqML9rL8RBwtC8vxhGt8YfptXrb5tN..', '', '', '', NULL, NULL, 0, 0, 0, 0, 1, 'pending', '2024-12-11 12:49:23', 'guest'),
+(31, NULL, 'Guest7809', '$2y$10$g6abLxZZ/fGi895XNimGQOnZ6DdmF5SLCBjhDKe1TMskvRfiWsSm2', '', '', '', NULL, NULL, 0, 0, 0, 0, 1, 'pending', '2024-12-11 12:55:50', 'guest'),
+(32, '2002@wmsu.edu.ph', 'mana123', '$2y$10$SOQzTQVTL/uk8/MxqD9pY.mfnspmadbfzB8821pfh7M2YDTALSRd6', 'Christian jude', 'meow', 'p', NULL, NULL, 0, 1, 0, 0, 0, 'pending', '2024-12-11 13:40:57', 'employee'),
+(33, '2002@gmail.com', 'mana1234', '$2y$10$wCA4lFi0gK0HUsXvWqDul.ir3q2kpHc3wYNr5V3MtqyKnjlwRNBvi', 'Riyal', 'wow', 'p', NULL, NULL, 0, 0, 0, 0, 1, 'pending', '2024-12-11 13:58:26', 'guest'),
+(34, NULL, 'Guest2957', '$2y$10$Cl5DESQ4T2TQ.saho6Frk.lTHDNLLqAnarBOEqaZgpiQ68GZBgUce', '', '', '', NULL, NULL, 0, 0, 0, 0, 1, 'pending', '2024-12-11 14:06:23', 'guest'),
+(35, NULL, 'Guest1208', '$2y$10$S5LAJp4yuz/ax0N1LaBzruAze.NFQbBKeL9Qr2OjRL7mJA0Q6Z77.', '', '', '', NULL, NULL, 0, 0, 0, 0, 1, 'pending', '2024-12-11 14:08:55', 'guest'),
+(36, NULL, 'Guest5182', '$2y$10$BlIgeS3KC9PRaJ2RTfxvcOV.REugT5uO69fVqQx/XUz1LQB.DzfYe', '', '', '', NULL, NULL, 0, 0, 0, 0, 1, 'pending', '2024-12-11 16:44:25', 'guest'),
+(37, NULL, 'Guest1884', '$2y$10$FkajJnB.bmD44flYGipe..8Rj/SJynNBLkmI5nduKy1GCHBMAJMhS', '', '', '', NULL, NULL, 0, 0, 0, 0, 1, 'pending', '2024-12-11 16:54:14', 'guest'),
+(38, NULL, 'Guest2845', '$2y$10$P.xod6We398OGwJnbxQyUOLo05meG2WtdcNNkdo9/ofwnbKcBY1na', '', '', '', NULL, NULL, 0, 0, 0, 0, 1, 'pending', '2024-12-11 17:05:35', 'guest'),
+(39, NULL, 'Guest8458', '$2y$10$IhqRV6epee4BdVCYLI.BBuV7t6q/VsUpMNrGZM4vTKtxqWpUgbDKS', '', '', '', NULL, NULL, 0, 0, 0, 0, 1, 'pending', '2024-12-11 17:05:41', 'guest'),
+(40, 'mike@gmail.com', 'mike123', '$2y$10$y3Zwi4rLUwbhsaQPYPW9jOwsr.llVRyqk5mar9hy/atvVKuuMUBfC', 'jordan', 'Michael', 'flow.g', NULL, 41, 0, 0, 1, 0, 0, 'pending', '2024-12-11 17:08:15', 'manager'),
+(41, NULL, 'Guest1369', '$2y$10$NVDeDwiuKpEe8fu1sF2cT.wWbHbsyvz3YlOtasjeXtCd29l2JAqkK', '', '', '', NULL, NULL, 0, 0, 0, 0, 1, 'pending', '2024-12-11 17:43:47', 'guest'),
+(42, 'asd@gmail.com', 'asd', '$2y$10$hT9ew3YWtRVJ2lP2vSH8WOOiaTFaTtCy7EJoMf9ICrNeE5VrCsPw2', 'asd', 'qwe', 'ashxeynx', NULL, 42, 0, 0, 0, 0, 0, 'pending', '2024-12-11 17:44:18', 'manager'),
+(43, NULL, 'Guest1551', '$2y$10$fXk5VrC.TAVoqpPXP3HbbupHElUQj4mWcKaEile3/JmPIkMfDF8tm', '', '', '', NULL, NULL, 0, 0, 0, 0, 1, 'pending', '2024-12-11 17:51:09', 'guest'),
+(44, NULL, 'Guest5769', '$2y$10$ukCUmx3Te2ZAB8HsV.ba0evTo.cTwDCaHqOWV2CAc/gqI8rgYM5yq', '', '', '', NULL, NULL, 0, 0, 0, 0, 1, 'pending', '2024-12-11 17:51:21', 'guest'),
+(45, 'adsf@gmial.com', 'user11', '$2y$10$6BxbrrktVK6tl8BS8ggRS.rcm8ic6/HqtXW2UVJmo78ItcT47oG/i', 'asdffgdfd', 'dfgdf', 'asd', NULL, 43, 0, 0, 1, 0, 0, 'approved', '2024-12-11 17:52:22', 'manager'),
+(46, NULL, 'Guest7065', '$2y$10$vx.OqdvV/GxUqKd8jLA1te8n7N5lJxlX5VU.7XrTkJeCu5gYShRru', '', '', '', NULL, NULL, 0, 0, 0, 0, 1, 'pending', '2024-12-11 17:57:30', 'guest'),
+(47, 'sdf@gmial.com', 'user1234', '$2y$10$j9jhTjbPfFgpKgTbpm9Cgewq8d8YQtVY0L17f0GdYRDxkj1bcU1ai', 'wdkgj&#039;kafdg', 'asdfldf', 'manager13', NULL, 44, 0, 0, 1, 0, 0, 'approved', '2024-12-11 17:58:12', 'manager'),
+(48, 'Helo@wmsu.edu.ph', 'heloworld', '$2y$10$Mqze5MlGIXEsrQb9zmReMOVXKKhg4RZ1tdwjcv/T0Y6Qp1D/djBKC', 'Hello', 'World', 'asd', NULL, NULL, 0, 1, 0, 0, 0, 'pending', '2024-12-11 18:00:44', 'employee');
 
 --
 -- Triggers `users`
@@ -270,7 +294,8 @@ ALTER TABLE `orders`
 ALTER TABLE `order_items`
   ADD PRIMARY KEY (`order_item_id`),
   ADD KEY `order_id` (`order_id`),
-  ADD KEY `product_id` (`product_id`);
+  ADD KEY `product_id` (`product_id`),
+  ADD KEY `canteen_id` (`canteen_id`);
 
 --
 -- Indexes for table `products`
@@ -308,25 +333,25 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `canteens`
 --
 ALTER TABLE `canteens`
-  MODIFY `canteen_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
+  MODIFY `canteen_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
 
 --
 -- AUTO_INCREMENT for table `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=58;
+  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=66;
 
 --
 -- AUTO_INCREMENT for table `order_items`
 --
 ALTER TABLE `order_items`
-  MODIFY `order_item_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=72;
+  MODIFY `order_item_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=82;
 
 --
 -- AUTO_INCREMENT for table `products`
 --
 ALTER TABLE `products`
-  MODIFY `product_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=57;
+  MODIFY `product_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=58;
 
 --
 -- AUTO_INCREMENT for table `programs`
@@ -338,7 +363,7 @@ ALTER TABLE `programs`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
+  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=49;
 
 --
 -- Constraints for dumped tables
@@ -349,14 +374,17 @@ ALTER TABLE `users`
 --
 ALTER TABLE `orders`
   ADD CONSTRAINT `orders_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `orders_ibfk_2` FOREIGN KEY (`canteen_id`) REFERENCES `canteens` (`canteen_id`) ON DELETE SET NULL;
+  ADD CONSTRAINT `orders_ibfk_2` FOREIGN KEY (`canteen_id`) REFERENCES `canteens` (`canteen_id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `orders_ibfk_3` FOREIGN KEY (`canteen_id`) REFERENCES `canteens` (`canteen_id`);
 
 --
 -- Constraints for table `order_items`
 --
 ALTER TABLE `order_items`
   ADD CONSTRAINT `fk_order_items_orders` FOREIGN KEY (`order_id`) REFERENCES `orders` (`order_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_order_items_products` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE;
+  ADD CONSTRAINT `fk_order_items_products` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `order_items_ibfk_1` FOREIGN KEY (`canteen_id`) REFERENCES `canteens` (`canteen_id`),
+  ADD CONSTRAINT `order_items_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`);
 
 --
 -- Constraints for table `products`

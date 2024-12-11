@@ -14,36 +14,71 @@ $canteens = $canteenObj->searchCanteens($keyword);
 <div class='center'>
     <div class='table'>
         <form autocomplete='off'>
-            <input type="search" name="" id="search" placeholder="Search canteens...">
+            <input type="search" name="search" id="searchCanteen" placeholder="Search canteens..." 
+                   onkeyup="searchCanteens(this.value)">
         </form>
         <div class="mb-3">
-        <button type="button" class="btn btn-primary" onclick="openAddCanteenModal()">Add Canteen</button>
+            <button type="button" class="btn btn-primary" onclick="openAddCanteenModal()">Add Canteen</button>
         </div>
-        <table>
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Location</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        <?php foreach ($canteens as $canteen): ?>
-            <tr>
-                <td><?= $canteen['canteen_id'] ?></td>
-                <td><?= $canteen['name'] ?></td>
-                <td><?= $canteen['campus_location'] ?></td>
-                <td>
-                    <button class="btn btn-warning btn-sm" onclick="openEditModal(<?= $canteen['canteen_id'] ?>)">Edit</button>
-                    <button class="btn btn-danger btn-sm" onclick="openDeleteModal(<?= $canteen['canteen_id'] ?>)">Delete</button>
-                </td>
-            </tr>
-        <?php endforeach; ?>
-    </tbody>
-</table>  
+        <table id="canteenTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Location</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="canteenTableBody">
+                <?php foreach ($canteens as $canteen): ?>
+                    <tr>
+                        <td><?= htmlspecialchars($canteen['canteen_id']) ?></td>
+                        <td><?= htmlspecialchars($canteen['name']) ?></td>
+                        <td><?= htmlspecialchars($canteen['campus_location']) ?></td>
+                        <td>
+                            <button class="btn btn-warning btn-sm" onclick="openEditModal(<?= $canteen['canteen_id'] ?>)">Edit</button>
+                            <button class="btn btn-danger btn-sm" onclick="openDeleteModal(<?= $canteen['canteen_id'] ?>)">Delete</button>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>  
     </div>
 </div>
 
-<script src="../js/search.js"></script>
+<script>
+function searchCanteens(keyword) {
+    fetch(`../ajax/search_canteens.php?keyword=${encodeURIComponent(keyword)}`)
+        .then(response => response.json())
+        .then(data => {
+            const tbody = document.getElementById('canteenTableBody');
+            tbody.innerHTML = '';
+            
+            data.forEach(canteen => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${escapeHtml(canteen.canteen_id)}</td>
+                        <td>${escapeHtml(canteen.name)}</td>
+                        <td>${escapeHtml(canteen.campus_location)}</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm" onclick="openEditModal(${canteen.canteen_id})">Edit</button>
+                            <button class="btn btn-danger btn-sm" onclick="openDeleteModal(${canteen.canteen_id})">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+function escapeHtml(unsafe) {
+    return unsafe
+        .toString()
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+</script>
 

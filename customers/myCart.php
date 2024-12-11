@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             
             try {
                 // Place the order
-                $orderObj->placeOrder($user_id, $cartItems);
+                $orderResult = $orderObj->placeOrder($user_id, $cartItems);
                 
                 // Update stock quantities
                 foreach ($cartItems as $item) {
@@ -45,10 +45,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 }
                 
                 // Clear the cart after successful order
-                $orderObj->clearCart($user_id);
+                if (!$orderObj->clearCart($user_id)) {
+                    throw new Exception("Failed to clear cart");
+                }
                 
                 // Commit transaction
                 $db->commit();
+                
+                // Store order info in session for orderStatus.php
+                $_SESSION['last_order'] = [
+                    'order_id' => $orderResult['order_id'],
+                    'queue_number' => $orderResult['queue_number'],
+                    'canteen_name' => $orderResult['canteen_name']
+                ];
                 
                 header('Location: orderStatus.php');
                 exit;

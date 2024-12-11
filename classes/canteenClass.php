@@ -71,13 +71,22 @@ class Canteen
     }
 
     function searchCanteens($keyword = '') {
-        $sql = "SELECT * FROM canteens WHERE name LIKE :keyword 
-                OR campus_location LIKE :keyword";
-
-        $query = $this->db->connect()->prepare($sql);
-        $query->execute([':keyword' => '%' . $keyword . '%']);
-        
-        return $query->fetchAll();
+        try {
+            $sql = "SELECT * FROM canteens 
+                    WHERE name LIKE :keyword 
+                    OR campus_location LIKE :keyword 
+                    ORDER BY canteen_id DESC";
+            
+            $query = $this->db->connect()->prepare($sql);
+            $searchTerm = "%" . $keyword . "%";
+            $query->bindParam(':keyword', $searchTerm);
+            $query->execute();
+            
+            return $query->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error searching canteens: " . $e->getMessage());
+            throw $e;
+        }
     }
 
     function searchCanteensAndProducts($keyword)

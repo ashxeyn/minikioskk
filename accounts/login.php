@@ -22,6 +22,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($user['is_admin']) {
             $_SESSION['role'] = 'admin';
             header('Location: ../admin/adminDashboard.php');
+        } elseif ($user['role'] === 'pending_manager') {
+            $_SESSION['role'] = 'pending_manager';
+            $_SESSION['canteen_id'] = $accountObj->getManagerCanteen($username);
+            header('Location: pending.php');
+            exit();
         } elseif ($user['is_manager']) {
             $_SESSION['role'] = 'manager';
             $_SESSION['canteen_id'] = $accountObj->getManagerCanteen($username);
@@ -34,7 +39,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $loginErr = 'Invalid username or password.';
     }
-    
 }
 ?>
 

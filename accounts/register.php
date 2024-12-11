@@ -74,8 +74,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['role'] = 'manager';
                 $_SESSION['canteen_id'] = $canteenId;
                 
-                // Redirect to manager dashboard
-                header('Location: ../manager/managerDashboard.php');
+                // Redirect to pending page
+                header('Location: pending.php');
                 exit;
             } else {
                 $response = 'failure';

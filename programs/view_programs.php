@@ -1,10 +1,6 @@
 <?php
 require_once '../classes/programClass.php';
-
 $programObj = new Program();
-$keyword = isset($_GET['search']) ? $_GET['search'] : '';  
-
-$programs = $programObj->searchPrograms($keyword); 
 ?>
 
 <head>
@@ -14,12 +10,13 @@ $programs = $programObj->searchPrograms($keyword);
 <div class='center'>
     <div class='table'>
         <form autocomplete='off'>
-            <input type="search" name="search" id="search" placeholder="Search...">
+            <input type="search" id="searchProgram" placeholder="Search programs..." 
+                   onkeyup="searchPrograms(this.value)">
         </form>
         <div class="mb-3">
             <button type="button" class="btn btn-primary" onclick="openAddProgramModal()">Add Program</button>
         </div>
-        <table class="table table-bordered">
+        <table class="table table-bordered" id="programTable">
             <thead>
                 <tr>
                     <th>Program ID</th>
@@ -29,29 +26,57 @@ $programs = $programObj->searchPrograms($keyword);
                     <th>Actions</th>
                 </tr>
             </thead>
-            <tbody>
-                <?php if (!empty($programs)): ?>
-                    <?php foreach ($programs as $program): ?>
-                        <tr id="program-<?= $program['program_id'] ?>">
-                            <td><?= ($program['program_id']) ?></td>
-                            <td><?= ($program['program_name']) ?></td>
-                            <td><?= ($program['department']) ?></td>
-                            <td><?= ($program['college']) ?></td>
-                            <td>
-                                <button class="btn btn-warning btn-sm" onclick="openEditModal(<?= $program['program_id'] ?>)">Edit</button>
-                                <button class="btn btn-danger btn-sm" onclick="openDeleteModal(<?= $program['program_id'] ?>)">Delete</button>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <tr>
-                        <td colspan="4">No programs found</td>
-                    </tr>
-                <?php endif; ?>
+            <tbody id="programTableBody">
             </tbody>
         </table>
     </div>
 </div>
 
-<script src="../js/search.js"></script>
+<script>
+function searchPrograms(keyword) {
+    fetch(`../ajax/search_programs.php?keyword=${encodeURIComponent(keyword)}`)
+        .then(response => response.json())
+        .then(data => {
+            const tbody = document.getElementById('programTableBody');
+            tbody.innerHTML = '';
+            
+            if (data.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="text-center">No programs found</td>
+                    </tr>`;
+                return;
+            }
+            
+            data.forEach(program => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${escapeHtml(program.program_id)}</td>
+                        <td>${escapeHtml(program.program_name)}</td>
+                        <td>${escapeHtml(program.department)}</td>
+                        <td>${escapeHtml(program.college)}</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm" onclick="openEditModal(${program.program_id})">Edit</button>
+                            <button class="btn btn-danger btn-sm" onclick="openDeleteModal(${program.program_id})">Delete</button>
+                        </td>
+                    </tr>`;
+            });
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+function escapeHtml(unsafe) {
+    return unsafe
+        ? unsafe.toString()
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;")
+        : '';
+}
+
+// Initial load
+searchPrograms('');
+</script>
 

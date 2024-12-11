@@ -37,7 +37,7 @@ class Product
         }
     
         $query->execute();
-        return $query->fetchAll();
+        return $query->fetchAll(PDO::FETCH_ASSOC);
     }
     
     
@@ -217,6 +217,37 @@ class Product
         $stmt = $this->db->connect()->prepare($sql);
         $stmt->execute();
         return $stmt->fetchAll();
+    }
+
+    function searchProductsByCanteen($canteen_id, $keyword = '', $category = '') {
+        $sql = "SELECT p.product_id, p.name, p.description, p.category, p.price, s.quantity, c.name AS canteen_name
+                FROM products p
+                LEFT JOIN stocks s ON p.product_id = s.product_id
+                LEFT JOIN canteens c ON p.canteen_id = c.canteen_id
+                WHERE p.canteen_id = :canteen_id";
+
+        if ($keyword) {
+            $sql .= " AND (p.name LIKE :keyword OR p.description LIKE :keyword)";
+        }
+
+        if ($category) {
+            $sql .= " AND p.category = :category";
+        }
+
+        $query = $this->db->connect()->prepare($sql);
+        $query->bindParam(':canteen_id', $canteen_id);
+
+        if ($keyword) {
+            $searchKeyword = '%' . $keyword . '%';
+            $query->bindParam(':keyword', $searchKeyword);
+        }
+
+        if ($category) {
+            $query->bindParam(':category', $category);
+        }
+
+        $query->execute();
+        return $query->fetchAll(PDO::FETCH_ASSOC);
     }
 }
 ?>

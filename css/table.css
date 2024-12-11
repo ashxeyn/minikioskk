@@ -90,3 +90,27 @@ button.btn-danger {
 button.btn-danger:hover {
     background-color: #c82333;
 }
+
+.search-container {
+    margin-bottom: 20px;
+}
+
+#searchCanteen {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    font-size: 16px;
+}
+
+#searchCanteen:focus {
+    outline: none;
+    border-color: #087F8C;
+    box-shadow: 0 0 5px rgba(8, 127, 140, 0.3);
+}
+
+.table {
+    width: 100%;
+    margin-top: 20px;
+}

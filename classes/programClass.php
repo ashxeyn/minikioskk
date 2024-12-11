@@ -75,14 +75,23 @@ class Program
     }
 
     function searchPrograms($keyword = '') {
-        $sql = "SELECT * FROM programs 
-                WHERE program_name LIKE :keyword 
-                OR department LIKE :keyword";
-        
-        $query = $this->db->connect()->prepare($sql);
-        $query->execute([':keyword' => '%' . $keyword . '%']);
-        
-        return $query->fetchAll();
+        try {
+            $sql = "SELECT * FROM programs 
+                    WHERE program_name LIKE :keyword 
+                    OR department LIKE :keyword 
+                    OR college LIKE :keyword 
+                    ORDER BY program_name ASC";
+            
+            $query = $this->db->connect()->prepare($sql);
+            $searchTerm = "%" . $keyword . "%";
+            $query->bindParam(':keyword', $searchTerm);
+            $query->execute();
+            
+            return $query->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error searching programs: " . $e->getMessage());
+            throw $e;
+        }
     }    
 }
 ?>

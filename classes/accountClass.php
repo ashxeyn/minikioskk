@@ -155,18 +155,16 @@ class Account
         return false;
     }
 
-    function fetch($username)
-    {
-        $sql = "SELECT * FROM Users WHERE username = :username LIMIT 1;";
+    function fetch($username) {
+        $sql = "SELECT user_id, username, password, is_admin, is_manager, is_employee, is_student, role, status, canteen_id 
+                FROM users 
+                WHERE username = :username";
+                
         $query = $this->db->connect()->prepare($sql);
-
-        $query->bindParam('username', $username);
-        $data = null;
-        if ($query->execute()) {
-            $data = $query->fetch();
-        }
-
-        return $data;
+        $query->bindParam(':username', $username);
+        $query->execute();
+        
+        return $query->fetch(PDO::FETCH_ASSOC);
     }
 
     function addManager($canteen_id) {
@@ -231,28 +229,39 @@ class Account
         return $query->fetchAll(PDO::FETCH_ASSOC); // Return all users as an associative array
     }
     
-    function searchUsers($keyword = '', $role = null) {
-        $sql = "SELECT * FROM users WHERE 1";
-        if ($keyword) {
-            $sql .= " AND (last_name LIKE :keyword 
-                        OR given_name LIKE :keyword 
-                        OR middle_name LIKE :keyword 
-                        OR username LIKE :keyword 
-                        OR email LIKE :keyword 
-                        OR role LIKE :keyword)";
+    function searchUsers($keyword = '', $role = '') {
+        try {
+            $sql = "SELECT user_id, username, email, role, status, 
+                           last_name, given_name, middle_name
+                    FROM users 
+                    WHERE 1=1";
+
+            $params = [];
+            
+            if ($keyword) {
+                $sql .= " AND (username LIKE :keyword 
+                          OR email LIKE :keyword 
+                          OR last_name LIKE :keyword 
+                          OR given_name LIKE :keyword 
+                          OR middle_name LIKE :keyword)";
+                $params[':keyword'] = "%$keyword%";
+            }
+            
+            if ($role) {
+                $sql .= " AND role = :role";
+                $params[':role'] = $role;
+            }
+            
+            $sql .= " ORDER BY last_name ASC, given_name ASC";
+            
+            $query = $this->db->connect()->prepare($sql);
+            $query->execute($params);
+            
+            return $query->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error searching users: " . $e->getMessage());
+            throw $e;
         }
-        if ($role) {
-            $sql .= " AND role = :role";
-        }
-        $query = $this->db->connect()->prepare($sql);
-        if ($keyword) {
-            $query->bindParam(':keyword', $keyword);
-        }
-        if ($role) {
-            $query->bindParam(':role', $role);
-        }
-        $query->execute();
-        return $query->fetchAll();
     }
     
 
@@ -282,7 +291,7 @@ class Account
     }
 
     function approveManager($user_id) {
-        $sql = "UPDATE Users SET is_manager = 1, role = 'manager' WHERE user_id = :user_id";
+        $sql = "UPDATE Users SET is_manager = 1, role = 'manager', status = 'approved' WHERE user_id = :user_id";
         
         $query = $this->db->connect()->prepare($sql);
         $query->bindParam(':user_id', $user_id);
@@ -322,26 +331,54 @@ class Account
 
 
     function addPendingManager($canteen_id) {
-        $sql = "INSERT INTO Users (last_name, given_name, middle_name, email, username, password, canteen_id, is_manager, role) 
-                VALUES (:last_name, :given_name, :middle_name, :email, :username, :password, :canteen_id, 0, 'pending_manager')";
-        
-        $query = $this->db->connect()->prepare($sql);
-    
-        $hashedPassword = password_hash($this->password, PASSWORD_DEFAULT);
-    
-        $query->bindParam(':last_name', $this->last_name);
-        $query->bindParam(':given_name', $this->given_name);
-        $query->bindParam(':middle_name', $this->middle_name);
-        $query->bindParam(':email', $this->email);
-        $query->bindParam(':username', $this->username);
-        $query->bindParam(':password', $hashedPassword);
-        $query->bindParam(':canteen_id', $canteen_id);
-    
-        return $query->execute(); 
+        try {
+            $conn = $this->db->connect();
+            $conn->beginTransaction();
+
+            $hashedPassword = password_hash($this->password, PASSWORD_DEFAULT);
+            
+            $sql = "INSERT INTO users (last_name, given_name, middle_name, email, username, password, is_manager, role, status, canteen_id) 
+                    VALUES (:last_name, :given_name, :middle_name, :email, :username, :password, 0, 'pending_manager', 'pending', :canteen_id)";
+            
+            $stmt = $conn->prepare($sql);
+            
+            $params = [
+                ':last_name' => $this->last_name,
+                ':given_name' => $this->given_name,
+                ':middle_name' => $this->middle_name,
+                ':email' => $this->email,
+                ':username' => $this->username,
+                ':password' => $hashedPassword,
+                ':canteen_id' => $canteen_id
+            ];
+
+            if ($stmt->execute($params)) {
+                $this->user_id = $conn->lastInsertId();
+                $conn->commit();
+                return true;
+            }
+
+            $conn->rollBack();
+            return false;
+
+        } catch (Exception $e) {
+            if (isset($conn)) {
+                $conn->rollBack();
+            }
+            error_log("Signup error: " . $e->getMessage());
+            throw $e;
+        }
     }
     
     
     
     
+    function checkStatus($user_id) {
+        $sql = "SELECT status FROM users WHERE user_id = :user_id";
+        $query = $this->db->connect()->prepare($sql);
+        $query->execute(['user_id' => $user_id]);
+        $result = $query->fetch();
+        return $result['status'] ?? null;
+    }
 }
 ?>

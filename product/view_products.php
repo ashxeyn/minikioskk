@@ -26,17 +26,18 @@ if (isset($_SESSION['role']) && $_SESSION['role'] == 'manager') {
 <div class='center'>
     <div class='table'>
         <form autocomplete='off'>
-            <input type="search" id="search" placeholder="Search products...">
+            <input type="search" id="searchProduct" placeholder="Search products..." 
+                   onkeyup="searchProducts(this.value, document.getElementById('category').value)">
         </form>
         
         <div class="filter-group">
             <label for="category">Category</label>
-            <select id="category" class="form-select w-auto" onchange="filterProductCategory()">
+            <select id="category" class="form-select w-auto" onchange="searchProducts(document.getElementById('searchProduct').value, this.value)">
                 <option value="">All Categories</option>
-                <option value="Snacks" <?= $category === 'Snacks' ? 'selected' : '' ?>>Snacks</option>
-                <option value="Drinks and Beverages" <?= $category === 'Drinks and Beverages' ? 'selected' : '' ?>>Drinks and Beverages</option>
-                <option value="Meals" <?= $category === 'Meals' ? 'selected' : '' ?>>Meals</option>
-                <option value="Fruits" <?= $category === 'Fruits' ? 'selected' : '' ?>>Fruits</option>
+                <option value="Snacks">Snacks</option>
+                <option value="Drinks and Beverages">Drinks and Beverages</option>
+                <option value="Meals">Meals</option>
+                <option value="Fruits">Fruits</option>
             </select>
         </div>
 
@@ -44,7 +45,7 @@ if (isset($_SESSION['role']) && $_SESSION['role'] == 'manager') {
             <button type="button" class="btn btn-primary" onclick="openAddProductModal()">Add Product</button>
         </div>
 
-        <table class="table table-bordered" id="table">
+        <table class="table table-bordered" id="productTable">
             <thead>
                 <tr>
                     <?php if ($_SESSION['role'] != 'manager'): ?>
@@ -60,40 +61,70 @@ if (isset($_SESSION['role']) && $_SESSION['role'] == 'manager') {
                     <th>Actions</th>
                 </tr>
             </thead>
-            <tbody>
-                <?php if (!empty($products)): ?>
-                    <?php foreach ($products as $product): ?>
-                        <?php
-                        $stock = $stockObj->fetchStockByProductId($product['product_id']);
-                        $quantity = $stock ? $stock['quantity'] : 0;
-                        $status = $stock && $quantity > 0 ? 'In Stock' : 'Out of Stock';
-                        ?>
-                        <tr id="product-<?= $product['product_id'] ?>" class="dataRow">
-                            <?php if ($_SESSION['role'] != 'manager'): ?>
-                                <td><?= clean_input($product['canteen_name']) ?></td>
-                            <?php endif; ?>
-                            <td><?= $product['product_id'] ?></td>
-                            <td><?= clean_input($product['name']) ?></td>
-                            <td><?= clean_input($product['description']) ?></td>
-                            <td><?= clean_input($product['category']) ?></td>
-                            <td><?= $product['price'] ?></td>
-                            <td><?= $quantity ?></td>
-                            <td><?= $status ?></td>
-                            <td>
-                                <button class="btn btn-warning btn-sm" onclick="openEditModal(<?= $product['product_id'] ?>)">Edit</button>
-                                <button class="btn btn-danger btn-sm" onclick="openDeleteModal(<?= $product['product_id'] ?>)">Delete</button>
-                                <button class="btn btn-info btn-sm" onclick="openStockModal(<?= $product['product_id'] ?>)">Stock In/Stock Out</button>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <tr>
-                        <td colspan="9" class="text-center">No products found.</td>
-                    </tr>
-                <?php endif; ?>
+            <tbody id="productTableBody">
             </tbody>
         </table>
     </div>
 </div>
 
-<script src="../js/search.js"></script>
+<script>
+function searchProducts(keyword, category) {
+    let url = `../ajax/search_products.php?keyword=${encodeURIComponent(keyword)}`;
+    if (category) {
+        url += `&category=${encodeURIComponent(category)}`;
+    }
+    
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            const tbody = document.getElementById('productTableBody');
+            tbody.innerHTML = '';
+            
+            if (data.length === 0) {
+                const cols = <?php echo $_SESSION['role'] != 'manager' ? '9' : '8'; ?>;
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="${cols}" class="text-center">No products found.</td>
+                    </tr>`;
+                return;
+            }
+            
+            data.forEach(product => {
+                let row = '<tr>';
+                <?php if ($_SESSION['role'] != 'manager'): ?>
+                    row += `<td>${escapeHtml(product.canteen_name)}</td>`;
+                <?php endif; ?>
+                row += `
+                    <td>${escapeHtml(product.product_id)}</td>
+                    <td>${escapeHtml(product.name)}</td>
+                    <td>${escapeHtml(product.description)}</td>
+                    <td>${escapeHtml(product.category)}</td>
+                    <td>${escapeHtml(product.price)}</td>
+                    <td>${escapeHtml(product.quantity || 0)}</td>
+                    <td>${product.quantity > 0 ? 'In Stock' : 'Out of Stock'}</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm" onclick="openEditModal(${product.product_id})">Edit</button>
+                        <button class="btn btn-danger btn-sm" onclick="openDeleteModal(${product.product_id})">Delete</button>
+                        <button class="btn btn-info btn-sm" onclick="openStockModal(${product.product_id})">Stock In/Stock Out</button>
+                    </td>
+                </tr>`;
+                tbody.innerHTML += row;
+            });
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+function escapeHtml(unsafe) {
+    return unsafe
+        ? unsafe.toString()
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;")
+        : '';
+}
+
+// Initial load
+searchProducts('', '');
+</script>
