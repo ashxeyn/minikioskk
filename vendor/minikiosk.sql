@@ -305,7 +305,7 @@ ALTER TABLE `users`
 --
 
 --
--- AUTO_INCREMENT for table `canteens`
+-- AUTO_INCREMENT for table `canteenss`
 --
 ALTER TABLE `canteens`
   MODIFY `canteen_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
