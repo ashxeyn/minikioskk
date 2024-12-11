@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Dec 09, 2024 at 06:14 AM
+-- Generation Time: Dec 11, 2024 at 12:57 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -56,7 +56,9 @@ INSERT INTO `canteens` (`canteen_id`, `name`, `campus_location`) VALUES
 (28, 'itlog', 'golti'),
 (29, 'itlog', 'golti'),
 (30, 'basta', 'sheesh'),
-(33, 'test', 'Campus A fronting open field');
+(33, 'test', 'Campus A fronting open field'),
+(38, 'Canteen ni Flow.G', 'Harap ng Sementeryo Near Social Work'),
+(39, 'DOngskie Eatery', 'malapit sa heart mu');
 
 -- --------------------------------------------------------
 
@@ -79,25 +81,9 @@ CREATE TABLE `orders` (
 --
 
 INSERT INTO `orders` (`order_id`, `user_id`, `canteen_id`, `status`, `created_at`, `updated_at`, `queue_number`) VALUES
-(36, 22, NULL, 'pending', '2024-11-07 02:55:36', '2024-11-07 02:55:36', 1),
-(37, 22, 2, 'pending', '2024-11-07 03:04:27', '2024-11-07 03:04:27', 1),
-(38, 22, NULL, 'pending', '2024-11-07 03:05:18', '2024-11-07 03:05:18', 2),
-(39, 22, 1, 'pending', '2024-11-14 06:47:18', '2024-11-14 06:47:18', 1),
-(40, 22, NULL, 'pending', '2024-11-14 06:47:35', '2024-11-14 06:47:35', 3),
-(41, 22, 1, 'pending', '2024-11-14 06:47:52', '2024-11-14 06:47:52', 2),
-(42, 22, 1, 'pending', '2024-11-14 06:48:01', '2024-11-14 06:48:01', 3),
-(43, 22, 1, 'pending', '2024-11-14 06:48:21', '2024-11-14 06:48:21', 4),
-(44, 22, 2, 'pending', '2024-11-17 04:27:27', '2024-11-17 04:27:27', 2),
-(45, 22, 1, 'pending', '2024-11-17 04:36:24', '2024-11-17 04:36:24', 5),
-(46, 22, 1, 'pending', '2024-11-17 04:47:29', '2024-11-17 04:47:29', 6),
 (47, 22, 1, 'completed', '2024-11-17 05:27:07', '2024-12-06 15:36:00', 7),
-(48, 22, 2, 'pending', '2024-11-17 05:58:14', '2024-11-17 05:58:14', 3),
-(49, 22, 2, 'pending', '2024-11-17 05:58:46', '2024-11-17 05:58:46', 4),
-(50, 22, 2, 'pending', '2024-11-17 06:00:00', '2024-11-17 06:00:00', 5),
-(51, 22, 2, 'pending', '2024-11-17 06:01:03', '2024-11-17 06:01:03', 6),
-(52, 22, 2, 'pending', '2024-11-17 06:03:48', '2024-11-17 06:03:48', 7),
-(53, 22, 2, 'pending', '2024-11-17 06:04:05', '2024-11-17 06:04:05', 8),
-(54, 11, 1, 'pending', '2024-11-21 06:53:19', '2024-11-21 06:53:19', 8);
+(54, 11, 1, 'pending', '2024-11-21 06:53:19', '2024-11-21 06:53:19', 8),
+(57, 22, NULL, 'pending', '2024-12-11 11:53:02', '2024-12-11 11:53:02', 1);
 
 -- --------------------------------------------------------
 
@@ -110,19 +96,17 @@ CREATE TABLE `order_items` (
   `order_id` int(11) DEFAULT NULL,
   `product_id` int(11) DEFAULT NULL,
   `quantity` int(11) NOT NULL,
-  `total_price` decimal(8,2) NOT NULL
+  `total_price` decimal(8,2) NOT NULL,
+  `price` decimal(10,2) NOT NULL DEFAULT 0.00
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `order_items`
 --
 
-INSERT INTO `order_items` (`order_item_id`, `order_id`, `product_id`, `quantity`, `total_price`) VALUES
-(34, 37, 45, 1, 70.00),
-(45, 44, 45, 1, 70.00),
-(51, 47, 45, 1, 70.00),
-(54, 48, 45, 1, 70.00),
-(59, 52, 45, 1, 70.00);
+INSERT INTO `order_items` (`order_item_id`, `order_id`, `product_id`, `quantity`, `total_price`, `price`) VALUES
+(51, 47, 45, 1, 70.00, 0.00),
+(71, 57, 56, 5, 150.00, 30.00);
 
 -- --------------------------------------------------------
 
@@ -148,7 +132,8 @@ INSERT INTO `products` (`product_id`, `canteen_id`, `category`, `name`, `descrip
 (52, 2, 'Meals', 'Patir', 'Muslim Delicacy', 30.00),
 (53, 9, 'Snacks', 'Lumpia', 'Crispy lumpia', 100.00),
 (54, 18, 'Snacks', 'Patir', 'sccsc', 222.00),
-(55, 1, 'Snacks', 'Empanada', 'Basta', 12.00);
+(55, 1, 'Snacks', 'Empanada', 'Basta', 12.00),
+(56, 39, 'Snacks', 'burger', 'ang burger ni dongksie', 30.00);
 
 -- --------------------------------------------------------
 
@@ -193,7 +178,8 @@ INSERT INTO `stocks` (`product_id`, `quantity`, `status`) VALUES
 (45, 12313, 'In Stock'),
 (52, 123, 'In Stock'),
 (53, 43, 'In Stock'),
-(55, 234, 'In Stock');
+(55, 234, 'In Stock'),
+(56, 10, 'In Stock');
 
 -- --------------------------------------------------------
 
@@ -203,7 +189,7 @@ INSERT INTO `stocks` (`product_id`, `quantity`, `status`) VALUES
 
 CREATE TABLE `users` (
   `user_id` int(11) NOT NULL,
-  `email` varchar(255) NULL,
+  `email` varchar(255) DEFAULT NULL,
   `username` varchar(255) NOT NULL,
   `password` varchar(255) NOT NULL,
   `last_name` varchar(255) NOT NULL,
@@ -233,7 +219,10 @@ INSERT INTO `users` (`user_id`, `email`, `username`, `password`, `last_name`, `g
 (22, 'hz202301257@wmsu.edu.ph', 'JazzForYou', '$2y$10$7P2hyEf.y4H0blICcv4rCuFuYvw9aQq3/Vq9yEiutU1hP0j7fPUEm', 'Roque', 'Jazzper', 'Dimain', 1, NULL, 1, 0, 0, 0, 0, '2024-11-03 08:20:34', 'student'),
 (23, 'HZ202312339@wmsu.edu.ph', 'customer', '$2y$10$OIswgG9IcDnjK5yJnVMA6uCl8Fm2Dr6AqnvFPcUcR0g.r4fPPr9uO', 'Jimenez', 'John', 'Francisco', 1, NULL, 1, 0, 0, 0, 0, '2024-11-26 05:31:44', 'student'),
 (24, 'Sheesh@wmsu.edu.ph', 'sheesh', '$2y$10$1cNAe8nTcO1qlVE/dj67zuOlULkdgvlljWzk2BprdmMozbOk56JhS', 'Sheesh', 'Sheesh', 'Sheesh', NULL, NULL, 0, 1, 0, 0, 0, '2024-12-09 04:10:26', 'employee'),
-(25, '', '', '$2y$10$Fr6P3I/CovTyxD/H/WZ3iepO8cQaqVPNUXo9f5f3OXVYF9wn9wT5W', '', '', '', NULL, NULL, 0, 0, 0, 0, 1, '2024-12-09 05:05:19', '');
+(25, '', '', '$2y$10$Fr6P3I/CovTyxD/H/WZ3iepO8cQaqVPNUXo9f5f3OXVYF9wn9wT5W', '', '', '', NULL, NULL, 0, 0, 0, 0, 1, '2024-12-09 05:05:19', ''),
+(27, 'flowg@gmail.com', 'flow.g', '$2y$10$v0m1JKDZf0h3OgaovCMcOuRDEDiHuywTNwq0MBAeLGwTWvX6oKc66', 'G', 'Flow', '.', NULL, 38, 0, 0, 0, 0, 0, '2024-12-10 14:48:11', 'pending_manager'),
+(28, 'dongskie@gmail.com', 'manager13', '$2y$10$LaGtwZBjuY88fd9/D0dPjuniC.Uhw6T4PSds3OvM47iNLUGN8bHwG', 'Mugs', 'Dongski', 'manager13', NULL, 39, 0, 0, 0, 0, 0, '2024-12-10 15:04:01', 'pending_manager'),
+(29, NULL, 'Guest', '$2y$10$1oG5jDaaa6BdTdE10.6G2eMXG5h5KjQHvv7Up4i2YWOZAkUFSaxSq', '', '', '', NULL, NULL, 0, 0, 0, 0, 1, '2024-12-11 09:53:03', 'guest');
 
 --
 -- Triggers `users`
@@ -319,25 +308,25 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `canteens`
 --
 ALTER TABLE `canteens`
-  MODIFY `canteen_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
+  MODIFY `canteen_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
 
 --
 -- AUTO_INCREMENT for table `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=55;
+  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=58;
 
 --
 -- AUTO_INCREMENT for table `order_items`
 --
 ALTER TABLE `order_items`
-  MODIFY `order_item_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=64;
+  MODIFY `order_item_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=72;
 
 --
 -- AUTO_INCREMENT for table `products`
 --
 ALTER TABLE `products`
-  MODIFY `product_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=56;
+  MODIFY `product_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=57;
 
 --
 -- AUTO_INCREMENT for table `programs`
@@ -349,7 +338,7 @@ ALTER TABLE `programs`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
+  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
 
 --
 -- Constraints for dumped tables
@@ -366,8 +355,8 @@ ALTER TABLE `orders`
 -- Constraints for table `order_items`
 --
 ALTER TABLE `order_items`
-  ADD CONSTRAINT `order_items_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`order_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `order_items_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE;
+  ADD CONSTRAINT `fk_order_items_orders` FOREIGN KEY (`order_id`) REFERENCES `orders` (`order_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_order_items_products` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `products`
