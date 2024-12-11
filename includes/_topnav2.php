@@ -22,8 +22,12 @@
                     <li class="nav-item me-3">
                         <a class="nav-link text-white" href="../accounts/login.php">Login</a>
                     </li>
+                    <li class="nav-item me-3">
+                        <a class="nav-link text-white" href="../accounts/signup.php">Sign Up</a>
+                    </li>
+
                     <li class="nav-item">
-                        <a class="nav-link text-white" href="../accounts/register.php">Register</a>
+                        <a class="nav-link text-white" href="../accounts/register.php">Register your Canteen</a>
                     </li>
                 </ul>
             <?php else: ?>

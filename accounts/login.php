@@ -34,6 +34,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($user['is_employee'] || $user['is_student']) {
             $_SESSION['role'] = $user['is_employee'] ? 'employee' : 'student';
             header('Location: ../customers/customerDashboard.php');
+        } else {
+            // Default case for new users or guests
+            $_SESSION['role'] = 'guest';
+            header('Location: ../customers/customerDashboard.php');
         }
         exit();
     } else {
