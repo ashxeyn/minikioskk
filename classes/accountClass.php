@@ -34,31 +34,63 @@ class Account
     }
     
 
-    function signup($last_name, $given_name, $middle_name, $email, $username, $password, $is_student, $is_employee, $is_guest, $program_id = null) {
-        $sql = "INSERT INTO Users (last_name, given_name, middle_name, email, username, password, is_student, is_employee, is_guest, program_id) 
-                VALUES (:last_name, :given_name, :middle_name, :email, :username, :password, :is_student, :is_employee, :is_guest, :program_id)";
-        $query = $this->db->connect()->prepare($sql);
-    
-        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-        
-        $query->bindParam(':last_name', $last_name);
-        $query->bindParam(':given_name', $given_name);
-        $query->bindParam(':middle_name', $middle_name);
-        $query->bindParam(':email', $email);
-        $query->bindParam(':username', $username);
-        $query->bindParam(':password', $hashedPassword);
-        $query->bindParam(':is_student', $is_student);
-        $query->bindParam(':is_employee', $is_employee);
-        $query->bindParam(':is_guest', $is_guest);
-    
-        if ($is_student && $program_id) {
-            $query->bindParam(':program_id', $program_id);
-        } else {
-            $program_id = null;
-            $query->bindParam(':program_id', $program_id);
+    function signup($last_name, $given_name, $middle_name, $email, $username, $password, $is_student = 0, $is_employee = 0, $is_guest = 0, $program_id = null) {
+        try {
+            $conn = $this->db->connect();
+            
+            // Start transaction
+            $conn->beginTransaction();
+
+            // Hash the password
+            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+
+            // Validate email domain for students and employees
+            if (($is_student || $is_employee) && !preg_match('/@wmsu\.edu\.ph$/', $email)) {
+                throw new Exception("WMSU email domain required for students and employees");
+            }
+
+            // For guests, email is optional
+            if ($is_guest && empty($email)) {
+                $email = null;
+            }
+
+            // Insert into users table
+            $sql = "INSERT INTO users (last_name, given_name, middle_name, email, username, password, 
+                    is_student, is_employee, is_guest, program_id) 
+                    VALUES (:last_name, :given_name, :middle_name, :email, :username, :password,
+                    :is_student, :is_employee, :is_guest, :program_id)";
+            
+            $query = $conn->prepare($sql);
+            
+            $params = [
+                ':last_name' => $last_name,
+                ':given_name' => $given_name,
+                ':middle_name' => $middle_name,
+                ':email' => $email,
+                ':username' => $username,
+                ':password' => $hashed_password,
+                ':is_student' => $is_student,
+                ':is_employee' => $is_employee,
+                ':is_guest' => $is_guest,
+                ':program_id' => $program_id
+            ];
+
+            if ($query->execute($params)) {
+                $this->user_id = $conn->lastInsertId();
+                $conn->commit();
+                return true;
+            }
+
+            $conn->rollBack();
+            return false;
+
+        } catch (Exception $e) {
+            if (isset($conn)) {
+                $conn->rollBack();
+            }
+            error_log("Signup error: " . $e->getMessage());
+            throw $e;
         }
-    
-        return $query->execute();
     }
     
 

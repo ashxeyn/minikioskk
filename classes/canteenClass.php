@@ -112,6 +112,13 @@ class Canteen
     }
 }
 
+    function getAllCanteens()
+    {
+        $sql = "SELECT * FROM canteens ORDER BY name ASC";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
 
 }
 ?>

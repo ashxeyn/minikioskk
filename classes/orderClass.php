@@ -146,48 +146,131 @@ class Order
         return $query->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    function addProductToOrder($order_id, $product_id, $quantity)
-{
-        $product = $this->getProductById($product_id);
-        if (!$product) {
-            throw new Exception("Product not found.");
+    function getOrCreatePendingOrder($user_id) {
+        try {
+            $conn = $this->db->connect();
+            $conn->beginTransaction();
+
+            // First check if there's an existing pending order
+            $sql = "SELECT order_id FROM orders 
+                    WHERE user_id = :user_id AND status = 'pending' 
+                    ORDER BY created_at DESC LIMIT 1";
+            
+            $query = $conn->prepare($sql);
+            $query->bindParam(':user_id', $user_id);
+            $query->execute();
+            $order = $query->fetch();
+
+            if (!$order) {
+                // Create new order if none exists
+                $sql = "INSERT INTO orders (user_id, status, created_at) 
+                       VALUES (:user_id, 'pending', CURRENT_TIMESTAMP)";
+                $query = $conn->prepare($sql);
+                $query->bindParam(':user_id', $user_id);
+                $query->execute();
+                
+                $order_id = $conn->lastInsertId();
+                if (!$order_id) {
+                    throw new Exception("Failed to create a new order.");
+                }
+            } else {
+                $order_id = $order['order_id'];
+            }
+
+            $conn->commit();
+            return $order_id;
+            
+        } catch (Exception $e) {
+            if (isset($conn)) {
+                $conn->rollBack();
+            }
+            throw $e;
         }
+    }
 
-        $total_price = $product['price'] * $quantity;  
+    function addToCart($user_id, $product_id, $quantity) {
+        try {
+            $conn = $this->db->connect();
+            $conn->beginTransaction();
 
-        $sql = "SELECT * FROM order_items WHERE order_id = :order_id AND product_id = :product_id";
-        $query = $this->db->connect()->prepare($sql);
-        $query->bindParam(':order_id', $order_id);
-        $query->bindParam(':product_id', $product_id);
-        $query->execute();
+            // First, check if there's an existing pending order
+            $sql = "SELECT order_id FROM orders 
+                    WHERE user_id = :user_id AND status = 'pending' 
+                    ORDER BY created_at DESC LIMIT 1";
+            
+            $query = $conn->prepare($sql);
+            $query->bindParam(':user_id', $user_id);
+            $query->execute();
+            $order = $query->fetch();
 
-        if ($query->rowCount() > 0) {
-            $existingItem = $query->fetch(PDO::FETCH_ASSOC);
-            $new_quantity = $existingItem['quantity'] + $quantity;  
-            $new_total_price = $new_quantity * $product['price'];  
+            if (!$order) {
+                // Create new order if none exists
+                $sql = "INSERT INTO orders (user_id, status, created_at) 
+                       VALUES (:user_id, 'pending', CURRENT_TIMESTAMP)";
+                $query = $conn->prepare($sql);
+                $query->bindParam(':user_id', $user_id);
+                $query->execute();
+                
+                $order_id = $conn->lastInsertId();
+            } else {
+                $order_id = $order['order_id'];
+            }
 
-            $sql = "UPDATE order_items 
-                    SET quantity = :quantity, 
-                        total_price = :total_price 
+            // Get product price
+            $sql = "SELECT price FROM products WHERE product_id = :product_id";
+            $query = $conn->prepare($sql);
+            $query->bindParam(':product_id', $product_id);
+            $query->execute();
+            $product = $query->fetch();
+
+            if (!$product) {
+                throw new Exception("Product not found");
+            }
+
+            $total_price = $product['price'] * $quantity;
+
+            // Check if product already exists in order
+            $sql = "SELECT order_item_id, quantity FROM order_items 
                     WHERE order_id = :order_id AND product_id = :product_id";
-            $query = $this->db->connect()->prepare($sql);
+            $query = $conn->prepare($sql);
             $query->bindParam(':order_id', $order_id);
             $query->bindParam(':product_id', $product_id);
-            $query->bindParam(':quantity', $new_quantity);
-            $query->bindParam(':total_price', $new_total_price);
             $query->execute();
-        } else {
-            
-            $sql = "INSERT INTO order_items (order_id, product_id, quantity, total_price) 
-                    VALUES (:order_id, :product_id, :quantity, :total_price)";
-            $query = $this->db->connect()->prepare($sql);
+            $existing_item = $query->fetch();
+
+            if ($existing_item) {
+                // Update existing item
+                $sql = "UPDATE order_items 
+                        SET quantity = quantity + :quantity,
+                            total_price = (quantity + :quantity) * :price 
+                        WHERE order_id = :order_id AND product_id = :product_id";
+                $query = $conn->prepare($sql);
+                $query->bindParam(':quantity', $quantity);
+                $query->bindParam(':price', $product['price']);
+            } else {
+                // Insert new item
+                $sql = "INSERT INTO order_items (order_id, product_id, quantity, price, total_price) 
+                        VALUES (:order_id, :product_id, :quantity, :price, :total_price)";
+                $query = $conn->prepare($sql);
+                $query->bindParam(':total_price', $total_price);
+                $query->bindParam(':price', $product['price']);
+            }
+
             $query->bindParam(':order_id', $order_id);
             $query->bindParam(':product_id', $product_id);
             $query->bindParam(':quantity', $quantity);
-            $query->bindParam(':total_price', $total_price);
             $query->execute();
+
+            $conn->commit();
+            return true;
+
+        } catch (Exception $e) {
+            if (isset($conn)) {
+                $conn->rollBack();
+            }
+            throw new Exception("Error adding to cart: " . $e->getMessage());
         }
-}
+    }
 
     
 
@@ -395,25 +478,76 @@ function getCurrentQuantity($order_id, $product_id) {
         return $query->fetch();
     }
     
-    function removeFromCart($user_id, $product_id)
-    {
-        $sql = "SELECT order_id FROM orders WHERE user_id = :user_id AND status = 'pending' LIMIT 1";
-        $query = $this->db->connect()->prepare($sql);
-        $query->bindParam(':user_id', $user_id);
-        $query->execute();
-        $order = $query->fetch();
+    function removeFromCart($user_id, $product_id) {
+        try {
+            $conn = $this->db->connect();
+            
+            // First get the pending order id for this user
+            $sql = "SELECT order_id FROM orders 
+                    WHERE user_id = :user_id AND status = 'pending' 
+                    LIMIT 1";
+            
+            $stmt = $conn->prepare($sql);
+            $stmt->execute(['user_id' => $user_id]);
+            $order = $stmt->fetch();
 
-        if (!$order) {
-            throw new Exception("No pending order found for this user.");
+            if (!$order) {
+                throw new Exception("No pending order found");
+            }
+
+            // Start transaction
+            $conn->beginTransaction();
+
+            // Remove the item from order_items
+            $sql = "DELETE FROM order_items 
+                    WHERE order_id = :order_id AND product_id = :product_id";
+            
+            $stmt = $conn->prepare($sql);
+            $result = $stmt->execute([
+                'order_id' => $order['order_id'],
+                'product_id' => $product_id
+            ]);
+
+            if (!$result) {
+                throw new Exception("Failed to remove item from cart");
+            }
+
+            // Check if this was the last item in the order
+            $sql = "SELECT COUNT(*) as count FROM order_items WHERE order_id = :order_id";
+            $stmt = $conn->prepare($sql);
+            $stmt->execute(['order_id' => $order['order_id']]);
+            $itemCount = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            // If this was the last item, remove the order too
+            if ($itemCount['count'] == 0) {
+                $sql = "DELETE FROM orders WHERE order_id = :order_id";
+                $stmt = $conn->prepare($sql);
+                $stmt->execute(['order_id' => $order['order_id']]);
+            } else {
+                // Update the total price of the order
+                $sql = "UPDATE orders o 
+                       SET o.total_amount = (
+                           SELECT SUM(oi.total_price) 
+                           FROM order_items oi 
+                           WHERE oi.order_id = :order_id
+                       )
+                       WHERE o.order_id = :order_id";
+                $stmt = $conn->prepare($sql);
+                $stmt->execute(['order_id' => $order['order_id']]);
+            }
+
+            // Commit transaction
+            $conn->commit();
+            return true;
+
+        } catch (Exception $e) {
+            // Rollback transaction on error
+            if (isset($conn) && $conn->inTransaction()) {
+                $conn->rollBack();
+            }
+            error_log("Error removing item from cart: " . $e->getMessage());
+            throw $e;
         }
-
-        $order_id = $order['order_id'];
-
-        $sql = "DELETE FROM order_items WHERE order_id = :order_id AND product_id = :product_id";
-        $query = $this->db->connect()->prepare($sql);
-        $query->bindParam(':order_id', $order_id);
-        $query->bindParam(':product_id', $product_id);
-        $query->execute();
     }
     
     function updateCartQuantity($user_id, $product_id, $new_quantity)
@@ -452,13 +586,74 @@ function getCurrentQuantity($order_id, $product_id) {
     
     function getCartItems($user_id)
     {
-    $sql = "SELECT oi.*, p.name, p.price FROM order_items oi
-                 JOIN products p ON oi.product_id = p.product_id
-                 WHERE oi.order_id IN (SELECT order_id FROM orders WHERE user_id = :user_id AND status = 'pending')";
-         $query = $this->db->connect()->prepare($sql);
-         $query->bindParam(':user_id', $user_id);
-         $query->execute();
-         return $query->fetchAll();
+        $sql = "SELECT oi.*, p.name, p.price as unit_price 
+                FROM orders o 
+                JOIN order_items oi ON o.order_id = oi.order_id 
+                JOIN products p ON oi.product_id = p.product_id 
+                WHERE o.user_id = :user_id AND o.status = 'pending'";
+        
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->execute(['user_id' => $user_id]);
+        return $stmt->fetchAll();
+    }
+
+    function getUserOrders($user_id)
+    {
+        $sql = "SELECT o.*, c.name as canteen_name 
+                FROM orders o 
+                LEFT JOIN canteens c ON o.canteen_id = c.canteen_id 
+                WHERE o.user_id = :user_id 
+                ORDER BY o.created_at DESC";
+                
+        $query = $this->db->connect()->prepare($sql);
+        $query->bindParam(':user_id', $user_id);
+        $query->execute();
+        
+        return $query->fetchAll();
+    }
+
+    public function clearCart($user_id) {
+        try {
+            $conn = $this->db->connect();
+            
+            // Get the pending order ID
+            $sql = "SELECT order_id FROM orders 
+                    WHERE user_id = :user_id AND status = 'pending' 
+                    LIMIT 1";
+            
+            $stmt = $conn->prepare($sql);
+            $stmt->execute(['user_id' => $user_id]);
+            $order = $stmt->fetch();
+
+            if (!$order) {
+                return true; // No pending order means cart is already empty
+            }
+
+            // Start transaction
+            $conn->beginTransaction();
+
+            try {
+                // Delete all items from the order
+                $sql = "DELETE FROM order_items WHERE order_id = :order_id";
+                $stmt = $conn->prepare($sql);
+                $stmt->execute(['order_id' => $order['order_id']]);
+
+                // Delete the order itself
+                $sql = "DELETE FROM orders WHERE order_id = :order_id";
+                $stmt = $conn->prepare($sql);
+                $stmt->execute(['order_id' => $order['order_id']]);
+
+                // Commit transaction
+                $conn->commit();
+                return true;
+            } catch (Exception $e) {
+                $conn->rollBack();
+                throw $e;
+            }
+        } catch (Exception $e) {
+            error_log("Error clearing cart: " . $e->getMessage());
+            throw $e;
+        }
     }
 }
 

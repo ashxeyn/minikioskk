@@ -203,5 +203,20 @@ class Product
             return false;
         }
     }
+
+    function getFeaturedProducts()
+    {
+        $sql = "SELECT p.*, c.name as canteen_name 
+                FROM products p 
+                LEFT JOIN canteens c ON p.canteen_id = c.canteen_id 
+                LEFT JOIN stocks s ON p.product_id = s.product_id 
+                WHERE s.status = 'In Stock' AND s.quantity > 0 
+                ORDER BY RAND() 
+                LIMIT 8";
+        
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
 }
 ?>
