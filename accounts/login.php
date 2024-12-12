@@ -14,18 +14,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = clean_input($_POST['password']);
 
     $user = $accountObj->fetch($username);
-
+    
+    // Debugging
+    error_log("Login attempt for username: " . $username);
+    error_log("User data found: " . print_r($user, true));
+    if ($user) {
+        error_log("Password verification result: " . (password_verify($password, $user['password']) ? 'true' : 'false'));
+    }
+    
     if ($user && password_verify($password, $user['password'])) {
         $_SESSION['user_id'] = $user['user_id'];
         $_SESSION['username'] = $user['username'];
+        $_SESSION['email'] = $user['email'] ?? '';
+        $_SESSION['given_name'] = $user['given_name'] ?? '';
+        $_SESSION['last_name'] = $user['last_name'] ?? '';
 
-        switch ($user['role']) {
+        $role = strtolower($user['role'] ?? '');
+        switch ($role) {
             case 'admin':
                 $_SESSION['role'] = 'admin';
                 header('Location: ../admin/adminDashboard.php');
                 break;
             case 'manager':
-                if ($user['status'] === 'pending') {
+                $status = strtolower($user['status'] ?? 'pending');
+                if ($status === 'pending') {
                     $_SESSION['role'] = 'pending_manager';
                     $_SESSION['canteen_id'] = $accountObj->getManagerCanteen($username);
                     header('Location: pending.php');
@@ -50,6 +62,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         exit();
     } else {
+        error_log("Login failed for username: " . $username);
+        if (!$user) {
+            error_log("User not found");
+        } else {
+            error_log("Password verification failed");
+        }
         $loginErr = 'Invalid username or password.';
     }
 }

@@ -1,0 +1,1870 @@
+[12-Dec-2024 12:23:09 Europe/Berlin] Starting order placement for user: 8
+[12-Dec-2024 12:23:09 Europe/Berlin] Cart items: Array
+(
+    [0] => Array
+        (
+            [item_id] => 47
+            [order_id] => 35
+            [product_id] => 3
+            [quantity] => 1
+            [unit_price] => 25.00
+            [subtotal] => 25.00
+            [name] => Iced Tea
+            [price] => 25.00
+        )
+
+)
+
+[12-Dec-2024 12:23:09 Europe/Berlin] Starting transaction for order placement
+[12-Dec-2024 12:23:09 Europe/Berlin] Inserting order - User: 8, Canteen: 1, Total: 25
+[12-Dec-2024 12:23:09 Europe/Berlin] Created order ID: 36
+[12-Dec-2024 12:23:09 Europe/Berlin] Adding item to order: Array
+(
+    [item_id] => 47
+    [order_id] => 35
+    [product_id] => 3
+    [quantity] => 1
+    [unit_price] => 25.00
+    [subtotal] => 25.00
+    [name] => Iced Tea
+    [price] => 25.00
+)
+
+[12-Dec-2024 12:23:09 Europe/Berlin] Order placement completed successfully
+[12-Dec-2024 12:23:44 Europe/Berlin] Starting order placement for user: 8
+[12-Dec-2024 12:23:44 Europe/Berlin] Cart items: Array
+(
+    [0] => Array
+        (
+            [item_id] => 49
+            [order_id] => 37
+            [product_id] => 1
+            [quantity] => 1
+            [unit_price] => 75.00
+            [subtotal] => 75.00
+            [name] => Chicken Adobo
+            [price] => 75.00
+        )
+
+)
+
+[12-Dec-2024 12:23:44 Europe/Berlin] Starting transaction for order placement
+[12-Dec-2024 12:23:44 Europe/Berlin] Inserting order - User: 8, Canteen: 1, Total: 75
+[12-Dec-2024 12:23:44 Europe/Berlin] Created order ID: 38
+[12-Dec-2024 12:23:44 Europe/Berlin] Adding item to order: Array
+(
+    [item_id] => 49
+    [order_id] => 37
+    [product_id] => 1
+    [quantity] => 1
+    [unit_price] => 75.00
+    [subtotal] => 75.00
+    [name] => Chicken Adobo
+    [price] => 75.00
+)
+
+[12-Dec-2024 12:23:44 Europe/Berlin] Order placement completed successfully
+[12-Dec-2024 12:23:57 Europe/Berlin] Starting order placement for user: 8
+[12-Dec-2024 12:23:57 Europe/Berlin] Cart items: Array
+(
+    [0] => Array
+        (
+            [item_id] => 51
+            [order_id] => 39
+            [product_id] => 2
+            [quantity] => 1
+            [unit_price] => 80.00
+            [subtotal] => 80.00
+            [name] => Sinigang
+            [price] => 80.00
+        )
+
+)
+
+[12-Dec-2024 12:23:57 Europe/Berlin] Starting transaction for order placement
+[12-Dec-2024 12:23:57 Europe/Berlin] Inserting order - User: 8, Canteen: 1, Total: 80
+[12-Dec-2024 12:23:57 Europe/Berlin] Created order ID: 40
+[12-Dec-2024 12:23:57 Europe/Berlin] Adding item to order: Array
+(
+    [item_id] => 51
+    [order_id] => 39
+    [product_id] => 2
+    [quantity] => 1
+    [unit_price] => 80.00
+    [subtotal] => 80.00
+    [name] => Sinigang
+    [price] => 80.00
+)
+
+[12-Dec-2024 12:23:57 Europe/Berlin] Order placement completed successfully
+[12-Dec-2024 12:25:37 Europe/Berlin] Session data: Array
+(
+    [user_id] => 8
+    [username] => Levi
+    [email] => Levi@wmsu.edu.ph
+    [given_name] => Levi
+    [last_name] => Levi
+    [role] => student
+    [last_order] => Array
+        (
+            [order_id] => 40
+            [queue_number] => 202412120040
+            [canteen_name] => Main Canteen
+        )
+
+)
+
+[12-Dec-2024 12:25:37 Europe/Berlin] Database connection established successfully
+[12-Dec-2024 12:25:37 Europe/Berlin] Starting order placement for user: 8
+[12-Dec-2024 12:25:37 Europe/Berlin] Getting cart items for user_id: 8
+[12-Dec-2024 12:25:37 Europe/Berlin] Found 1 items in cart
+[12-Dec-2024 12:25:37 Europe/Berlin] Cart items: Array
+(
+    [0] => Array
+        (
+            [item_id] => 53
+            [order_id] => 41
+            [product_id] => 2
+            [quantity] => 1
+            [unit_price] => 80.00
+            [subtotal] => 80.00
+            [name] => Sinigang
+            [price] => 80.00
+        )
+
+)
+
+[12-Dec-2024 12:25:37 Europe/Berlin] Retrieved cart items: Array
+(
+    [0] => Array
+        (
+            [item_id] => 53
+            [order_id] => 41
+            [product_id] => 2
+            [quantity] => 1
+            [unit_price] => 80.00
+            [subtotal] => 80.00
+            [name] => Sinigang
+            [price] => 80.00
+        )
+
+)
+
+[12-Dec-2024 12:25:37 Europe/Berlin] Stock check for product 2: Array
+(
+    [quantity] => 23
+    [last_restock] => 2024-12-12 17:37:46
+    [status] => In Stock
+)
+
+[12-Dec-2024 12:25:37 Europe/Berlin] Attempting to place order...
+[12-Dec-2024 12:25:37 Europe/Berlin] Starting transaction for order placement
+[12-Dec-2024 12:25:37 Europe/Berlin] Inserting order - User: 8, Canteen: 1, Total: 80
+[12-Dec-2024 12:25:37 Europe/Berlin] Created order ID: 42
+[12-Dec-2024 12:25:37 Europe/Berlin] Adding item to order: Array
+(
+    [item_id] => 53
+    [order_id] => 41
+    [product_id] => 2
+    [quantity] => 1
+    [unit_price] => 80.00
+    [subtotal] => 80.00
+    [name] => Sinigang
+    [price] => 80.00
+)
+
+[12-Dec-2024 12:25:37 Europe/Berlin] Order placement completed successfully
+[12-Dec-2024 12:25:37 Europe/Berlin] Order result: Array
+(
+    [success] => 1
+    [order_id] => 42
+    [queue_number] => 202412120042
+    [canteen_name] => Main Canteen
+)
+
+[12-Dec-2024 12:25:37 Europe/Berlin] Updating stock quantities...
+[12-Dec-2024 12:25:37 Europe/Berlin] Clearing cart...
+[12-Dec-2024 12:25:37 Europe/Berlin] Order completed successfully. Session updated with order info.
+[12-Dec-2024 12:27:54 Europe/Berlin] Session data: Array
+(
+    [user_id] => 8
+    [username] => Levi
+    [email] => Levi@wmsu.edu.ph
+    [given_name] => Levi
+    [last_name] => Levi
+    [role] => student
+)
+
+[12-Dec-2024 12:27:54 Europe/Berlin] Database connection established successfully
+[12-Dec-2024 12:27:54 Europe/Berlin] Starting order placement for user: 8
+[12-Dec-2024 12:27:54 Europe/Berlin] Getting cart items for user_id: 8
+[12-Dec-2024 12:27:54 Europe/Berlin] Found 1 items in cart
+[12-Dec-2024 12:27:54 Europe/Berlin] Cart items: Array
+(
+    [0] => Array
+        (
+            [item_id] => 55
+            [order_id] => 43
+            [product_id] => 2
+            [quantity] => 1
+            [unit_price] => 80.00
+            [subtotal] => 80.00
+            [name] => Sinigang
+            [price] => 80.00
+        )
+
+)
+
+[12-Dec-2024 12:27:54 Europe/Berlin] Retrieved cart items: Array
+(
+    [0] => Array
+        (
+            [item_id] => 55
+            [order_id] => 43
+            [product_id] => 2
+            [quantity] => 1
+            [unit_price] => 80.00
+            [subtotal] => 80.00
+            [name] => Sinigang
+            [price] => 80.00
+        )
+
+)
+
+[12-Dec-2024 12:27:54 Europe/Berlin] Stock check for product 2: Array
+(
+    [quantity] => 24
+    [last_restock] => 2024-12-12 17:37:46
+    [status] => In Stock
+)
+
+[12-Dec-2024 12:27:54 Europe/Berlin] Attempting to place order...
+[12-Dec-2024 12:27:54 Europe/Berlin] Starting transaction for order placement
+[12-Dec-2024 12:27:54 Europe/Berlin] Inserting order - User: 8, Canteen: 1, Total: 80
+[12-Dec-2024 12:27:54 Europe/Berlin] Created order ID: 45
+[12-Dec-2024 12:27:54 Europe/Berlin] Adding item to order: Array
+(
+    [item_id] => 55
+    [order_id] => 43
+    [product_id] => 2
+    [quantity] => 1
+    [unit_price] => 80.00
+    [subtotal] => 80.00
+    [name] => Sinigang
+    [price] => 80.00
+)
+
+[12-Dec-2024 12:27:54 Europe/Berlin] Order placement completed successfully
+[12-Dec-2024 12:27:54 Europe/Berlin] Order result: Array
+(
+    [success] => 1
+    [order_id] => 45
+    [queue_number] => 202412120045
+    [canteen_name] => Main Canteen
+)
+
+[12-Dec-2024 12:27:54 Europe/Berlin] Updating stock quantities...
+[12-Dec-2024 12:27:54 Europe/Berlin] Clearing cart...
+[12-Dec-2024 12:27:54 Europe/Berlin] Order completed successfully. Session updated with order info.
+[12-Dec-2024 12:31:49 Europe/Berlin] Session data: Array
+(
+    [user_id] => 8
+    [username] => Levi
+    [email] => Levi@wmsu.edu.ph
+    [given_name] => Levi
+    [last_name] => Levi
+    [role] => student
+    [last_order] => Array
+        (
+            [order_id] => 45
+            [queue_number] => 202412120045
+            [canteen_name] => Main Canteen
+        )
+
+)
+
+[12-Dec-2024 12:31:49 Europe/Berlin] Database connection established successfully
+[12-Dec-2024 12:31:49 Europe/Berlin] Starting order placement for user: 8
+[12-Dec-2024 12:31:49 Europe/Berlin] Getting cart items for user_id: 8
+[12-Dec-2024 12:31:49 Europe/Berlin] Found 1 items in cart
+[12-Dec-2024 12:31:49 Europe/Berlin] Cart items: Array
+(
+    [0] => Array
+        (
+            [item_id] => 58
+            [order_id] => 46
+            [product_id] => 1
+            [quantity] => 1
+            [unit_price] => 75.00
+            [subtotal] => 75.00
+            [name] => Chicken Adobo
+            [price] => 75.00
+        )
+
+)
+
+[12-Dec-2024 12:31:49 Europe/Berlin] Retrieved cart items: Array
+(
+    [0] => Array
+        (
+            [item_id] => 58
+            [order_id] => 46
+            [product_id] => 1
+            [quantity] => 1
+            [unit_price] => 75.00
+            [subtotal] => 75.00
+            [name] => Chicken Adobo
+            [price] => 75.00
+        )
+
+)
+
+[12-Dec-2024 12:31:49 Europe/Berlin] Stock check for product 1: Array
+(
+    [quantity] => 41
+    [last_restock] => 2024-12-12 17:37:46
+    [status] => In Stock
+)
+
+[12-Dec-2024 12:31:49 Europe/Berlin] Attempting to place order...
+[12-Dec-2024 12:31:49 Europe/Berlin] Starting transaction for order placement
+[12-Dec-2024 12:31:49 Europe/Berlin] Inserting order - User: 8, Canteen: 1, Total: 75
+[12-Dec-2024 12:31:49 Europe/Berlin] Created order ID: 47
+[12-Dec-2024 12:31:49 Europe/Berlin] Adding item to order: Array
+(
+    [item_id] => 58
+    [order_id] => 46
+    [product_id] => 1
+    [quantity] => 1
+    [unit_price] => 75.00
+    [subtotal] => 75.00
+    [name] => Chicken Adobo
+    [price] => 75.00
+)
+
+[12-Dec-2024 12:31:49 Europe/Berlin] Order placement completed successfully
+[12-Dec-2024 12:31:49 Europe/Berlin] Order result: Array
+(
+    [success] => 1
+    [order_id] => 47
+    [queue_number] => 202412120047
+    [canteen_name] => Main Canteen
+)
+
+[12-Dec-2024 12:31:49 Europe/Berlin] Updating stock quantities...
+[12-Dec-2024 12:31:49 Europe/Berlin] Clearing cart...
+[12-Dec-2024 12:31:49 Europe/Berlin] Order completed successfully. Session updated with order info.
+[12-Dec-2024 12:35:00 Europe/Berlin] Session data: Array
+(
+    [user_id] => 8
+    [username] => Levi
+    [email] => Levi@wmsu.edu.ph
+    [given_name] => Levi
+    [last_name] => Levi
+    [role] => student
+    [last_order] => Array
+        (
+            [order_id] => 47
+            [queue_number] => 202412120047
+            [canteen_name] => Main Canteen
+        )
+
+)
+
+[12-Dec-2024 12:35:00 Europe/Berlin] Database connection established successfully
+[12-Dec-2024 12:35:00 Europe/Berlin] Starting order placement for user: 8
+[12-Dec-2024 12:35:00 Europe/Berlin] Getting cart items for user_id: 8
+[12-Dec-2024 12:35:00 Europe/Berlin] Found 2 items in cart
+[12-Dec-2024 12:35:00 Europe/Berlin] Cart items: Array
+(
+    [0] => Array
+        (
+            [item_id] => 60
+            [order_id] => 48
+            [product_id] => 2
+            [quantity] => 1
+            [unit_price] => 80.00
+            [subtotal] => 80.00
+            [name] => Sinigang
+            [price] => 80.00
+        )
+
+    [1] => Array
+        (
+            [item_id] => 61
+            [order_id] => 48
+            [product_id] => 3
+            [quantity] => 2
+            [unit_price] => 25.00
+            [subtotal] => 50.00
+            [name] => Iced Tea
+            [price] => 25.00
+        )
+
+)
+
+[12-Dec-2024 12:35:00 Europe/Berlin] Retrieved cart items: Array
+(
+    [0] => Array
+        (
+            [item_id] => 60
+            [order_id] => 48
+            [product_id] => 2
+            [quantity] => 1
+            [unit_price] => 80.00
+            [subtotal] => 80.00
+            [name] => Sinigang
+            [price] => 80.00
+        )
+
+    [1] => Array
+        (
+            [item_id] => 61
+            [order_id] => 48
+            [product_id] => 3
+            [quantity] => 2
+            [unit_price] => 25.00
+            [subtotal] => 50.00
+            [name] => Iced Tea
+            [price] => 25.00
+        )
+
+)
+
+[12-Dec-2024 12:35:00 Europe/Berlin] Stock check for product 2: Array
+(
+    [quantity] => 25
+    [last_restock] => 2024-12-12 17:37:46
+    [status] => In Stock
+)
+
+[12-Dec-2024 12:35:00 Europe/Berlin] Stock check for product 3: Array
+(
+    [quantity] => 100
+    [last_restock] => 2024-12-12 17:37:46
+    [status] => In Stock
+)
+
+[12-Dec-2024 12:35:00 Europe/Berlin] Attempting to place order...
+[12-Dec-2024 12:35:00 Europe/Berlin] Starting transaction for order placement
+[12-Dec-2024 12:35:00 Europe/Berlin] Inserting order - User: 8, Canteen: 1, Total: 130
+[12-Dec-2024 12:35:00 Europe/Berlin] Created order ID: 49
+[12-Dec-2024 12:35:00 Europe/Berlin] Adding item to order: Array
+(
+    [item_id] => 60
+    [order_id] => 48
+    [product_id] => 2
+    [quantity] => 1
+    [unit_price] => 80.00
+    [subtotal] => 80.00
+    [name] => Sinigang
+    [price] => 80.00
+)
+
+[12-Dec-2024 12:35:00 Europe/Berlin] Adding item to order: Array
+(
+    [item_id] => 61
+    [order_id] => 48
+    [product_id] => 3
+    [quantity] => 2
+    [unit_price] => 25.00
+    [subtotal] => 50.00
+    [name] => Iced Tea
+    [price] => 25.00
+)
+
+[12-Dec-2024 12:35:00 Europe/Berlin] Order placement completed successfully
+[12-Dec-2024 12:35:00 Europe/Berlin] Order result: Array
+(
+    [success] => 1
+    [order_id] => 49
+    [queue_number] => 202412120049
+    [canteen_name] => Main Canteen
+)
+
+[12-Dec-2024 12:35:00 Europe/Berlin] Updating stock quantities...
+[12-Dec-2024 12:35:00 Europe/Berlin] Clearing cart...
+[12-Dec-2024 12:35:00 Europe/Berlin] Order completed successfully. Session updated with order info.
+[12-Dec-2024 12:36:07 Europe/Berlin] Session data: Array
+(
+    [user_id] => 8
+    [username] => Levi
+    [email] => Levi@wmsu.edu.ph
+    [given_name] => Levi
+    [last_name] => Levi
+    [role] => student
+    [last_order] => Array
+        (
+            [order_id] => 49
+            [queue_number] => 202412120049
+            [canteen_name] => Main Canteen
+        )
+
+)
+
+[12-Dec-2024 12:36:07 Europe/Berlin] Database connection established successfully
+[12-Dec-2024 12:36:07 Europe/Berlin] Starting order placement for user: 8
+[12-Dec-2024 12:36:07 Europe/Berlin] Getting cart items for user_id: 8
+[12-Dec-2024 12:36:07 Europe/Berlin] Found 1 items in cart
+[12-Dec-2024 12:36:07 Europe/Berlin] Cart items: Array
+(
+    [0] => Array
+        (
+            [item_id] => 64
+            [order_id] => 50
+            [product_id] => 1
+            [quantity] => 1
+            [unit_price] => 75.00
+            [subtotal] => 75.00
+            [name] => Chicken Adobo
+            [price] => 75.00
+        )
+
+)
+
+[12-Dec-2024 12:36:07 Europe/Berlin] Retrieved cart items: Array
+(
+    [0] => Array
+        (
+            [item_id] => 64
+            [order_id] => 50
+            [product_id] => 1
+            [quantity] => 1
+            [unit_price] => 75.00
+            [subtotal] => 75.00
+            [name] => Chicken Adobo
+            [price] => 75.00
+        )
+
+)
+
+[12-Dec-2024 12:36:07 Europe/Berlin] Stock check for product 1: Array
+(
+    [quantity] => 42
+    [last_restock] => 2024-12-12 17:37:46
+    [status] => In Stock
+)
+
+[12-Dec-2024 12:36:07 Europe/Berlin] Attempting to place order...
+[12-Dec-2024 12:36:07 Europe/Berlin] Starting transaction for order placement
+[12-Dec-2024 12:36:07 Europe/Berlin] Inserting order - User: 8, Canteen: 1, Total: 75
+[12-Dec-2024 12:36:07 Europe/Berlin] Created order ID: 51
+[12-Dec-2024 12:36:07 Europe/Berlin] Adding item to order: Array
+(
+    [item_id] => 64
+    [order_id] => 50
+    [product_id] => 1
+    [quantity] => 1
+    [unit_price] => 75.00
+    [subtotal] => 75.00
+    [name] => Chicken Adobo
+    [price] => 75.00
+)
+
+[12-Dec-2024 12:36:07 Europe/Berlin] Order placement completed successfully
+[12-Dec-2024 12:36:07 Europe/Berlin] Order result: Array
+(
+    [success] => 1
+    [order_id] => 51
+    [queue_number] => 202412120051
+    [canteen_name] => Main Canteen
+)
+
+[12-Dec-2024 12:36:07 Europe/Berlin] Updating stock quantities...
+[12-Dec-2024 12:36:07 Europe/Berlin] Clearing cart...
+[12-Dec-2024 12:36:07 Europe/Berlin] Order completed successfully. Session updated with order info.
+[12-Dec-2024 14:14:59 Europe/Berlin] Session data: Array
+(
+    [user_id] => 8
+    [username] => Levi
+    [email] => Levi@wmsu.edu.ph
+    [given_name] => Levi
+    [last_name] => Levi
+    [role] => student
+)
+
+[12-Dec-2024 14:14:59 Europe/Berlin] Database connection established successfully
+[12-Dec-2024 14:14:59 Europe/Berlin] Starting order placement for user: 8
+[12-Dec-2024 14:14:59 Europe/Berlin] Getting cart items for user_id: 8
+[12-Dec-2024 14:14:59 Europe/Berlin] Found 2 items in cart
+[12-Dec-2024 14:14:59 Europe/Berlin] Cart items: Array
+(
+    [0] => Array
+        (
+            [item_id] => 67
+            [order_id] => 52
+            [product_id] => 1
+            [quantity] => 1
+            [unit_price] => 75.00
+            [subtotal] => 75.00
+            [name] => Chicken Adobo
+            [price] => 75.00
+        )
+
+    [1] => Array
+        (
+            [item_id] => 66
+            [order_id] => 52
+            [product_id] => 3
+            [quantity] => 1
+            [unit_price] => 25.00
+            [subtotal] => 25.00
+            [name] => Iced Tea
+            [price] => 25.00
+        )
+
+)
+
+[12-Dec-2024 14:14:59 Europe/Berlin] Retrieved cart items: Array
+(
+    [0] => Array
+        (
+            [item_id] => 67
+            [order_id] => 52
+            [product_id] => 1
+            [quantity] => 1
+            [unit_price] => 75.00
+            [subtotal] => 75.00
+            [name] => Chicken Adobo
+            [price] => 75.00
+        )
+
+    [1] => Array
+        (
+            [item_id] => 66
+            [order_id] => 52
+            [product_id] => 3
+            [quantity] => 1
+            [unit_price] => 25.00
+            [subtotal] => 25.00
+            [name] => Iced Tea
+            [price] => 25.00
+        )
+
+)
+
+[12-Dec-2024 14:14:59 Europe/Berlin] Stock check for product 1: Array
+(
+    [quantity] => 43
+    [last_restock] => 2024-12-12 17:37:46
+    [status] => In Stock
+)
+
+[12-Dec-2024 14:14:59 Europe/Berlin] Stock check for product 3: Array
+(
+    [quantity] => 102
+    [last_restock] => 2024-12-12 17:37:46
+    [status] => In Stock
+)
+
+[12-Dec-2024 14:14:59 Europe/Berlin] Attempting to place order...
+[12-Dec-2024 14:14:59 Europe/Berlin] Starting transaction for order placement
+[12-Dec-2024 14:14:59 Europe/Berlin] Inserting order - User: 8, Canteen: 1, Total: 100
+[12-Dec-2024 14:14:59 Europe/Berlin] Created order ID: 53
+[12-Dec-2024 14:14:59 Europe/Berlin] Adding item to order: Array
+(
+    [item_id] => 67
+    [order_id] => 52
+    [product_id] => 1
+    [quantity] => 1
+    [unit_price] => 75.00
+    [subtotal] => 75.00
+    [name] => Chicken Adobo
+    [price] => 75.00
+)
+
+[12-Dec-2024 14:14:59 Europe/Berlin] Adding item to order: Array
+(
+    [item_id] => 66
+    [order_id] => 52
+    [product_id] => 3
+    [quantity] => 1
+    [unit_price] => 25.00
+    [subtotal] => 25.00
+    [name] => Iced Tea
+    [price] => 25.00
+)
+
+[12-Dec-2024 14:14:59 Europe/Berlin] Order placement completed successfully
+[12-Dec-2024 14:14:59 Europe/Berlin] Order result: Array
+(
+    [success] => 1
+    [order_id] => 53
+    [queue_number] => 202412120053
+    [canteen_name] => Main Canteen
+)
+
+[12-Dec-2024 14:14:59 Europe/Berlin] Updating stock quantities...
+[12-Dec-2024 14:16:01 Europe/Berlin] Session data: Array
+(
+    [user_id] => 8
+    [username] => Levi
+    [email] => Levi@wmsu.edu.ph
+    [given_name] => Levi
+    [last_name] => Levi
+    [role] => student
+    [last_order] => Array
+        (
+            [order_id] => 53
+            [queue_number] => 202412120053
+            [canteen_name] => Main Canteen
+        )
+
+)
+
+[12-Dec-2024 14:16:01 Europe/Berlin] Database connection established successfully
+[12-Dec-2024 14:16:01 Europe/Berlin] Starting order placement for user: 8
+[12-Dec-2024 14:16:01 Europe/Berlin] Getting cart items for user_id: 8
+[12-Dec-2024 14:16:01 Europe/Berlin] Found 1 items in cart
+[12-Dec-2024 14:16:01 Europe/Berlin] Cart items: Array
+(
+    [0] => Array
+        (
+            [item_id] => 70
+            [order_id] => 54
+            [product_id] => 4
+            [quantity] => 1
+            [unit_price] => 45.00
+            [subtotal] => 45.00
+            [name] => Sandwich
+            [price] => 45.00
+        )
+
+)
+
+[12-Dec-2024 14:16:01 Europe/Berlin] Retrieved cart items: Array
+(
+    [0] => Array
+        (
+            [item_id] => 70
+            [order_id] => 54
+            [product_id] => 4
+            [quantity] => 1
+            [unit_price] => 45.00
+            [subtotal] => 45.00
+            [name] => Sandwich
+            [price] => 45.00
+        )
+
+)
+
+[12-Dec-2024 14:16:01 Europe/Berlin] Stock check for product 4: Array
+(
+    [quantity] => 40
+    [last_restock] => 2024-12-12 17:37:46
+    [status] => In Stock
+)
+
+[12-Dec-2024 14:16:01 Europe/Berlin] Attempting to place order...
+[12-Dec-2024 14:16:01 Europe/Berlin] Starting transaction for order placement
+[12-Dec-2024 14:16:01 Europe/Berlin] Inserting order - User: 8, Canteen: 2, Total: 45
+[12-Dec-2024 14:16:01 Europe/Berlin] Created order ID: 55
+[12-Dec-2024 14:16:01 Europe/Berlin] Adding item to order: Array
+(
+    [item_id] => 70
+    [order_id] => 54
+    [product_id] => 4
+    [quantity] => 1
+    [unit_price] => 45.00
+    [subtotal] => 45.00
+    [name] => Sandwich
+    [price] => 45.00
+)
+
+[12-Dec-2024 14:16:01 Europe/Berlin] Order placement completed successfully
+[12-Dec-2024 14:16:01 Europe/Berlin] Order result: Array
+(
+    [success] => 1
+    [order_id] => 55
+    [queue_number] => 202412120055
+    [canteen_name] => CCS Canteen Test
+)
+
+[12-Dec-2024 14:16:01 Europe/Berlin] Updating stock quantities...
+[12-Dec-2024 14:16:01 Europe/Berlin] Clearing cart...
+[12-Dec-2024 14:16:01 Europe/Berlin] Order completed successfully. Session updated with order info.
+[12-Dec-2024 14:18:45 Europe/Berlin] Session data: Array
+(
+    [user_id] => 8
+    [username] => Levi
+    [email] => Levi@wmsu.edu.ph
+    [given_name] => Levi
+    [last_name] => Levi
+    [role] => student
+    [last_order] => Array
+        (
+            [order_id] => 55
+            [queue_number] => 202412120055
+            [canteen_name] => CCS Canteen Test
+        )
+
+)
+
+[12-Dec-2024 14:18:45 Europe/Berlin] Database connection established successfully
+[12-Dec-2024 14:18:45 Europe/Berlin] Starting order placement for user: 8
+[12-Dec-2024 14:18:45 Europe/Berlin] Getting cart items for user_id: 8
+[12-Dec-2024 14:18:45 Europe/Berlin] Found 1 items in cart
+[12-Dec-2024 14:18:45 Europe/Berlin] Cart items: Array
+(
+    [0] => Array
+        (
+            [item_id] => 72
+            [order_id] => 56
+            [product_id] => 3
+            [quantity] => 2
+            [unit_price] => 25.00
+            [subtotal] => 50.00
+            [name] => Iced Tea
+            [price] => 25.00
+        )
+
+)
+
+[12-Dec-2024 14:18:45 Europe/Berlin] Retrieved cart items: Array
+(
+    [0] => Array
+        (
+            [item_id] => 72
+            [order_id] => 56
+            [product_id] => 3
+            [quantity] => 2
+            [unit_price] => 25.00
+            [subtotal] => 50.00
+            [name] => Iced Tea
+            [price] => 25.00
+        )
+
+)
+
+[12-Dec-2024 14:18:45 Europe/Berlin] Stock check for product 3: Array
+(
+    [quantity] => 103
+    [last_restock] => 2024-12-12 17:37:46
+    [status] => In Stock
+)
+
+[12-Dec-2024 14:18:45 Europe/Berlin] Attempting to place order...
+[12-Dec-2024 14:18:45 Europe/Berlin] Starting transaction for order placement
+[12-Dec-2024 14:18:45 Europe/Berlin] Inserting order - User: 8, Canteen: 1, Total: 50
+[12-Dec-2024 14:18:45 Europe/Berlin] Created order ID: 57
+[12-Dec-2024 14:18:45 Europe/Berlin] Adding item to order: Array
+(
+    [item_id] => 72
+    [order_id] => 56
+    [product_id] => 3
+    [quantity] => 2
+    [unit_price] => 25.00
+    [subtotal] => 50.00
+    [name] => Iced Tea
+    [price] => 25.00
+)
+
+[12-Dec-2024 14:18:45 Europe/Berlin] Order placement completed successfully
+[12-Dec-2024 14:18:45 Europe/Berlin] Order result: Array
+(
+    [success] => 1
+    [order_id] => 57
+    [queue_number] => 202412120057
+    [canteen_name] => Main Canteen
+)
+
+[12-Dec-2024 14:18:45 Europe/Berlin] Updating stock quantities...
+[12-Dec-2024 14:18:45 Europe/Berlin] Clearing cart...
+[12-Dec-2024 14:18:45 Europe/Berlin] Order completed successfully. Session updated with order info.
+[12-Dec-2024 14:19:07 Europe/Berlin] Session data: Array
+(
+    [user_id] => 8
+    [username] => Levi
+    [email] => Levi@wmsu.edu.ph
+    [given_name] => Levi
+    [last_name] => Levi
+    [role] => student
+    [last_order] => Array
+        (
+            [order_id] => 57
+            [queue_number] => 202412120057
+            [canteen_name] => Main Canteen
+        )
+
+)
+
+[12-Dec-2024 14:19:07 Europe/Berlin] Database connection established successfully
+[12-Dec-2024 14:19:07 Europe/Berlin] Starting order placement for user: 8
+[12-Dec-2024 14:19:07 Europe/Berlin] Getting cart items for user_id: 8
+[12-Dec-2024 14:19:07 Europe/Berlin] Found 1 items in cart
+[12-Dec-2024 14:19:07 Europe/Berlin] Cart items: Array
+(
+    [0] => Array
+        (
+            [item_id] => 73
+            [order_id] => 57
+            [product_id] => 3
+            [quantity] => 2
+            [unit_price] => 25.00
+            [subtotal] => 50.00
+            [name] => Iced Tea
+            [price] => 25.00
+        )
+
+)
+
+[12-Dec-2024 14:19:07 Europe/Berlin] Retrieved cart items: Array
+(
+    [0] => Array
+        (
+            [item_id] => 73
+            [order_id] => 57
+            [product_id] => 3
+            [quantity] => 2
+            [unit_price] => 25.00
+            [subtotal] => 50.00
+            [name] => Iced Tea
+            [price] => 25.00
+        )
+
+)
+
+[12-Dec-2024 14:19:07 Europe/Berlin] Stock check for product 3: Array
+(
+    [quantity] => 105
+    [last_restock] => 2024-12-12 17:37:46
+    [status] => In Stock
+)
+
+[12-Dec-2024 14:19:07 Europe/Berlin] Attempting to place order...
+[12-Dec-2024 14:19:07 Europe/Berlin] Starting transaction for order placement
+[12-Dec-2024 14:19:07 Europe/Berlin] Inserting order - User: 8, Canteen: 1, Total: 50
+[12-Dec-2024 14:19:07 Europe/Berlin] Created order ID: 58
+[12-Dec-2024 14:19:07 Europe/Berlin] Adding item to order: Array
+(
+    [item_id] => 73
+    [order_id] => 57
+    [product_id] => 3
+    [quantity] => 2
+    [unit_price] => 25.00
+    [subtotal] => 50.00
+    [name] => Iced Tea
+    [price] => 25.00
+)
+
+[12-Dec-2024 14:19:07 Europe/Berlin] Order placement completed successfully
+[12-Dec-2024 14:19:07 Europe/Berlin] Order result: Array
+(
+    [success] => 1
+    [order_id] => 58
+    [queue_number] => 202412120058
+    [canteen_name] => Main Canteen
+)
+
+[12-Dec-2024 14:19:07 Europe/Berlin] Updating stock quantities...
+[12-Dec-2024 14:19:07 Europe/Berlin] Clearing cart...
+[12-Dec-2024 14:19:07 Europe/Berlin] Order completed successfully. Session updated with order info.
+[12-Dec-2024 14:19:54 Europe/Berlin] Session data: Array
+(
+    [user_id] => 8
+    [username] => Levi
+    [email] => Levi@wmsu.edu.ph
+    [given_name] => Levi
+    [last_name] => Levi
+    [role] => student
+    [last_order] => Array
+        (
+            [order_id] => 58
+            [queue_number] => 202412120058
+            [canteen_name] => Main Canteen
+        )
+
+)
+
+[12-Dec-2024 14:19:54 Europe/Berlin] Database connection established successfully
+[12-Dec-2024 14:19:54 Europe/Berlin] Starting order placement for user: 8
+[12-Dec-2024 14:19:54 Europe/Berlin] Getting cart items for user_id: 8
+[12-Dec-2024 14:19:54 Europe/Berlin] Found 3 items in cart
+[12-Dec-2024 14:19:54 Europe/Berlin] Cart items: Array
+(
+    [0] => Array
+        (
+            [item_id] => 73
+            [order_id] => 57
+            [product_id] => 3
+            [quantity] => 2
+            [unit_price] => 25.00
+            [subtotal] => 50.00
+            [name] => Iced Tea
+            [price] => 25.00
+        )
+
+    [1] => Array
+        (
+            [item_id] => 74
+            [order_id] => 58
+            [product_id] => 3
+            [quantity] => 2
+            [unit_price] => 25.00
+            [subtotal] => 50.00
+            [name] => Iced Tea
+            [price] => 25.00
+        )
+
+    [2] => Array
+        (
+            [item_id] => 75
+            [order_id] => 58
+            [product_id] => 4
+            [quantity] => 1
+            [unit_price] => 45.00
+            [subtotal] => 45.00
+            [name] => Sandwich
+            [price] => 45.00
+        )
+
+)
+
+[12-Dec-2024 14:19:54 Europe/Berlin] Retrieved cart items: Array
+(
+    [0] => Array
+        (
+            [item_id] => 73
+            [order_id] => 57
+            [product_id] => 3
+            [quantity] => 2
+            [unit_price] => 25.00
+            [subtotal] => 50.00
+            [name] => Iced Tea
+            [price] => 25.00
+        )
+
+    [1] => Array
+        (
+            [item_id] => 74
+            [order_id] => 58
+            [product_id] => 3
+            [quantity] => 2
+            [unit_price] => 25.00
+            [subtotal] => 50.00
+            [name] => Iced Tea
+            [price] => 25.00
+        )
+
+    [2] => Array
+        (
+            [item_id] => 75
+            [order_id] => 58
+            [product_id] => 4
+            [quantity] => 1
+            [unit_price] => 45.00
+            [subtotal] => 45.00
+            [name] => Sandwich
+            [price] => 45.00
+        )
+
+)
+
+[12-Dec-2024 14:19:54 Europe/Berlin] Stock check for product 3: Array
+(
+    [quantity] => 107
+    [last_restock] => 2024-12-12 17:37:46
+    [status] => In Stock
+)
+
+[12-Dec-2024 14:19:54 Europe/Berlin] Stock check for product 3: Array
+(
+    [quantity] => 107
+    [last_restock] => 2024-12-12 17:37:46
+    [status] => In Stock
+)
+
+[12-Dec-2024 14:19:54 Europe/Berlin] Stock check for product 4: Array
+(
+    [quantity] => 41
+    [last_restock] => 2024-12-12 17:37:46
+    [status] => In Stock
+)
+
+[12-Dec-2024 14:19:54 Europe/Berlin] Attempting to place order...
+[12-Dec-2024 14:19:54 Europe/Berlin] Starting transaction for order placement
+[12-Dec-2024 14:19:54 Europe/Berlin] Inserting order - User: 8, Canteen: 1, Total: 145
+[12-Dec-2024 14:19:54 Europe/Berlin] Created order ID: 59
+[12-Dec-2024 14:19:54 Europe/Berlin] Adding item to order: Array
+(
+    [item_id] => 73
+    [order_id] => 57
+    [product_id] => 3
+    [quantity] => 2
+    [unit_price] => 25.00
+    [subtotal] => 50.00
+    [name] => Iced Tea
+    [price] => 25.00
+)
+
+[12-Dec-2024 14:19:54 Europe/Berlin] Adding item to order: Array
+(
+    [item_id] => 74
+    [order_id] => 58
+    [product_id] => 3
+    [quantity] => 2
+    [unit_price] => 25.00
+    [subtotal] => 50.00
+    [name] => Iced Tea
+    [price] => 25.00
+)
+
+[12-Dec-2024 14:19:54 Europe/Berlin] Adding item to order: Array
+(
+    [item_id] => 75
+    [order_id] => 58
+    [product_id] => 4
+    [quantity] => 1
+    [unit_price] => 45.00
+    [subtotal] => 45.00
+    [name] => Sandwich
+    [price] => 45.00
+)
+
+[12-Dec-2024 14:19:54 Europe/Berlin] Order placement completed successfully
+[12-Dec-2024 14:19:54 Europe/Berlin] Order result: Array
+(
+    [success] => 1
+    [order_id] => 59
+    [queue_number] => 202412120059
+    [canteen_name] => Main Canteen
+)
+
+[12-Dec-2024 14:19:54 Europe/Berlin] Updating stock quantities...
+[12-Dec-2024 14:19:54 Europe/Berlin] Clearing cart...
+[12-Dec-2024 14:19:54 Europe/Berlin] Order completed successfully. Session updated with order info.
+[12-Dec-2024 14:25:45 Europe/Berlin] Session data: Array
+(
+    [user_id] => 8
+    [username] => Levi
+    [email] => Levi@wmsu.edu.ph
+    [given_name] => Levi
+    [last_name] => Levi
+    [role] => student
+    [last_order] => Array
+        (
+            [order_id] => 59
+            [queue_number] => 202412120059
+            [canteen_name] => Main Canteen
+        )
+
+)
+
+[12-Dec-2024 14:25:45 Europe/Berlin] Database connection established successfully
+[12-Dec-2024 14:25:45 Europe/Berlin] Starting order placement for user: 8
+[12-Dec-2024 14:25:45 Europe/Berlin] Getting cart items for user_id: 8
+[12-Dec-2024 14:25:45 Europe/Berlin] Found 6 items in cart
+[12-Dec-2024 14:25:45 Europe/Berlin] Cart items: Array
+(
+    [0] => Array
+        (
+            [item_id] => 73
+            [order_id] => 57
+            [product_id] => 3
+            [quantity] => 2
+            [unit_price] => 25.00
+            [subtotal] => 50.00
+            [name] => Iced Tea
+            [price] => 25.00
+        )
+
+    [1] => Array
+        (
+            [item_id] => 74
+            [order_id] => 58
+            [product_id] => 3
+            [quantity] => 2
+            [unit_price] => 25.00
+            [subtotal] => 50.00
+            [name] => Iced Tea
+            [price] => 25.00
+        )
+
+    [2] => Array
+        (
+            [item_id] => 75
+            [order_id] => 58
+            [product_id] => 4
+            [quantity] => 1
+            [unit_price] => 45.00
+            [subtotal] => 45.00
+            [name] => Sandwich
+            [price] => 45.00
+        )
+
+    [3] => Array
+        (
+            [item_id] => 76
+            [order_id] => 59
+            [product_id] => 3
+            [quantity] => 3
+            [unit_price] => 25.00
+            [subtotal] => 75.00
+            [name] => Iced Tea
+            [price] => 25.00
+        )
+
+    [4] => Array
+        (
+            [item_id] => 77
+            [order_id] => 59
+            [product_id] => 3
+            [quantity] => 3
+            [unit_price] => 25.00
+            [subtotal] => 75.00
+            [name] => Iced Tea
+            [price] => 25.00
+        )
+
+    [5] => Array
+        (
+            [item_id] => 78
+            [order_id] => 59
+            [product_id] => 4
+            [quantity] => 1
+            [unit_price] => 45.00
+            [subtotal] => 45.00
+            [name] => Sandwich
+            [price] => 45.00
+        )
+
+)
+
+[12-Dec-2024 14:25:45 Europe/Berlin] Retrieved cart items: Array
+(
+    [0] => Array
+        (
+            [item_id] => 73
+            [order_id] => 57
+            [product_id] => 3
+            [quantity] => 2
+            [unit_price] => 25.00
+            [subtotal] => 50.00
+            [name] => Iced Tea
+            [price] => 25.00
+        )
+
+    [1] => Array
+        (
+            [item_id] => 74
+            [order_id] => 58
+            [product_id] => 3
+            [quantity] => 2
+            [unit_price] => 25.00
+            [subtotal] => 50.00
+            [name] => Iced Tea
+            [price] => 25.00
+        )
+
+    [2] => Array
+        (
+            [item_id] => 75
+            [order_id] => 58
+            [product_id] => 4
+            [quantity] => 1
+            [unit_price] => 45.00
+            [subtotal] => 45.00
+            [name] => Sandwich
+            [price] => 45.00
+        )
+
+    [3] => Array
+        (
+            [item_id] => 76
+            [order_id] => 59
+            [product_id] => 3
+            [quantity] => 3
+            [unit_price] => 25.00
+            [subtotal] => 75.00
+            [name] => Iced Tea
+            [price] => 25.00
+        )
+
+    [4] => Array
+        (
+            [item_id] => 77
+            [order_id] => 59
+            [product_id] => 3
+            [quantity] => 3
+            [unit_price] => 25.00
+            [subtotal] => 75.00
+            [name] => Iced Tea
+            [price] => 25.00
+        )
+
+    [5] => Array
+        (
+            [item_id] => 78
+            [order_id] => 59
+            [product_id] => 4
+            [quantity] => 1
+            [unit_price] => 45.00
+            [subtotal] => 45.00
+            [name] => Sandwich
+            [price] => 45.00
+        )
+
+)
+
+[12-Dec-2024 14:25:45 Europe/Berlin] Stock check for product 3: Array
+(
+    [quantity] => 111
+    [last_restock] => 2024-12-12 17:37:46
+    [status] => In Stock
+)
+
+[12-Dec-2024 14:25:45 Europe/Berlin] Stock check for product 3: Array
+(
+    [quantity] => 111
+    [last_restock] => 2024-12-12 17:37:46
+    [status] => In Stock
+)
+
+[12-Dec-2024 14:25:45 Europe/Berlin] Stock check for product 4: Array
+(
+    [quantity] => 42
+    [last_restock] => 2024-12-12 17:37:46
+    [status] => In Stock
+)
+
+[12-Dec-2024 14:25:45 Europe/Berlin] Stock check for product 3: Array
+(
+    [quantity] => 111
+    [last_restock] => 2024-12-12 17:37:46
+    [status] => In Stock
+)
+
+[12-Dec-2024 14:25:45 Europe/Berlin] Stock check for product 3: Array
+(
+    [quantity] => 111
+    [last_restock] => 2024-12-12 17:37:46
+    [status] => In Stock
+)
+
+[12-Dec-2024 14:25:45 Europe/Berlin] Stock check for product 4: Array
+(
+    [quantity] => 42
+    [last_restock] => 2024-12-12 17:37:46
+    [status] => In Stock
+)
+
+[12-Dec-2024 14:25:45 Europe/Berlin] Attempting to place order...
+[12-Dec-2024 14:25:45 Europe/Berlin] Starting transaction for order placement
+[12-Dec-2024 14:25:45 Europe/Berlin] Inserting order - User: 8, Canteen: 1, Total: 340
+[12-Dec-2024 14:25:45 Europe/Berlin] Created order ID: 61
+[12-Dec-2024 14:25:45 Europe/Berlin] Adding item to order: Array
+(
+    [item_id] => 73
+    [order_id] => 57
+    [product_id] => 3
+    [quantity] => 2
+    [unit_price] => 25.00
+    [subtotal] => 50.00
+    [name] => Iced Tea
+    [price] => 25.00
+)
+
+[12-Dec-2024 14:25:45 Europe/Berlin] Adding item to order: Array
+(
+    [item_id] => 74
+    [order_id] => 58
+    [product_id] => 3
+    [quantity] => 2
+    [unit_price] => 25.00
+    [subtotal] => 50.00
+    [name] => Iced Tea
+    [price] => 25.00
+)
+
+[12-Dec-2024 14:25:45 Europe/Berlin] Adding item to order: Array
+(
+    [item_id] => 75
+    [order_id] => 58
+    [product_id] => 4
+    [quantity] => 1
+    [unit_price] => 45.00
+    [subtotal] => 45.00
+    [name] => Sandwich
+    [price] => 45.00
+)
+
+[12-Dec-2024 14:25:45 Europe/Berlin] Adding item to order: Array
+(
+    [item_id] => 76
+    [order_id] => 59
+    [product_id] => 3
+    [quantity] => 3
+    [unit_price] => 25.00
+    [subtotal] => 75.00
+    [name] => Iced Tea
+    [price] => 25.00
+)
+
+[12-Dec-2024 14:25:45 Europe/Berlin] Adding item to order: Array
+(
+    [item_id] => 77
+    [order_id] => 59
+    [product_id] => 3
+    [quantity] => 3
+    [unit_price] => 25.00
+    [subtotal] => 75.00
+    [name] => Iced Tea
+    [price] => 25.00
+)
+
+[12-Dec-2024 14:25:45 Europe/Berlin] Adding item to order: Array
+(
+    [item_id] => 78
+    [order_id] => 59
+    [product_id] => 4
+    [quantity] => 1
+    [unit_price] => 45.00
+    [subtotal] => 45.00
+    [name] => Sandwich
+    [price] => 45.00
+)
+
+[12-Dec-2024 14:25:45 Europe/Berlin] Order placement completed successfully
+[12-Dec-2024 14:25:45 Europe/Berlin] Order result: Array
+(
+    [success] => 1
+    [order_id] => 61
+    [queue_number] => 202412120061
+    [canteen_name] => Main Canteen
+)
+
+[12-Dec-2024 14:25:45 Europe/Berlin] Updating stock quantities...
+[12-Dec-2024 14:25:45 Europe/Berlin] Stack trace: #0 C:\xampp\htdocs\minikioskk\classes\orderClass.php(667): PDOStatement->execute(Array)
+#1 C:\xampp\htdocs\minikioskk\ajax\placeOrder.php(66): Order->clearCart(8)
+#2 {main}
+[12-Dec-2024 15:00:48 Europe/Berlin] Session data: Array
+(
+    [user_id] => 3
+    [username] => Rei
+    [role] => student
+)
+
+[12-Dec-2024 15:00:48 Europe/Berlin] Database connection established successfully
+[12-Dec-2024 15:00:48 Europe/Berlin] Starting order placement for user: 3
+[12-Dec-2024 15:00:48 Europe/Berlin] Found 1 items in cart for user 3
+[12-Dec-2024 15:00:48 Europe/Berlin] Retrieved cart items: Array
+(
+    [0] => Array
+        (
+            [cart_item_id] => 4
+            [cart_id] => 3
+            [product_id] => 3
+            [quantity] => 1
+            [unit_price] => 25.00
+            [subtotal] => 25.00
+            [created_at] => 2024-12-12 22:00:39
+            [name] => Iced Tea
+            [description] => Refreshing cold tea
+            [price] => 25.00
+        )
+
+)
+
+[12-Dec-2024 15:00:48 Europe/Berlin] Stock check for product 3: Array
+(
+    [quantity] => 100
+    [last_restock] => 2024-12-12 21:32:50
+    [status] => In Stock
+)
+
+[12-Dec-2024 15:00:48 Europe/Berlin] Attempting to place order...
+[12-Dec-2024 15:00:48 Europe/Berlin] Error placing order: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'queue_number' in 'field list'
+[12-Dec-2024 15:00:48 Europe/Berlin] Order placement error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'queue_number' in 'field list'
+[12-Dec-2024 15:00:48 Europe/Berlin] Stack trace: #0 C:\xampp\htdocs\minikioskk\classes\orderClass.php(509): PDOStatement->execute(Array)
+#1 C:\xampp\htdocs\minikioskk\ajax\placeOrder.php(49): Order->placeOrder('3', Array)
+#2 {main}
+[12-Dec-2024 15:03:10 Europe/Berlin] Session data: Array
+(
+    [user_id] => 3
+    [username] => Rei
+    [role] => student
+)
+
+[12-Dec-2024 15:03:10 Europe/Berlin] Database connection established successfully
+[12-Dec-2024 15:03:10 Europe/Berlin] Starting order placement for user: 3
+[12-Dec-2024 15:03:10 Europe/Berlin] Found 1 items in cart for user 3
+[12-Dec-2024 15:03:10 Europe/Berlin] Retrieved cart items: Array
+(
+    [0] => Array
+        (
+            [cart_item_id] => 4
+            [cart_id] => 3
+            [product_id] => 3
+            [quantity] => 1
+            [unit_price] => 25.00
+            [subtotal] => 25.00
+            [created_at] => 2024-12-12 22:00:39
+            [name] => Iced Tea
+            [description] => Refreshing cold tea
+            [price] => 25.00
+        )
+
+)
+
+[12-Dec-2024 15:03:10 Europe/Berlin] Stock check for product 3: Array
+(
+    [quantity] => 100
+    [last_restock] => 2024-12-12 21:32:50
+    [status] => In Stock
+)
+
+[12-Dec-2024 15:03:10 Europe/Berlin] Attempting to place order...
+[12-Dec-2024 15:03:10 Europe/Berlin] Error placing order: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'queue_number' in 'field list'
+[12-Dec-2024 15:03:10 Europe/Berlin] Order placement error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'queue_number' in 'field list'
+[12-Dec-2024 15:03:10 Europe/Berlin] Stack trace: #0 C:\xampp\htdocs\minikioskk\classes\orderClass.php(513): PDOStatement->execute(Array)
+#1 C:\xampp\htdocs\minikioskk\ajax\placeOrder.php(49): Order->placeOrder('3', Array)
+#2 {main}
+[12-Dec-2024 15:03:27 Europe/Berlin] Session data: Array
+(
+    [user_id] => 3
+    [username] => Rei
+    [role] => student
+)
+
+[12-Dec-2024 15:03:27 Europe/Berlin] Database connection established successfully
+[12-Dec-2024 15:03:27 Europe/Berlin] Starting order placement for user: 3
+[12-Dec-2024 15:03:27 Europe/Berlin] Found 1 items in cart for user 3
+[12-Dec-2024 15:03:27 Europe/Berlin] Retrieved cart items: Array
+(
+    [0] => Array
+        (
+            [cart_item_id] => 4
+            [cart_id] => 3
+            [product_id] => 3
+            [quantity] => 1
+            [unit_price] => 25.00
+            [subtotal] => 25.00
+            [created_at] => 2024-12-12 22:00:39
+            [name] => Iced Tea
+            [description] => Refreshing cold tea
+            [price] => 25.00
+        )
+
+)
+
+[12-Dec-2024 15:03:27 Europe/Berlin] Stock check for product 3: Array
+(
+    [quantity] => 100
+    [last_restock] => 2024-12-12 21:32:50
+    [status] => In Stock
+)
+
+[12-Dec-2024 15:03:27 Europe/Berlin] Attempting to place order...
+[12-Dec-2024 15:03:27 Europe/Berlin] Error placing order: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'queue_number' in 'field list'
+[12-Dec-2024 15:03:27 Europe/Berlin] Order placement error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'queue_number' in 'field list'
+[12-Dec-2024 15:03:27 Europe/Berlin] Stack trace: #0 C:\xampp\htdocs\minikioskk\classes\orderClass.php(513): PDOStatement->execute(Array)
+#1 C:\xampp\htdocs\minikioskk\ajax\placeOrder.php(49): Order->placeOrder('3', Array)
+#2 {main}
+[12-Dec-2024 15:13:59 Europe/Berlin] Session data: Array
+(
+    [user_id] => 4
+    [username] => Reiee
+    [email] => johnmagno@wmsu.edu.ph
+    [given_name] => RIEI
+    [last_name] => RIE
+    [role] => student
+)
+
+[12-Dec-2024 15:13:59 Europe/Berlin] Database connection established successfully
+[12-Dec-2024 15:13:59 Europe/Berlin] Starting order placement for user: 4
+[12-Dec-2024 15:13:59 Europe/Berlin] Found 1 items in cart for user 4
+[12-Dec-2024 15:13:59 Europe/Berlin] Retrieved cart items: Array
+(
+    [0] => Array
+        (
+            [cart_item_id] => 5
+            [cart_id] => 4
+            [product_id] => 1
+            [quantity] => 1
+            [unit_price] => 75.00
+            [subtotal] => 75.00
+            [created_at] => 2024-12-12 22:13:52
+            [name] => Chicken Adobo
+            [description] => Classic Filipino adobo with rice
+            [price] => 75.00
+        )
+
+)
+
+[12-Dec-2024 15:13:59 Europe/Berlin] Stock check for product 1: Array
+(
+    [quantity] => 50
+    [last_restock] => 2024-12-12 21:32:50
+    [status] => In Stock
+)
+
+[12-Dec-2024 15:13:59 Europe/Berlin] Attempting to place order...
+[12-Dec-2024 15:13:59 Europe/Berlin] Error placing order: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'queue_number' in 'field list'
+[12-Dec-2024 15:13:59 Europe/Berlin] Order placement error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'queue_number' in 'field list'
+[12-Dec-2024 15:13:59 Europe/Berlin] Stack trace: #0 C:\xampp\htdocs\minikioskk\classes\orderClass.php(513): PDOStatement->execute(Array)
+#1 C:\xampp\htdocs\minikioskk\ajax\placeOrder.php(49): Order->placeOrder(4, Array)
+#2 {main}
+[12-Dec-2024 15:20:29 Europe/Berlin] Session data: Array
+(
+    [user_id] => 4
+    [username] => Reiee
+    [email] => johnmagno@wmsu.edu.ph
+    [given_name] => RIEI
+    [last_name] => RIE
+    [role] => student
+)
+
+[12-Dec-2024 15:20:29 Europe/Berlin] Database connection established successfully
+[12-Dec-2024 15:20:29 Europe/Berlin] Starting order placement for user: 4
+[12-Dec-2024 15:20:29 Europe/Berlin] Found 1 items in cart for user 4
+[12-Dec-2024 15:20:29 Europe/Berlin] Retrieved cart items: Array
+(
+    [0] => Array
+        (
+            [cart_item_id] => 5
+            [cart_id] => 4
+            [product_id] => 1
+            [quantity] => 1
+            [unit_price] => 75.00
+            [subtotal] => 75.00
+            [created_at] => 2024-12-12 22:13:52
+            [name] => Chicken Adobo
+            [description] => Classic Filipino adobo with rice
+            [price] => 75.00
+        )
+
+)
+
+[12-Dec-2024 15:20:29 Europe/Berlin] Stock check for product 1: Array
+(
+    [quantity] => 50
+    [last_restock] => 2024-12-12 21:32:50
+    [status] => In Stock
+)
+
+[12-Dec-2024 15:20:29 Europe/Berlin] Attempting to place order...
+[12-Dec-2024 15:20:29 Europe/Berlin] Error placing order: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'queue_number' in 'field list'
+[12-Dec-2024 15:20:29 Europe/Berlin] Order placement error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'queue_number' in 'field list'
+[12-Dec-2024 15:20:29 Europe/Berlin] Stack trace: #0 C:\xampp\htdocs\minikioskk\classes\orderClass.php(513): PDOStatement->execute(Array)
+#1 C:\xampp\htdocs\minikioskk\ajax\placeOrder.php(49): Order->placeOrder(4, Array)
+#2 {main}
+[12-Dec-2024 15:20:47 Europe/Berlin] Session data: Array
+(
+    [user_id] => 4
+    [username] => Reiee
+    [email] => johnmagno@wmsu.edu.ph
+    [given_name] => RIEI
+    [last_name] => RIE
+    [role] => student
+)
+
+[12-Dec-2024 15:20:47 Europe/Berlin] Database connection established successfully
+[12-Dec-2024 15:20:47 Europe/Berlin] Starting order placement for user: 4
+[12-Dec-2024 15:20:47 Europe/Berlin] Found 1 items in cart for user 4
+[12-Dec-2024 15:20:47 Europe/Berlin] Retrieved cart items: Array
+(
+    [0] => Array
+        (
+            [cart_item_id] => 5
+            [cart_id] => 4
+            [product_id] => 1
+            [quantity] => 1
+            [unit_price] => 75.00
+            [subtotal] => 75.00
+            [created_at] => 2024-12-12 22:13:52
+            [name] => Chicken Adobo
+            [description] => Classic Filipino adobo with rice
+            [price] => 75.00
+        )
+
+)
+
+[12-Dec-2024 15:20:47 Europe/Berlin] Stock check for product 1: Array
+(
+    [quantity] => 50
+    [last_restock] => 2024-12-12 21:32:50
+    [status] => In Stock
+)
+
+[12-Dec-2024 15:20:47 Europe/Berlin] Attempting to place order...
+[12-Dec-2024 15:20:47 Europe/Berlin] Error placing order: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'queue_number' in 'field list'
+[12-Dec-2024 15:20:47 Europe/Berlin] Order placement error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'queue_number' in 'field list'
+[12-Dec-2024 15:20:47 Europe/Berlin] Stack trace: #0 C:\xampp\htdocs\minikioskk\classes\orderClass.php(513): PDOStatement->execute(Array)
+#1 C:\xampp\htdocs\minikioskk\ajax\placeOrder.php(49): Order->placeOrder(4, Array)
+#2 {main}
+[12-Dec-2024 15:52:17 Europe/Berlin] Session data: Array
+(
+    [user_id] => 4
+    [username] => Reiee
+    [email] => johnmagno@wmsu.edu.ph
+    [given_name] => RIEI
+    [last_name] => RIE
+    [role] => student
+)
+
+[12-Dec-2024 15:52:17 Europe/Berlin] Database connection established successfully
+[12-Dec-2024 15:52:17 Europe/Berlin] Starting order placement for user: 4
+[12-Dec-2024 15:52:17 Europe/Berlin] Found 1 items in cart for user 4
+[12-Dec-2024 15:52:17 Europe/Berlin] Retrieved cart items: Array
+(
+    [0] => Array
+        (
+            [cart_item_id] => 5
+            [cart_id] => 4
+            [product_id] => 1
+            [quantity] => 1
+            [unit_price] => 75.00
+            [subtotal] => 75.00
+            [created_at] => 2024-12-12 22:13:52
+            [name] => Chicken Adobo
+            [description] => Classic Filipino adobo with rice
+            [price] => 75.00
+        )
+
+)
+
+[12-Dec-2024 15:52:17 Europe/Berlin] Stock check for product 1: Array
+(
+    [quantity] => 50
+    [last_restock] => 2024-12-12 21:32:50
+    [status] => In Stock
+)
+
+[12-Dec-2024 15:52:17 Europe/Berlin] Attempting to place order...
+[12-Dec-2024 15:52:17 Europe/Berlin] PHP Fatal error:  Uncaught ArgumentCountError: Too few arguments to function Order::placeOrder(), 2 passed in C:\xampp\htdocs\minikioskk\ajax\placeOrder.php on line 49 and exactly 3 expected in C:\xampp\htdocs\minikioskk\classes\orderClass.php:477
+Stack trace:
+#0 C:\xampp\htdocs\minikioskk\ajax\placeOrder.php(49): Order->placeOrder(4, Array)
+#1 {main}
+  thrown in C:\xampp\htdocs\minikioskk\classes\orderClass.php on line 477
+[12-Dec-2024 15:56:40 Europe/Berlin] Session data: Array
+(
+    [user_id] => 4
+    [username] => Reiee
+    [email] => johnmagno@wmsu.edu.ph
+    [given_name] => RIEI
+    [last_name] => RIE
+    [role] => student
+)
+
+[12-Dec-2024 15:56:40 Europe/Berlin] Database connection established successfully
+[12-Dec-2024 15:56:40 Europe/Berlin] Starting order placement for user: 4
+[12-Dec-2024 15:56:40 Europe/Berlin] Found 1 items in cart for user 4
+[12-Dec-2024 15:56:40 Europe/Berlin] Retrieved cart items: Array
+(
+    [0] => Array
+        (
+            [cart_item_id] => 6
+            [cart_id] => 5
+            [product_id] => 2
+            [quantity] => 1
+            [unit_price] => 80.00
+            [subtotal] => 80.00
+            [created_at] => 2024-12-12 22:55:44
+            [name] => Sinigang
+            [description] => Sour soup with pork and vegetables
+            [price] => 80.00
+        )
+
+)
+
+[12-Dec-2024 15:56:40 Europe/Berlin] Stock check for product 2: Array
+(
+    [quantity] => 30
+    [last_restock] => 2024-12-12 21:32:50
+    [status] => In Stock
+)
+
+[12-Dec-2024 15:56:40 Europe/Berlin] Attempting to place order...
+[12-Dec-2024 15:56:40 Europe/Berlin] PHP Fatal error:  Uncaught ArgumentCountError: Too few arguments to function Order::placeOrder(), 2 passed in C:\xampp\htdocs\minikioskk\ajax\placeOrder.php on line 49 and exactly 3 expected in C:\xampp\htdocs\minikioskk\classes\orderClass.php:477
+Stack trace:
+#0 C:\xampp\htdocs\minikioskk\ajax\placeOrder.php(49): Order->placeOrder(4, Array)
+#1 {main}
+  thrown in C:\xampp\htdocs\minikioskk\classes\orderClass.php on line 477
+[12-Dec-2024 15:56:43 Europe/Berlin] Session data: Array
+(
+    [user_id] => 4
+    [username] => Reiee
+    [email] => johnmagno@wmsu.edu.ph
+    [given_name] => RIEI
+    [last_name] => RIE
+    [role] => student
+)
+
+[12-Dec-2024 15:56:43 Europe/Berlin] Database connection established successfully
+[12-Dec-2024 15:56:43 Europe/Berlin] Starting order placement for user: 4
+[12-Dec-2024 15:56:43 Europe/Berlin] Found 1 items in cart for user 4
+[12-Dec-2024 15:56:43 Europe/Berlin] Retrieved cart items: Array
+(
+    [0] => Array
+        (
+            [cart_item_id] => 6
+            [cart_id] => 5
+            [product_id] => 2
+            [quantity] => 1
+            [unit_price] => 80.00
+            [subtotal] => 80.00
+            [created_at] => 2024-12-12 22:55:44
+            [name] => Sinigang
+            [description] => Sour soup with pork and vegetables
+            [price] => 80.00
+        )
+
+)
+
+[12-Dec-2024 15:56:43 Europe/Berlin] Stock check for product 2: Array
+(
+    [quantity] => 30
+    [last_restock] => 2024-12-12 21:32:50
+    [status] => In Stock
+)
+
+[12-Dec-2024 15:56:43 Europe/Berlin] Attempting to place order...
+[12-Dec-2024 15:56:43 Europe/Berlin] PHP Fatal error:  Uncaught ArgumentCountError: Too few arguments to function Order::placeOrder(), 2 passed in C:\xampp\htdocs\minikioskk\ajax\placeOrder.php on line 49 and exactly 3 expected in C:\xampp\htdocs\minikioskk\classes\orderClass.php:477
+Stack trace:
+#0 C:\xampp\htdocs\minikioskk\ajax\placeOrder.php(49): Order->placeOrder(4, Array)
+#1 {main}
+  thrown in C:\xampp\htdocs\minikioskk\classes\orderClass.php on line 477
+[12-Dec-2024 15:57:05 Europe/Berlin] Session data: Array
+(
+    [user_id] => 4
+    [username] => Reiee
+    [email] => johnmagno@wmsu.edu.ph
+    [given_name] => RIEI
+    [last_name] => RIE
+    [role] => student
+)
+
+[12-Dec-2024 15:57:05 Europe/Berlin] Database connection established successfully
+[12-Dec-2024 15:57:05 Europe/Berlin] Starting order placement for user: 4
+[12-Dec-2024 15:57:05 Europe/Berlin] Found 1 items in cart for user 4
+[12-Dec-2024 15:57:05 Europe/Berlin] Retrieved cart items: Array
+(
+    [0] => Array
+        (
+            [cart_item_id] => 6
+            [cart_id] => 5
+            [product_id] => 2
+            [quantity] => 1
+            [unit_price] => 80.00
+            [subtotal] => 80.00
+            [created_at] => 2024-12-12 22:55:44
+            [name] => Sinigang
+            [description] => Sour soup with pork and vegetables
+            [price] => 80.00
+        )
+
+)
+
+[12-Dec-2024 15:57:05 Europe/Berlin] Stock check for product 2: Array
+(
+    [quantity] => 30
+    [last_restock] => 2024-12-12 21:32:50
+    [status] => In Stock
+)
+
+[12-Dec-2024 15:57:05 Europe/Berlin] Attempting to place order...
+[12-Dec-2024 15:57:05 Europe/Berlin] PHP Fatal error:  Uncaught ArgumentCountError: Too few arguments to function Order::placeOrder(), 2 passed in C:\xampp\htdocs\minikioskk\ajax\placeOrder.php on line 49 and exactly 3 expected in C:\xampp\htdocs\minikioskk\classes\orderClass.php:477
+Stack trace:
+#0 C:\xampp\htdocs\minikioskk\ajax\placeOrder.php(49): Order->placeOrder(4, Array)
+#1 {main}
+  thrown in C:\xampp\htdocs\minikioskk\classes\orderClass.php on line 477

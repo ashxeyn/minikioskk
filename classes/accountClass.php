@@ -198,15 +198,21 @@ class Account
     }
 
     public function fetch($username) {
-        $sql = "SELECT user_id, username, password, role, status, canteen_id 
-                FROM users 
-                WHERE username = :username";
-                
-        $query = $this->db->connect()->prepare($sql);
-        $query->bindParam(':username', $username);
-        $query->execute();
-        
-        return $query->fetch(PDO::FETCH_ASSOC);
+        try {
+            $sql = "SELECT * FROM users WHERE username = :username";
+            $stmt = $this->db->connect()->prepare($sql);
+            $stmt->execute(['username' => $username]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($user) {
+                return $user;
+            }
+            
+            return false;
+        } catch (PDOException $e) {
+            error_log("Error fetching user: " . $e->getMessage());
+            return false;
+        }
     }
 
     function addManager($canteen_id) {
@@ -309,15 +315,20 @@ class Account
 
     function getManagerCanteen($username)
     {
-        $sql = "SELECT canteen_id FROM users WHERE username = :username AND is_manager = 1";
-        $query = $this->db->connect()->prepare($sql);
-        $query->bindParam(':username', $username);
-
-        if ($query->execute()) {
-            return $query->fetchColumn(); 
+        try {
+            $sql = "SELECT cm.canteen_id 
+                    FROM users u
+                    JOIN canteen_managers cm ON u.user_id = cm.user_id
+                    WHERE u.username = :username 
+                    AND u.role_id = 2
+                    AND u.status = 'active'";
+            $stmt = $this->db->connect()->prepare($sql);
+            $stmt->execute(['username' => $username]);
+            return $stmt->fetchColumn();
+        } catch (PDOException $e) {
+            error_log("Error getting manager canteen: " . $e->getMessage());
+            return false;
         }
-
-        return null; 
     }
 
     public function getPendingManagers()

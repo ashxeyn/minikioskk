@@ -40,17 +40,19 @@ function loadHomeSection() {
 
 // Function to load the Cart section into the main content area
 function loadCartSection() {
-    console.log('Loading cart section...');
     $.ajax({
-        url: "../customers/myCart.php",
-        method: 'GET',
-        success: function (response) {
+        url: 'myCart.php',
+        type: 'GET',
+        dataType: 'html',
+        success: function(response) {
             console.log('Cart content successfully loaded.');
             $('#contentArea').html(response);
+            
+            // Reinitialize event handlers after loading content
+            initializeCartHandlers();
         },
-        error: function (xhr, status, error) {
-            console.error('Error loading cart section:', error);
-            $('#contentArea').html('<p class="text-danger">Failed to load the Cart section. Please try again.</p>');
+        error: function(xhr, status, error) {
+            console.error('Error loading cart:', error);
         }
     });
 }
@@ -88,3 +90,73 @@ function loadOrderStatusSection() {
         }
     });
 }
+
+// Add this function to initialize all cart-related event handlers
+function initializeCartHandlers() {
+    // Clear cart button handler
+    $('.clear-all').off('click').on('click', function() {
+        clearCart();
+    });
+
+    // Checkout button handler
+    $('.checkout').off('click').on('click', function() {
+        openCheckoutModal();
+    });
+
+    // Other event handlers as needed...
+}
+
+// Make sure these functions are globally available
+window.clearCart = function() {
+    // Your existing clearCart code
+    let modalCartItems = '';
+    let total = 0;
+
+    $('.cart-item').each(function() {
+        const name = $(this).find('.item-name').text();
+        const quantity = $(this).find('.quantity').text().replace('Quantity: ', '');
+        const price = $(this).find('.total').text();
+        
+        modalCartItems += `<div class="d-flex justify-content-between mb-2">
+            <span>${name} x ${quantity}</span>
+            <span>${price}</span>
+        </div>`;
+        
+        total += parseFloat(price.replace('₱', '').replace(',', ''));
+    });
+
+    $('#modalClearCartItems').html(modalCartItems);
+    $('#modalClearCartAmount').text('₱' + total.toFixed(2));
+
+    const clearCartModal = new bootstrap.Modal(document.getElementById('clearCartModal'));
+    clearCartModal.show();
+};
+
+window.openCheckoutModal = function() {
+    let modalCartItems = '';
+    let total = 0;
+
+    $('.cart-item').each(function() {
+        const name = $(this).find('.item-name').text();
+        const quantity = $(this).find('.quantity').text().replace('Quantity: ', '');
+        const price = $(this).find('.total').text();
+        
+        modalCartItems += `<div class="d-flex justify-content-between mb-2">
+            <span>${name} x ${quantity}</span>
+            <span>${price}</span>
+        </div>`;
+        
+        total += parseFloat(price.replace('₱', '').replace(',', ''));
+    });
+
+    $('#modalCartItems').html(modalCartItems);
+    $('#modalTotalAmount').text('₱' + total.toFixed(2));
+
+    const checkoutModal = new bootstrap.Modal(document.getElementById('checkoutModal'));
+    checkoutModal.show();
+};
+
+// Initialize handlers when document is ready
+$(document).ready(function() {
+    initializeCartHandlers();
+});

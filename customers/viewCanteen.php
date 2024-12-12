@@ -345,6 +345,8 @@ function showResponseModal(message, success = true) {
 function addToCart() {
     const productId = $('#product_id').val();
     const quantity = $('#quantity').val();
+    const unitPrice = parseFloat($('#modal_product_price').text().replace('₱', ''));
+    const subtotal = quantity * unitPrice;
 
     $.ajax({
         url: '../ajax/addToCart.php',
@@ -352,10 +354,16 @@ function addToCart() {
         dataType: 'json',
         data: {
             product_id: productId,
-            quantity: quantity
+            quantity: quantity,
+            unit_price: unitPrice,
+            subtotal: subtotal
         },
         success: function(response) {
             if (response.success) {
+                // Close the order modal
+                const orderModal = bootstrap.Modal.getInstance(document.getElementById('orderModal'));
+                orderModal.hide();
+                
                 showResponseModal('Product added to cart successfully!', true);
                 updateCartCount();
             } else {

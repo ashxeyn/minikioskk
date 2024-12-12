@@ -7,7 +7,15 @@ class Order
 
     function __construct()
     {
-        $this->db = new Database();
+        try {
+            $this->db = new Database();
+            // Test the connection
+            $conn = $this->db->connect();
+            error_log("Database connection established successfully");
+        } catch (Exception $e) {
+            error_log("Database connection error: " . $e->getMessage());
+            throw new Exception("Failed to connect to database");
+        }
     }
 
     function fetchOrdersByCanteen($canteenId)
@@ -206,10 +214,19 @@ class Order
         }
     }
 
-    function addToCart($user_id, $product_id, $quantity) {
+    public function addToCart($user_id, $product_id, $quantity = 1)
+    {
         try {
-            $conn = $this->db->connect();
-            $conn->beginTransaction();
+            $db = $this->db->connect();
+            $db->beginTransaction();
+
+            // First verify the user exists
+            $sql = "SELECT user_id FROM users WHERE user_id = :user_id";
+            $stmt = $db->prepare($sql);
+            $stmt->execute(['user_id' => $user_id]);
+            if (!$stmt->fetch()) {
+                throw new Exception("Invalid user");
+            }
 
             // Get product details
             $product = $this->getProductById($product_id);
@@ -217,25 +234,69 @@ class Order
                 throw new Exception("Product not found");
             }
 
-            // Get or create pending order
-            $order = $this->getOrCreatePendingOrder($user_id);
-            $subtotal = $product['price'] * $quantity;
+            // Calculate subtotal
+            $subtotal = $quantity * $product['price'];
 
-            // Check if product already exists in order
-            $existing_item = $this->getExistingCartItem($order['order_id'], $product_id);
+            // Check if user has an active cart
+            $sql = "SELECT cart_id FROM carts WHERE user_id = :user_id";
+            $stmt = $db->prepare($sql);
+            $stmt->execute(['user_id' => $user_id]);
+            $cart = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if ($existing_item) {
-                $this->updateCartItemQuantity($existing_item, $quantity, $product['price']);
+            if (!$cart) {
+                // Create new cart
+                $sql = "INSERT INTO carts (user_id) VALUES (:user_id)";
+                $stmt = $db->prepare($sql);
+                $stmt->execute(['user_id' => $user_id]);
+                $cart_id = $db->lastInsertId();
             } else {
-                $this->addNewCartItem($order['order_id'], $product_id, $quantity, $product['price'], $subtotal);
+                $cart_id = $cart['cart_id'];
             }
 
-            $conn->commit();
+            // Check if product already exists in cart
+            $sql = "SELECT cart_item_id, quantity FROM cart_items 
+                    WHERE cart_id = :cart_id AND product_id = :product_id";
+            $stmt = $db->prepare($sql);
+            $stmt->execute([
+                'cart_id' => $cart_id,
+                'product_id' => $product_id
+            ]);
+            $existingItem = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($existingItem) {
+                // Update existing item quantity and subtotal
+                $newQuantity = $existingItem['quantity'] + $quantity;
+                $newSubtotal = $newQuantity * $product['price'];
+                
+                $sql = "UPDATE cart_items 
+                        SET quantity = :quantity, subtotal = :subtotal 
+                        WHERE cart_item_id = :cart_item_id";
+                $stmt = $db->prepare($sql);
+                $stmt->execute([
+                    'quantity' => $newQuantity,
+                    'subtotal' => $newSubtotal,
+                    'cart_item_id' => $existingItem['cart_item_id']
+                ]);
+            } else {
+                // Add new item to cart_items
+                $sql = "INSERT INTO cart_items (cart_id, product_id, quantity, unit_price, subtotal) 
+                        VALUES (:cart_id, :product_id, :quantity, :unit_price, :subtotal)";
+                $stmt = $db->prepare($sql);
+                $stmt->execute([
+                    'cart_id' => $cart_id,
+                    'product_id' => $product_id,
+                    'quantity' => $quantity,
+                    'unit_price' => $product['price'],
+                    'subtotal' => $subtotal
+                ]);
+            }
+
+            $db->commit();
             return true;
 
         } catch (Exception $e) {
-            if (isset($conn)) {
-                $conn->rollBack();
+            if (isset($db) && $db->inTransaction()) {
+                $db->rollBack();
             }
             error_log("Error adding to cart: " . $e->getMessage());
             throw $e;
@@ -413,91 +474,131 @@ function getCurrentQuantity($order_id, $product_id) {
     return $query->fetchAll();
     }
     
-    function placeOrder($user_id, $cartItems) {
+    public function placeOrder($user_id, $cartItems, $total_amount) {
         try {
-            $conn = $this->db->connect();
-            $conn->beginTransaction();
+            $db = $this->db->connect();
+            $db->beginTransaction();
 
-            // Get the canteen_id and verify all items are from same canteen
-            $sql = "SELECT DISTINCT p.canteen_id, c.name as canteen_name 
-                    FROM cart_items ci
-                    JOIN products p ON ci.product_id = p.product_id
-                    JOIN canteens c ON p.canteen_id = c.canteen_id
-                    WHERE ci.user_id = :user_id";
-            $stmt = $conn->prepare($sql);
-            $stmt->execute(['user_id' => $user_id]);
-            $canteens = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            // Get canteen_id from the first cart item's product
+            $sql = "SELECT p.canteen_id 
+                    FROM products p 
+                    WHERE p.product_id = :product_id";
+            $stmt = $db->prepare($sql);
+            $stmt->execute(['product_id' => $cartItems[0]['product_id']]);
+            $canteen = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if (count($canteens) === 0) {
-                throw new Exception("No items in cart");
-            }
-            if (count($canteens) > 1) {
-                throw new Exception("Items from multiple canteens found in cart");
+            if (!$canteen) {
+                throw new Exception("Canteen not found for the product");
             }
 
-            $canteen = $canteens[0];
-            $queue_number = $this->getNextQueueNumber($canteen['canteen_id']);
+            // Calculate total amount
+            $total_amount = 0;
+            foreach ($cartItems as $item) {
+                $total_amount += ($item['unit_price'] * $item['quantity']);
+            }
+
+            // Generate queue number (format: YYYYMMDD-XXX)
+            $date = date('Ymd');
+            $sql = "SELECT COUNT(*) + 1 as next_num FROM orders WHERE DATE(created_at) = CURDATE()";
+            $stmt = $db->prepare($sql);
+            $stmt->execute();
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            $queue_number = $date . '-' . str_pad($result['next_num'], 3, '0', STR_PAD_LEFT);
 
             // Create new order
-            $sql = "INSERT INTO orders (user_id, canteen_id, status, queue_number, created_at) 
-                    VALUES (:user_id, :canteen_id, 'pending', :queue_number, NOW())";
-            $stmt = $conn->prepare($sql);
+            $sql = "INSERT INTO orders (user_id, canteen_id, total_amount, status, payment_status, queue_number, created_at) 
+                    VALUES (:user_id, :canteen_id, :total_amount, 'pending', 'unpaid', :queue_number, NOW())";
+            $stmt = $db->prepare($sql);
             $stmt->execute([
                 'user_id' => $user_id,
                 'canteen_id' => $canteen['canteen_id'],
+                'total_amount' => $total_amount,
                 'queue_number' => $queue_number
             ]);
-            
-            $order_id = $conn->lastInsertId();
 
-            // Insert order items - Updated to match database schema
-            $sql = "INSERT INTO order_items (order_id, product_id, quantity, unit_price, subtotal) 
-                    VALUES (:order_id, :product_id, :quantity, :unit_price, :subtotal)";
-            $stmt = $conn->prepare($sql);
+            $order_id = $db->lastInsertId();
 
+            // Transfer cart items to order_items
             foreach ($cartItems as $item) {
-                // Get product price
-                $product = $this->getProductById($item['product_id']);
-                if (!$product) {
-                    throw new Exception("Product not found");
-                }
-
-                $subtotal = $product['price'] * $item['quantity'];
-                
+                $sql = "INSERT INTO order_items (order_id, product_id, quantity, unit_price, subtotal) 
+                        VALUES (:order_id, :product_id, :quantity, :unit_price, :subtotal)";
+                $stmt = $db->prepare($sql);
                 $stmt->execute([
                     'order_id' => $order_id,
                     'product_id' => $item['product_id'],
                     'quantity' => $item['quantity'],
-                    'unit_price' => $product['price'],
-                    'subtotal' => $subtotal
+                    'unit_price' => $item['unit_price'],
+                    'subtotal' => ($item['unit_price'] * $item['quantity'])
                 ]);
             }
 
-            $conn->commit();
+            // Clear the cart after successful order placement
+            $this->clearCart($user_id);
+
+            $db->commit();
             return [
                 'success' => true,
                 'order_id' => $order_id,
                 'queue_number' => $queue_number,
-                'canteen_name' => $canteen['canteen_name']
+                'canteen_name' => $this->getCanteenName($canteen['canteen_id'])
             ];
+
         } catch (Exception $e) {
-            if (isset($conn)) {
-                $conn->rollBack();
+            if (isset($db) && $db->inTransaction()) {
+                $db->rollBack();
             }
             error_log("Error placing order: " . $e->getMessage());
             throw $e;
         }
     }
 
-    private function getNextQueueNumber($canteen_id) {
-        $sql = "SELECT COUNT(*) + 1 
-                FROM orders 
-                WHERE canteen_id = :canteen_id 
-                AND DATE(created_at) = CURDATE()";
-        $stmt = $this->db->connect()->prepare($sql);
-        $stmt->execute(['canteen_id' => $canteen_id]);
-        $number = $stmt->fetchColumn();
-        return sprintf("%03d", $number); // Format as 001, 002, etc.
+    private function getCanteenName($canteen_id) {
+        try {
+            $sql = "SELECT name FROM canteens WHERE canteen_id = :canteen_id";
+            $stmt = $this->db->connect()->prepare($sql);
+            $stmt->execute(['canteen_id' => $canteen_id]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $result['name'] ?? '';
+        } catch (Exception $e) {
+            error_log("Error getting canteen name: " . $e->getMessage());
+            return '';
+        }
+    }
+
+    public function clearCart($user_id)
+    {
+        try {
+            $conn = $this->db->connect();
+            $conn->beginTransaction();
+
+            // Get user's cart
+            $sql = "SELECT cart_id FROM carts WHERE user_id = :user_id";
+            $stmt = $conn->prepare($sql);
+            $stmt->execute(['user_id' => $user_id]);
+            $cart = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($cart) {
+                // Delete all items from cart_items
+                $sql = "DELETE FROM cart_items WHERE cart_id = :cart_id";
+                $stmt = $conn->prepare($sql);
+                $stmt->execute(['cart_id' => $cart['cart_id']]);
+
+                // Optionally delete the cart itself
+                $sql = "DELETE FROM carts WHERE cart_id = :cart_id";
+                $stmt = $conn->prepare($sql);
+                $stmt->execute(['cart_id' => $cart['cart_id']]);
+            }
+
+            $conn->commit();
+            return true;
+
+        } catch (Exception $e) {
+            if (isset($conn) && $conn->inTransaction()) {
+                $conn->rollBack();
+            }
+            error_log("Error clearing cart: " . $e->getMessage());
+            throw $e;
+        }
     }
 
     function getOrderStatus($user_id)
@@ -613,78 +714,72 @@ function getCurrentQuantity($order_id, $product_id) {
         $query->execute();
     }
     
-    function getCartItems($user_id)
-    {
-        $sql = "SELECT oi.item_id, oi.order_id, oi.product_id, oi.quantity, 
-                       oi.unit_price, oi.subtotal, p.name 
-                FROM orders o 
-                JOIN order_items oi ON o.order_id = oi.order_id 
-                JOIN products p ON oi.product_id = p.product_id 
-                WHERE o.user_id = :user_id AND o.status = 'pending'";
-        
-        $stmt = $this->db->connect()->prepare($sql);
-        $stmt->execute(['user_id' => $user_id]);
-        return $stmt->fetchAll();
+    function getCartItems($user_id) {
+        try {
+            $sql = "SELECT ci.*, p.name, p.description, p.price 
+                    FROM carts c 
+                    JOIN cart_items ci ON c.cart_id = ci.cart_id 
+                    JOIN products p ON ci.product_id = p.product_id 
+                    WHERE c.user_id = :user_id";
+                    
+            $stmt = $this->db->connect()->prepare($sql);
+            $stmt->execute(['user_id' => $user_id]);
+            $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            error_log("Found " . count($items) . " items in cart for user " . $user_id);
+            return $items;
+        } catch (Exception $e) {
+            error_log("Error getting cart items: " . $e->getMessage());
+            throw $e;
+        }
     }
 
     function getUserOrders($user_id)
     {
-        $sql = "SELECT o.*, c.name as canteen_name 
+        try {
+            $sql = "SELECT 
+                    o.order_id,
+                    o.user_id,
+                    o.canteen_id,
+                    o.total_amount,
+                    o.status,
+                    o.payment_status,
+                    o.payment_method,
+                    o.created_at,
+                    c.name as canteen_name,
+                    GROUP_CONCAT(
+                        CONCAT(p.name, ' (', oi.quantity, ')')
+                        SEPARATOR ', '
+                    ) as items
                 FROM orders o 
-                LEFT JOIN canteens c ON o.canteen_id = c.canteen_id 
+                INNER JOIN canteens c ON o.canteen_id = c.canteen_id 
+                INNER JOIN order_items oi ON o.order_id = oi.order_id
+                INNER JOIN products p ON oi.product_id = p.product_id
                 WHERE o.user_id = :user_id 
+                GROUP BY 
+                    o.order_id,
+                    o.user_id,
+                    o.canteen_id,
+                    o.total_amount,
+                    o.status,
+                    o.payment_status,
+                    o.payment_method,
+                    o.created_at,
+                    c.name
                 ORDER BY o.created_at DESC";
                 
-        $query = $this->db->connect()->prepare($sql);
-        $query->bindParam(':user_id', $user_id);
-        $query->execute();
-        
-        return $query->fetchAll();
-    }
-
-    public function clearCart($user_id) {
-        try {
-            $conn = $this->db->connect();
+            $query = $this->db->connect()->prepare($sql);
+            $query->bindParam(':user_id', $user_id);
+            $query->execute();
             
-            // Get all pending orders for the user
-            $sql = "SELECT order_id FROM orders 
-                    WHERE user_id = :user_id AND status = 'pending'";
+            error_log("Fetching orders for user_id: " . $user_id);
+            $orders = $query->fetchAll(PDO::FETCH_ASSOC);
+            error_log("Found " . count($orders) . " orders");
             
-            $stmt = $conn->prepare($sql);
-            $stmt->execute(['user_id' => $user_id]);
-            $orders = $stmt->fetchAll();
-
-            if (empty($orders)) {
-                return true; // No pending orders means cart is already empty
-            }
-
-            // Start transaction
-            $conn->beginTransaction();
-
-            try {
-                foreach ($orders as $order) {
-                    // Delete all items from the order
-                    $sql = "DELETE FROM order_items WHERE order_id = :order_id";
-                    $stmt = $conn->prepare($sql);
-                    $stmt->execute(['order_id' => $order['order_id']]);
-
-                    // Delete the order itself
-                    $sql = "DELETE FROM orders WHERE order_id = :order_id";
-                    $stmt = $conn->prepare($sql);
-                    $stmt->execute(['order_id' => $order['order_id']]);
-                }
-
-                // Commit transaction
-                $conn->commit();
-                return true;
-            } catch (Exception $e) {
-                $conn->rollBack();
-                error_log("Error clearing cart: " . $e->getMessage());
-                return false;
-            }
+            return $orders;
         } catch (Exception $e) {
-            error_log("Error clearing cart: " . $e->getMessage());
-            return false;
+            error_log("Error in getUserOrders: " . $e->getMessage());
+            throw $e;
         }
     }
 
@@ -714,6 +809,41 @@ function getCurrentQuantity($order_id, $product_id) {
             throw $e;
         }
     }
+
+    public function getCartTotal($user_id) {
+        try {
+            $sql = "SELECT SUM(ci.subtotal) as total 
+                    FROM carts c 
+                    JOIN cart_items ci ON c.cart_id = ci.cart_id 
+                    WHERE c.user_id = :user_id";
+                    
+            $stmt = $this->db->connect()->prepare($sql);
+            $stmt->execute(['user_id' => $user_id]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $result['total'] ?? 0;
+        } catch (Exception $e) {
+            error_log("Error getting cart total: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    private function userExists($user_id) {
+        $sql = "SELECT COUNT(*) FROM users WHERE user_id = :user_id";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->execute(['user_id' => $user_id]);
+        return (bool)$stmt->fetchColumn();
+    }
+
+   
+
+    private function getCanteenIdFromProduct($product_id) {
+        $sql = "SELECT canteen_id FROM products WHERE product_id = ?";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->execute([$product_id]);
+        return $stmt->fetchColumn();
+    }
+
+  
 }
 
 ?>

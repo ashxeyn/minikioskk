@@ -22,8 +22,6 @@ DROP TABLE IF EXISTS `programs`;
 DROP TABLE IF EXISTS `departments`;
 DROP TABLE IF EXISTS `colleges`;
 DROP TABLE IF EXISTS `canteens`;
-DROP TABLE IF EXISTS `cart_items`;
-DROP TABLE IF EXISTS `carts`;
 
 -- Create tables in proper order (base tables first)
 
@@ -217,31 +215,31 @@ CREATE TABLE `stocks` (
   FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
--- Create carts table
+-- Cart table to store temporary items before order placement
 CREATE TABLE `carts` (
-    `cart_id` int(11) NOT NULL AUTO_INCREMENT,
-    `user_id` int(11) NOT NULL,
-    `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-    `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-    PRIMARY KEY (`cart_id`),
-    KEY `user_id` (`user_id`),
-    CONSTRAINT `carts_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
+  `cart_id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`cart_id`),
+  KEY `user_id` (`user_id`),
+  FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
--- Create cart_items table
+-- Cart items table to store items in cart
 CREATE TABLE `cart_items` (
-    `cart_item_id` int(11) NOT NULL AUTO_INCREMENT,
-    `cart_id` int(11) NOT NULL,
-    `product_id` int(11) NOT NULL,
-    `quantity` int(11) NOT NULL DEFAULT 1,
-    `unit_price` decimal(10,2) NOT NULL,
-    `subtotal` decimal(10,2) NOT NULL,
-    `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-    PRIMARY KEY (`cart_item_id`),
-    KEY `cart_id` (`cart_id`),
-    KEY `product_id` (`product_id`),
-    CONSTRAINT `cart_items_ibfk_1` FOREIGN KEY (`cart_id`) REFERENCES `carts` (`cart_id`) ON DELETE CASCADE,
-    CONSTRAINT `cart_items_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE
+  `cart_item_id` int(11) NOT NULL AUTO_INCREMENT,
+  `cart_id` int(11) NOT NULL,
+  `product_id` int(11) NOT NULL,
+  `quantity` int(11) NOT NULL DEFAULT 1,
+  `unit_price` decimal(10,2) NOT NULL,
+  `subtotal` decimal(10,2) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`cart_item_id`),
+  KEY `cart_id` (`cart_id`),
+  KEY `product_id` (`product_id`),
+  FOREIGN KEY (`cart_id`) REFERENCES `carts` (`cart_id`) ON DELETE CASCADE,
+  FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 -- Modify the orders table to remove the 'pending' status since it will now start at 'placed'
@@ -249,16 +247,15 @@ CREATE TABLE `orders` (
   `order_id` int(11) NOT NULL AUTO_INCREMENT,
   `user_id` int(11) NOT NULL,
   `canteen_id` int(11) NOT NULL,
-  `total_amount` decimal(10,2) NOT NULL,
-  `status` enum('pending','processing','completed','cancelled') NOT NULL DEFAULT 'pending',
-  `payment_status` enum('paid','unpaid') NOT NULL DEFAULT 'unpaid',
-  `queue_number` varchar(20) DEFAULT NULL,
+  `total_amount` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `status` enum('placed','accepted','preparing','ready','completed','cancelled') DEFAULT 'placed',
+  `payment_status` enum('unpaid','paid') DEFAULT 'unpaid',
+  `payment_method` enum('cash','e-wallet','card') DEFAULT 'cash',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`order_id`),
-  KEY `user_id` (`user_id`),
-  KEY `canteen_id` (`canteen_id`),
-  CONSTRAINT `orders_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
-  CONSTRAINT `orders_ibfk_2` FOREIGN KEY (`canteen_id`) REFERENCES `canteens` (`canteen_id`) ON DELETE CASCADE
+  FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`),
+  FOREIGN KEY (`canteen_id`) REFERENCES `canteens` (`canteen_id`)
 ) ENGINE=InnoDB;
 
 CREATE TABLE `order_items` (

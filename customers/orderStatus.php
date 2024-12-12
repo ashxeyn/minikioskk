@@ -6,121 +6,110 @@ $orderObj = new Order();
 
 // Check if user_id is set in session
 if (isset($_SESSION['user_id'])) {
-    // Fetch orders only if user_id is defined
-    $orders = $orderObj->getUserOrders($_SESSION['user_id']);
+    try {
+        // Fetch orders only if user_id is defined
+        $orders = $orderObj->getUserOrders($_SESSION['user_id']);
+        error_log("Orders fetched for user " . $_SESSION['user_id'] . ": " . print_r($orders, true));
+    } catch (Exception $e) {
+        error_log("Error fetching orders: " . $e->getMessage());
+        $orders = [];
+    }
 } else {
     // Handle the case where user_id is not defined
     $orders = [];
 }
 
+// Add debugging
+error_log("Session data in orderStatus.php: " . print_r($_SESSION, true));
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <title>Order Status</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../css/customer-order.css">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
 <div id="contentArea" class="container mt-4">
     <h2>Your Order Status</h2>
-    <?php if ($orders && count($orders) > 0): ?>
-        <div class="order-card latest-order">
-            <div class="order-row">
-                <p><strong>Order ID:</strong></p>
-                <p><?= htmlspecialchars($orders[0]['order_id']); ?></p>
+    <?php if (!empty($orders)): ?>
+        <?php foreach ($orders as $order): ?>
+            <div class="order-card <?= $order['order_id'] === ($_SESSION['last_order']['order_id'] ?? null) ? 'latest-order' : '' ?>">
+                <div class="order-row">
+                    <p><strong>Order ID:</strong></p>
+                    <p><?= htmlspecialchars($order['order_id']); ?></p>
+                </div>
+                <div class="order-row">
+                    <p><strong>Status:</strong></p>
+                    <p class="status-<?= strtolower($order['status']) ?>">
+                        <?= htmlspecialchars(ucfirst($order['status'])); ?>
+                    </p>
+                </div>
+                <div class="order-row">
+                    <p><strong>Queue Number:</strong></p>
+                    <p><?= date('Ymd', strtotime($order['created_at'])) . str_pad($order['order_id'], 4, '0', STR_PAD_LEFT); ?></p>
+                </div>
+                <div class="order-row">
+                    <p><strong>Canteen:</strong></p>
+                    <p><?= htmlspecialchars($order['canteen_name'] ?? 'Not Available'); ?></p>
+                </div>
+                <div class="order-row">
+                    <p><strong>Items:</strong></p>
+                    <p><?= htmlspecialchars($order['items'] ?? 'No items'); ?></p>
+                </div>
+                <div class="order-row">
+                    <p><strong>Total Amount:</strong></p>
+                    <p>₱<?= number_format($order['total_amount'], 2); ?></p>
+                </div>
+                <div class="order-row">
+                    <p><strong>Created At:</strong></p>
+                    <p><?= date('F j, Y, g:i a', strtotime($order['created_at'])); ?></p>
+                </div>
             </div>
-            <div class="order-row">
-                <p><strong>Status:</strong></p>
-                <p><?= htmlspecialchars(ucfirst($orders[0]['status'])); ?></p>
-            </div>
-            <div class="order-row">
-                <p><strong>Queue Number:</strong></p>
-                <p><?= isset($orders[0]['queue_number']) ? htmlspecialchars($orders[0]['queue_number']) : 'Not Assigned'; ?></p>
-            </div>
-            <div class="order-row">
-                <p><strong>Canteen:</strong></p>
-                <p><?= htmlspecialchars($orders[0]['canteen_name'] ?? 'Not Available'); ?></p>
-            </div>
-            <div class="order-row">
-                <p><strong>Created At:</strong></p>
-                <p><?= date('F j, Y, g:i a', strtotime($orders[0]['created_at'])); ?></p>
-            </div>
-            <div class="order-row">
-                <p><strong>Updated At:</strong></p>
-                <p><?= date('F j, Y, g:i a', strtotime($orders[0]['updated_at'])); ?></p>
-            </div>
-        </div>
-
-        <!-- Add refresh button -->
-        <div class="text-center mt-3">
-            <button type="button" class="btn btn-primary" onclick="refreshOrderStatus()">
-                Refresh Status
-            </button>
-        </div>
+        <?php endforeach; ?>
     <?php else: ?>
         <div class="alert alert-info">No orders found.</div>
     <?php endif; ?>
 </div>
 
-<!-- Add response modal for status updates -->
-<div class="modal fade" id="responseModal" tabindex="-1" role="dialog" aria-labelledby="responseModalLabel">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="responseModalLabel">Order Status Update</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="order-details">
-                    <div class="detail-row">
-                        <div class="label-group">
-                            <span id="responseMessage"></span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-// Update the refresh function to use modal
-function refreshOrderStatus() {
-    $.ajax({
-        url: window.location.href,
-        type: 'GET',
-        success: function(response) {
-            $('#contentArea').html($(response).find('#contentArea').html());
-            showResponseModal('Order status updated successfully!', true);
-        },
-        error: function() {
-            showResponseModal('Failed to update order status', false);
-        }
-    });
-}
-
-function showResponseModal(message, success = true) {
-    $('#responseMessage').text(message);
-    if (success) {
-        $('#responseMessage').removeClass('text-danger').addClass('text-success');
-    } else {
-        $('#responseMessage').removeClass('text-success').addClass('text-danger');
+<style>
+    .order-card {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     
-    const responseModal = new bootstrap.Modal(document.getElementById('responseModal'));
-    responseModal.show();
-}
+    .order-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        padding: 5px 0;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .status-pending {
+        color: #ffc107;
+        font-weight: bold;
+    }
+    
+    .status-completed {
+        color: #28a745;
+        font-weight: bold;
+    }
+    
+    .status-cancelled {
+        color: #dc3545;
+        font-weight: bold;
+    }
+    
+    .latest-order {
+        border: 2px solid #007bff;
+    }
+</style>
 
-// Auto refresh every 30 seconds
-setInterval(function() {
-    refreshOrderStatus();
-}, 30000);
-</script>
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

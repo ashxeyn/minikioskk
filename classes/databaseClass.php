@@ -2,26 +2,30 @@
 class Database{
 
     private $host = 'localhost';
+    private $dbname = 'minikiosk';
     private $username = 'root';
     private $password = '';
-    private $database = 'minikiosk1';
-    private $connection = null;
+    private $conn = null;
 
     public function connect() {
         try {
-            if ($this->connection === null) {
-                $this->connection = new PDO(
-                    "mysql:host=$this->host;dbname=$this->database",
+            if ($this->conn === null) {
+                $this->conn = new PDO(
+                    "mysql:host=$this->host;dbname=$this->dbname",
                     $this->username,
                     $this->password
                 );
-                $this->connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             }
-            return $this->connection;
+            return $this->conn;
         } catch(PDOException $e) {
-            echo "Connection error: " . $e->getMessage();
-            exit;
+            error_log("Connection Error: " . $e->getMessage());
+            throw new Exception("Database connection failed");
         }
+    }
+
+    public function prepare($sql) {
+        return $this->connect()->prepare($sql);
     }
 }
 //$objdb = new Database;

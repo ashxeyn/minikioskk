@@ -25,9 +25,6 @@ if ($account->user_id) {
 // Get available canteens
 $canteens = $canteenObj->getAllCanteens();
 
-// Get featured products
-$featuredProducts = $productObj->getFeaturedProducts();
-
 $topNavFile = '../includes/_topnav2.php';
 require_once '../includes/_head.php';
 ?>
@@ -46,7 +43,7 @@ require_once '../includes/_head.php';
     <link rel="stylesheet" href="../css/customer.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="../customers/dashboard_content.js"></script>
+    <script src="dashboard_content.js"></script>
 </head>
 <body>
 
@@ -62,7 +59,7 @@ require_once '../includes/_head.php';
                     <h3>
                         <?php 
                         if ($userInfo) {
-                            echo "Welcome back, " . clean_input($userInfo['name']) . "!";
+                            echo "Welcome back, " . clean_input($userInfo['given_name']) . "!";
                         } else {
                             echo "Welcome to our dashboard!";
                         }
@@ -85,14 +82,6 @@ require_once '../includes/_head.php';
                             <div class="card-body">
                                 <h5 class="card-title">Available Canteens</h5>
                                 <p class="card-text"><?= count($canteens) ?> canteens</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card">
-                            <div class="card-body">
-                                <h5 class="card-title">Featured Items</h5>
-                                <p class="card-text"><?= count($featuredProducts) ?> items</p>
                             </div>
                         </div>
                     </div>
@@ -135,27 +124,6 @@ require_once '../includes/_head.php';
                         </table>
                     </div>
                 </div>
-
-                <!-- Featured Products -->
-                <div class="featured-products">
-                    <h4>Featured Products</h4>
-                    <div class="row">
-                        <?php foreach (array_slice($featuredProducts, 0, 4) as $product): ?>
-                        <div class="col-md-3 mb-3">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h5 class="card-title"><?= clean_input($product['name']) ?></h5>
-                                    <p class="card-text">₱<?= number_format($product['price'], 2) ?></p>
-                                    <button class="btn btn-primary btn-sm" 
-                                            onclick="addToCart(<?= $product['product_id'] ?>)">
-                                        Add to Cart
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -166,25 +134,6 @@ function viewOrderDetails(orderId) {
     window.location.href = `orderDetails.php?id=${orderId}`;
 }
 
-function addToCart(productId) {
-    $.post('../ajax/addToCart.php', {
-        product_id: productId
-    }, function(response) {
-        if (response.success) {
-            showResponseModal('Product added to cart successfully!', true);
-            updateCartCount();
-        } else {
-            showResponseModal(response.message || 'Failed to add product to cart.', false);
-        }
-    }, 'json');
-}
-
-function updateCartCount() {
-    $.get('../ajax/getCartCount.php', function(response) {
-        $('#cartCount').text(response.count);
-    }, 'json');
-}
-
 function getStatusColor(status) {
     switch(status) {
         case 'pending': return 'warning';
@@ -193,18 +142,6 @@ function getStatusColor(status) {
         case 'cancelled': return 'danger';
         default: return 'secondary';
     }
-}
-
-function showResponseModal(message, success = true) {
-    $('#responseMessage').text(message);
-    if (success) {
-        $('#responseMessage').removeClass('text-danger').addClass('text-success');
-    } else {
-        $('#responseMessage').removeClass('text-success').addClass('text-danger');
-    }
-    
-    const responseModal = new bootstrap.Modal(document.getElementById('responseModal'));
-    responseModal.show();
 }
 </script>
 

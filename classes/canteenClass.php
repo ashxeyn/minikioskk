@@ -5,6 +5,10 @@ class Canteen
 {
     public $name = '';
     public $campus_location = '';
+    public $description = '';
+    public $opening_time = '';
+    public $closing_time = '';
+    public $status = 'open';
 
     protected $db;
 
@@ -15,18 +19,23 @@ class Canteen
 
     function addCanteen()
     {
-        $sql = "INSERT INTO Canteens (name, campus_location) VALUES (:name, :campus_location)";
+        $sql = "INSERT INTO canteens (name, campus_location, description, opening_time, closing_time, status) 
+                VALUES (:name, :campus_location, :description, :opening_time, :closing_time, :status)";
         $query = $this->db->connect()->prepare($sql);
 
         $query->bindParam(':name', $this->name);
         $query->bindParam(':campus_location', $this->campus_location);
+        $query->bindParam(':description', $this->description);
+        $query->bindParam(':opening_time', $this->opening_time);
+        $query->bindParam(':closing_time', $this->closing_time);
+        $query->bindParam(':status', $this->status);
 
         return $query->execute();
     }
 
     function fetchCanteens()
     {
-        $sql = "SELECT * FROM Canteens";
+        $sql = "SELECT * FROM canteens";
         $query = $this->db->connect()->query($sql);
 
         $canteens = [];
@@ -35,7 +44,12 @@ class Canteen
                 $canteens[] = [
                     'canteen_id' => $row['canteen_id'],
                     'name' => $row['name'],
-                    'campus_location' => $row['campus_location']
+                    'campus_location' => $row['campus_location'],
+                    'description' => $row['description'],
+                    'opening_time' => $row['opening_time'],
+                    'closing_time' => $row['closing_time'],
+                    'status' => $row['status'],
+                    'created_at' => $row['created_at']
                 ];
             }
         }
@@ -54,17 +68,28 @@ class Canteen
 
     function editCanteen($canteen_id, $name, $campus_location)
     {
-        $sql = "UPDATE Canteens SET name = :name, campus_location = :campus_location WHERE canteen_id = :canteen_id";
+        $sql = "UPDATE canteens SET 
+                name = :name, 
+                campus_location = :campus_location,
+                description = :description,
+                opening_time = :opening_time,
+                closing_time = :closing_time,
+                status = :status 
+                WHERE canteen_id = :canteen_id";
         $query = $this->db->connect()->prepare($sql);
         $query->bindParam(':name', $name);
         $query->bindParam(':campus_location', $campus_location);
+        $query->bindParam(':description', $this->description);
+        $query->bindParam(':opening_time', $this->opening_time);
+        $query->bindParam(':closing_time', $this->closing_time);
+        $query->bindParam(':status', $this->status);
         $query->bindParam(':canteen_id', $canteen_id);
         return $query->execute();
     }
 
     function deleteCanteen($canteen_id)
     {
-        $sql = "DELETE FROM Canteens WHERE canteen_id = :canteen_id";
+        $sql = "DELETE FROM canteens WHERE canteen_id = :canteen_id";
         $query = $this->db->connect()->prepare($sql);
         $query->bindParam(':canteen_id', $canteen_id);
         return $query->execute();
@@ -75,6 +100,7 @@ class Canteen
             $sql = "SELECT * FROM canteens 
                     WHERE name LIKE :keyword 
                     OR campus_location LIKE :keyword 
+                    OR description LIKE :keyword
                     ORDER BY canteen_id DESC";
             
             $query = $this->db->connect()->prepare($sql);
@@ -105,21 +131,26 @@ class Canteen
     }  
 
     function registerCanteen()
-{
-    $db = $this->db->connect();
+    {
+        $db = $this->db->connect();
 
-    $sql = "INSERT INTO Canteens (name, campus_location) VALUES (:name, :campus_location)";
-    $query = $db->prepare($sql);
+        $sql = "INSERT INTO canteens (name, campus_location, description, opening_time, closing_time, status) 
+                VALUES (:name, :campus_location, :description, :opening_time, :closing_time, :status)";
+        $query = $db->prepare($sql);
 
-    $query->bindParam(':name', $this->name, PDO::PARAM_STR);
-    $query->bindParam(':campus_location', $this->campus_location, PDO::PARAM_STR);
+        $query->bindParam(':name', $this->name, PDO::PARAM_STR);
+        $query->bindParam(':campus_location', $this->campus_location, PDO::PARAM_STR);
+        $query->bindParam(':description', $this->description, PDO::PARAM_STR);
+        $query->bindParam(':opening_time', $this->opening_time);
+        $query->bindParam(':closing_time', $this->closing_time);
+        $query->bindParam(':status', $this->status, PDO::PARAM_STR);
 
-    if ($query->execute()) {
-        return $db->lastInsertId(); // Ensure we use the same $db connection
-    } else {
-        return false;
+        if ($query->execute()) {
+            return $db->lastInsertId();
+        } else {
+            return false;
+        }
     }
-}
 
     function getAllCanteens()
     {
@@ -129,5 +160,32 @@ class Canteen
         return $stmt->fetchAll();
     }
 
+    function isOpen($canteen_id) {
+        try {
+            $sql = "SELECT status, opening_time, closing_time 
+                    FROM canteens 
+                    WHERE canteen_id = :canteen_id";
+            $stmt = $this->db->connect()->prepare($sql);
+            $stmt->execute(['canteen_id' => $canteen_id]);
+            $canteen = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$canteen) {
+                return false;
+            }
+            
+            if ($canteen['status'] !== 'open') {
+                return false;
+            }
+            
+            $current_time = date('H:i:s');
+            $opening_time = $canteen['opening_time'];
+            $closing_time = $canteen['closing_time'];
+            
+            return ($current_time >= $opening_time && $current_time <= $closing_time);
+        } catch (Exception $e) {
+            error_log("Error checking canteen status: " . $e->getMessage());
+            return false;
+        }
+    }
 }
 ?>
