@@ -1,13 +1,10 @@
 <div class="container">
     <h3>Accounts Management</h3>
+    <div id="accountTable">
+        <?php include 'view_accounts.php'; ?>
+    </div>
 </div>
 
-    <div id="accountTable"></div>
-</div>
-
-<?php include 'addManagerModal.html'; ?>
+<?php include 'addUserModal.html'; ?>
 <?php include 'editUserModal.html'; ?>
-<?php include 'deleteUserModal.html'; ?>
-
-<script src="../js/admin.js"></script>
-<script src="../js/account.js"></script>
+<?php include 'deleteUserModal.html'; ?> 

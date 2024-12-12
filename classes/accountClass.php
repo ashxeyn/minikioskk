@@ -216,21 +216,51 @@ class Account
     }
 
     function addManager($canteen_id) {
-        $sql = "INSERT INTO Users (last_name, given_name, middle_name, email, username, password, is_manager, canteen_id) 
-                VALUES (:last_name, :given_name, :middle_name, :email, :username, :password, 1, :canteen_id)";
-        $query = $this->db->connect()->prepare($sql);
-    
-        $hashedPassword = password_hash($this->password, PASSWORD_DEFAULT);
-        
-        $query->bindParam(':last_name', $this->last_name);
-        $query->bindParam(':given_name', $this->given_name);
-        $query->bindParam(':middle_name', $this->middle_name);
-        $query->bindParam(':email', $this->email);
-        $query->bindParam(':username', $this->username);
-        $query->bindParam(':password', $hashedPassword);
-        $query->bindParam(':canteen_id', $canteen_id); 
-    
-        return $query->execute(); 
+        try {
+            $conn = $this->db->connect();
+            $conn->beginTransaction();
+
+            // First insert into users table
+            $sql = "INSERT INTO users (last_name, given_name, middle_name, email, username, 
+                    password, role, status) 
+                    VALUES (:last_name, :given_name, :middle_name, :email, :username, 
+                    :password, 'manager', 'active')";
+            
+            $hashedPassword = password_hash($this->password, PASSWORD_DEFAULT);
+            
+            $stmt = $conn->prepare($sql);
+            $stmt->bindParam(':last_name', $this->last_name);
+            $stmt->bindParam(':given_name', $this->given_name);
+            $stmt->bindParam(':middle_name', $this->middle_name);
+            $stmt->bindParam(':email', $this->email);
+            $stmt->bindParam(':username', $this->username);
+            $stmt->bindParam(':password', $hashedPassword);
+            
+            if ($stmt->execute()) {
+                $user_id = $conn->lastInsertId();
+                
+                // Then insert into canteen_managers table
+                $sql2 = "INSERT INTO canteen_managers (user_id, canteen_id, status) 
+                         VALUES (:user_id, :canteen_id, 'active')";
+                $stmt2 = $conn->prepare($sql2);
+                $stmt2->bindParam(':user_id', $user_id);
+                $stmt2->bindParam(':canteen_id', $canteen_id);
+                
+                if ($stmt2->execute()) {
+                    $conn->commit();
+                    return true;
+                }
+            }
+            
+            $conn->rollBack();
+            return false;
+        } catch (PDOException $e) {
+            if ($conn) {
+                $conn->rollBack();
+            }
+            error_log("Error adding manager: " . $e->getMessage());
+            return false;
+        }
     }
 
     function fetchUserById($user_id)
@@ -456,6 +486,83 @@ class Account
         
         $query = $this->db->connect()->query($sql);
         return $query->fetchAll();
+    }
+
+    function addUser() {
+        try {
+            $conn = $this->db->connect();
+            $conn->beginTransaction();
+
+            $hashedPassword = password_hash($this->password, PASSWORD_DEFAULT);
+            
+            // Insert into users table
+            $sql = "INSERT INTO users (last_name, given_name, middle_name, email, username, 
+                    password, role, status) 
+                    VALUES (:last_name, :given_name, :middle_name, :email, :username, 
+                    :password, :role, 'active')";
+            
+            $stmt = $conn->prepare($sql);
+            $stmt->bindParam(':last_name', $this->last_name);
+            $stmt->bindParam(':given_name', $this->given_name);
+            $stmt->bindParam(':middle_name', $this->middle_name);
+            $stmt->bindParam(':email', $this->email);
+            $stmt->bindParam(':username', $this->username);
+            $stmt->bindParam(':password', $hashedPassword);
+            $stmt->bindParam(':role', $this->role);
+            
+            if ($stmt->execute()) {
+                $user_id = $conn->lastInsertId();
+                
+                // Handle role-specific tables
+                switch($this->role) {
+                    case 'student':
+                    case 'employee':
+                        if ($this->program_id) {
+                            $sql2 = "INSERT INTO user_programs (user_id, program_id) 
+                                    VALUES (:user_id, :program_id)";
+                            $stmt2 = $conn->prepare($sql2);
+                            $stmt2->bindParam(':user_id', $user_id);
+                            $stmt2->bindParam(':program_id', $this->program_id);
+                            if (!$stmt2->execute()) {
+                                $conn->rollBack();
+                                return false;
+                            }
+                        }
+                        break;
+                        
+                    case 'manager':
+                        if ($this->canteen_id) {
+                            $sql2 = "INSERT INTO canteen_managers (user_id, canteen_id, status) 
+                                    VALUES (:user_id, :canteen_id, 'active')";
+                            $stmt2 = $conn->prepare($sql2);
+                            $stmt2->bindParam(':user_id', $user_id);
+                            $stmt2->bindParam(':canteen_id', $this->canteen_id);
+                            if (!$stmt2->execute()) {
+                                $conn->rollBack();
+                                return false;
+                            }
+                        }
+                        break;
+                }
+                
+                $conn->commit();
+                return true;
+            }
+            
+            $conn->rollBack();
+            return false;
+        } catch (PDOException $e) {
+            if ($conn) {
+                $conn->rollBack();
+            }
+            error_log("Error adding user: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    function addAdmin() {
+        $this->role = 'admin';
+        return $this->addUser();
     }
 }
 ?>

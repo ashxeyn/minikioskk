@@ -23,7 +23,7 @@ $role = isset($_GET['role']) ? $_GET['role'] : '';
             <option value="guest">Guest</option>
         </select>
         <div class="mb-3">
-            <button type="button" class="btn btn-primary" onclick="openAddManagerModal()">Add Manager</button>
+            <button type="button" class="btn btn-primary" onclick="openAddUserModal()">Add User</button>
         </div>
         <table id="userTable">
             <thead>

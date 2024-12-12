@@ -11,7 +11,7 @@ class Product
     }
     
     function searchProducts($keyword = '', $category = '') {
-        $sql = "SELECT p.product_id, p.name, p.description, p.category, p.price, s.quantity, c.name AS canteen_name
+        $sql = "SELECT p.product_id, p.name, p.description, p.type_id, p.price, s.quantity, c.name AS canteen_name
                 FROM products p
                 LEFT JOIN stocks s ON p.product_id = s.product_id
                 LEFT JOIN canteens c ON p.canteen_id = c.canteen_id
@@ -22,7 +22,7 @@ class Product
         }
     
         if ($category) {
-            $sql .= " AND p.category = :category";  
+            $sql .= " AND p.type_id = :category";  
         }
     
         $query = $this->db->connect()->prepare($sql);
@@ -232,7 +232,7 @@ class Product
     }
 
     function searchProductsByCanteen($canteen_id, $keyword = '', $category = '') {
-        $sql = "SELECT p.product_id, p.name, p.description, p.category, p.price, s.quantity, c.name AS canteen_name
+        $sql = "SELECT p.product_id, p.name, p.description, p.type_id, p.price, s.quantity, c.name AS canteen_name
                 FROM products p
                 LEFT JOIN stocks s ON p.product_id = s.product_id
                 LEFT JOIN canteens c ON p.canteen_id = c.canteen_id
@@ -243,7 +243,7 @@ class Product
         }
 
         if ($category) {
-            $sql .= " AND p.category = :category";
+            $sql .= " AND p.type_id = :category";
         }
 
         $query = $this->db->connect()->prepare($sql);

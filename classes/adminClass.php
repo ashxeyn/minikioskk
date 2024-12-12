@@ -13,7 +13,7 @@ class Admin
     function reports() {
         $sql_users = "SELECT COUNT(user_id) AS user_count 
                       FROM users 
-                      WHERE is_student = 1 OR is_employee = 1";
+                      WHERE role IN ('student', 'employee')";
         
         $query_users = $this->db->connect()->prepare($sql_users);
         $userCount = 0;
@@ -24,7 +24,7 @@ class Admin
         
         $sql_users_last_month = "SELECT COUNT(user_id) AS user_count 
                                   FROM users 
-                                  WHERE (is_student = 1 OR is_employee = 1)
+                                  WHERE role IN ('student', 'employee')
                                   AND MONTH(created_at) = MONTH(CURRENT_DATE) - 1";
         
         $query_users_last_month = $this->db->connect()->prepare($sql_users_last_month);
@@ -105,14 +105,17 @@ class Admin
     }
     function getTotalOrdersByCollege()
     {
-        $sql = "SELECT p.college, 
+        $sql = "SELECT c.college_name as college, 
                 YEAR(o.created_at) AS order_year, 
                 MONTH(o.created_at) AS order_month, 
                 COUNT(o.order_id) AS total_orders
                 FROM orders o
-                JOIN programs p ON o.user_id = p.program_id
+                JOIN users u ON o.user_id = u.user_id
+                JOIN programs p ON u.program_id = p.program_id
+                JOIN departments d ON p.department_id = d.department_id
+                JOIN colleges c ON d.college_id = c.college_id
                 WHERE o.status = 'completed' 
-                GROUP BY p.college, order_year, order_month
+                GROUP BY c.college_name, order_year, order_month
                 ORDER BY order_year DESC, order_month DESC, total_orders DESC";
         
         $query = $this->db->connect()->prepare($sql);
