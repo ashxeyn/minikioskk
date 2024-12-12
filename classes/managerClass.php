@@ -14,7 +14,7 @@ class Manager
 
     function getTotalSales()
     {
-        $sql = "SELECT SUM(oi.total_price) AS total_sales 
+        $sql = "SELECT SUM(oi.subtotal) AS total_sales 
                 FROM order_items oi
                 JOIN orders o ON oi.order_id = o.order_id
                 WHERE o.canteen_id = :canteen_id AND o.status = 'completed'";
@@ -87,7 +87,7 @@ class Manager
     }
 
     function getMonthlySales() {
-        $sql = "SELECT MONTH(o.created_at) AS month, SUM(oi.total_price) AS sales
+        $sql = "SELECT MONTH(o.created_at) AS month, SUM(oi.subtotal) AS sales
                 FROM orders o
                 JOIN order_items oi ON o.order_id = oi.order_id
                 WHERE o.canteen_id = :canteen_id AND o.status = 'completed'
@@ -143,7 +143,7 @@ function getCompletedOrdersByDate($startDate, $endDate)
 
 function getTotalSalesByDate($startDate, $endDate)
 {
-    $sql = "SELECT SUM(oi.total_price) AS total_sales 
+    $sql = "SELECT SUM(oi.subtotal) AS total_sales 
             FROM order_items oi
             JOIN orders o ON oi.order_id = o.order_id
             WHERE o.canteen_id = :canteen_id 
@@ -183,7 +183,7 @@ function getTopSellingProductsByDate($startDate, $endDate)
 
 function getMonthlySalesByDate($startDate, $endDate)
 {
-    $sql = "SELECT MONTH(o.created_at) AS month, SUM(oi.total_price) AS sales
+    $sql = "SELECT MONTH(o.created_at) AS month, SUM(oi.subtotal) AS sales
             FROM orders o
             JOIN order_items oi ON o.order_id = oi.order_id
             WHERE o.canteen_id = :canteen_id 

@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once '../classes/orderClass.php';
+require_once '../classes/cartClass.php';
 
 $response = ['success' => false, 'message' => ''];
 
@@ -9,14 +9,15 @@ try {
         throw new Exception('User not logged in');
     }
 
-    $orderObj = new Order();
-    if ($orderObj->clearCart($_SESSION['user_id'])) {
+    $cartObj = new Cart();
+    if ($cartObj->clearCart($_SESSION['user_id'])) {
         $response['success'] = true;
         $response['message'] = 'Cart cleared successfully';
     } else {
         throw new Exception('Failed to clear cart');
     }
 } catch (Exception $e) {
+    error_log("Clear cart error: " . $e->getMessage());
     $response['message'] = $e->getMessage();
 }
 

@@ -96,18 +96,21 @@ class Cart {
             $cart = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if ($cart) {
-                // Delete cart items first
+                // Delete cart items first (due to foreign key constraint)
                 $sql = "DELETE FROM cart_items WHERE cart_id = :cart_id";
                 $stmt = $db->prepare($sql);
                 $stmt->execute(['cart_id' => $cart['cart_id']]);
 
-                // Then delete the cart
+                // Then delete the cart itself
                 $sql = "DELETE FROM carts WHERE cart_id = :cart_id";
                 $stmt = $db->prepare($sql);
                 $stmt->execute(['cart_id' => $cart['cart_id']]);
+
+                $db->commit();
+                return true;
             }
 
-            $db->commit();
+            // If no cart found, consider it already cleared
             return true;
             
         } catch (Exception $e) {
@@ -115,7 +118,7 @@ class Cart {
                 $db->rollBack();
             }
             error_log("Error clearing cart: " . $e->getMessage());
-            return false;
+            throw $e;  // Throw the error to be caught by the caller
         }
     }
 

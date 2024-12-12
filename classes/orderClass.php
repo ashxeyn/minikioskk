@@ -19,13 +19,20 @@ class Order
         try {
             $db = $this->db->connect();
             
-            // Start transaction
             if (!$db->inTransaction()) {
                 $db->beginTransaction();
             }
 
-            // Get canteen_id from the first item (assuming all items are from same canteen)
-            $canteen_id = $cartItems[0]['canteen_id'] ?? 1;  // Default to 1 if not found
+            // First verify stock availability for all items
+            $stocksObj = new Stocks();
+            foreach ($cartItems as $item) {
+                $stock = $stocksObj->fetchStockByProductId($item['product_id']);
+                if (!$stock || $stock['quantity'] < $item['quantity']) {
+                    throw new Exception("Insufficient stock for {$item['name']}");
+                }
+            }
+
+            $canteen_id = $cartItems[0]['canteen_id'] ?? 1;
 
             // Create the order
             $sql = "INSERT INTO orders (user_id, canteen_id, total_amount, status, payment_status, created_at) 
@@ -40,7 +47,7 @@ class Order
             
             $order_id = $db->lastInsertId();
 
-            // Insert order items
+            // Insert order items and update stock
             $sql = "INSERT INTO order_items (order_id, product_id, quantity, unit_price, subtotal) 
                     VALUES (:order_id, :product_id, :quantity, :unit_price, :subtotal)";
             
@@ -48,6 +55,8 @@ class Order
             
             foreach ($cartItems as $item) {
                 $subtotal = $item['quantity'] * $item['unit_price'];
+                
+                // Insert order item
                 $stmt->execute([
                     'order_id' => $order_id,
                     'product_id' => $item['product_id'],
@@ -55,6 +64,11 @@ class Order
                     'unit_price' => $item['unit_price'],
                     'subtotal' => $subtotal
                 ]);
+
+                // Reduce stock
+                if (!$stocksObj->updateStock($item['product_id'], -$item['quantity'])) {
+                    throw new Exception("Failed to update stock for {$item['name']}");
+                }
             }
 
             $db->commit();
@@ -201,6 +215,41 @@ class Order
 
     public function getUserOrders($user_id) {
         return $this->getOrdersByUser($user_id);
+    }
+
+    public function fetchOrders($canteen_id = null) {
+        try {
+            $sql = "SELECT o.*, 
+                    GROUP_CONCAT(p.name) as product_names,
+                    SUM(oi.quantity) as total_quantity,
+                    SUM(oi.subtotal) as total_price,
+                    u.username,
+                    u.given_name as customer_name,
+                    c.name as canteen_name,
+                    CONCAT(DATE_FORMAT(o.created_at, '%Y%m%d'), '-', LPAD(o.order_id, 3, '0')) as queue_number
+                    FROM orders o
+                    LEFT JOIN order_items oi ON o.order_id = oi.order_id
+                    LEFT JOIN products p ON oi.product_id = p.product_id
+                    LEFT JOIN users u ON o.user_id = u.user_id
+                    LEFT JOIN canteens c ON o.canteen_id = c.canteen_id";
+
+            $params = [];
+            
+            if ($canteen_id) {
+                $sql .= " WHERE o.canteen_id = :canteen_id";
+                $params[':canteen_id'] = $canteen_id;
+            }
+
+            $sql .= " GROUP BY o.order_id ORDER BY o.created_at DESC";
+            
+            $stmt = $this->db->connect()->prepare($sql);
+            $stmt->execute($params);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+        } catch (Exception $e) {
+            error_log("Error fetching orders: " . $e->getMessage());
+            return [];
+        }
     }
 }
 

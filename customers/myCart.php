@@ -394,8 +394,9 @@ if (!isset($_SESSION['user_id'])) {
                         showResponseModal(response.message || 'Failed to clear cart', false);
                     }
                 },
-                error: function() {
-                    showResponseModal('Error occurred while clearing cart', false);
+                error: function(xhr, status, error) {
+                    console.error('Clear cart error:', error);
+                    showResponseModal('Error occurred while clearing cart. Please try again.', false);
                 }
             });
         }

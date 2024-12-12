@@ -14,7 +14,6 @@ if (!isset($_SESSION['user_id'])) {
 try {
     $orderObj = new Order();
     $cartObj = new Cart();
-    $stocksObj = new Stocks();
     
     $user_id = $_SESSION['user_id'];
     $cartItems = $cartObj->getCartItems($user_id);
@@ -25,18 +24,11 @@ try {
         exit;
     }
 
-    // Place the order first
+    // Place order (this will also handle stock updates)
     $orderResult = $orderObj->placeOrder($user_id, $cartItems, $total);
     
     if (!$orderResult['success']) {
         throw new Exception($orderResult['message'] ?? "Failed to place order");
-    }
-    
-    // Update stock quantities
-    foreach ($cartItems as $item) {
-        if (!$stocksObj->updateStock($item['product_id'], -$item['quantity'])) {
-            throw new Exception("Failed to update stock for {$item['name']}");
-        }
     }
     
     // Clear the cart after successful order
@@ -46,7 +38,7 @@ try {
     $_SESSION['last_order'] = [
         'order_id' => $orderResult['order_id'],
         'total_amount' => $total,
-        'status' => 'pending',
+        'status' => 'placed',
         'payment_status' => 'unpaid'
     ];
     
