@@ -14,14 +14,15 @@ class Program
         $this->db = new Database();
     }
 
-    function addProgram($program_name, $department, $college)
+    function addProgram($program_name, $department_id, $description)
     {
-        $sql = "INSERT INTO programs (program_name, department, college) VALUES (:program_name, :department, :college)";
+        $sql = "INSERT INTO programs (program_name, department_id, description) 
+                VALUES (:program_name, :department_id, :description)";
         $query = $this->db->connect()->prepare($sql);
 
         $query->bindParam(':program_name', $program_name);
-        $query->bindParam(':department', $department);
-        $query->bindParam(':college', $college);
+        $query->bindParam(':department_id', $department_id);
+        $query->bindParam(':description', $description);
 
         return $query->execute();  
     }
@@ -37,19 +38,19 @@ class Program
     }
 
     
-    function updateProgram($program_id, $program_name, $department, $college)
+    function updateProgram($program_id, $program_name, $department_id, $description)
     {
         $sql = "UPDATE programs 
                 SET program_name = :program_name, 
-                    department = :department, 
-                    college = :college
+                    department_id = :department_id, 
+                    description = :description
                 WHERE program_id = :program_id"; 
         $query = $this->db->connect()->prepare($sql);
     
         $query->bindParam(':program_name', $program_name);
-        $query->bindParam(':department', $department);
-        $query->bindParam(':college', $college); 
-        $query->bindParam(':program_id', $program_id); 
+        $query->bindParam(':department_id', $department_id);
+        $query->bindParam(':description', $description);
+        $query->bindParam(':program_id', $program_id);
     
         return $query->execute(); 
     }
@@ -67,10 +68,12 @@ class Program
     
     function fetchPrograms()
     {
-        $sql = "SELECT * FROM programs";
+        $sql = "SELECT p.*, d.department_name, c.college_name 
+                FROM programs p
+                JOIN departments d ON p.department_id = d.department_id
+                JOIN colleges c ON d.college_id = c.college_id";
         $query = $this->db->connect()->prepare($sql);
         $query->execute();
-
         return $query->fetchAll();
     }
 

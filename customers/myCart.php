@@ -25,7 +25,7 @@ foreach ($cartItems as $item) {
         $canCheckout = false;
         $errorMessages[] = "Insufficient stock for {$item['name']}";
     }
-    $total += $item['total_price'];
+    $total += $item['subtotal'];
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -134,20 +134,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                 <div class="item-info">
                                     <h4 class="item-name"><?= htmlspecialchars($item['name']); ?></h4>
                                     <div class="item-details">
-                                        <p class="price">Price: ₱<?= number_format($item['price'], 2); ?></p>
-                                        <p class="quantity">Quantity: <?= htmlspecialchars($item['quantity']); ?></p>
-                                        <p class="total">₱<?= number_format($item['total_price'], 2); ?></p>
+                                        <p class="price">Price: ₱<?= number_format($item['unit_price'], 2); ?></p>
+                                        <div class="quantity">
+                                            <p>Quantity: <?= htmlspecialchars($item['quantity']); ?></p>
+                                        </div>
+                                        <p class="total">₱<?= number_format($item['subtotal'], 2); ?></p>
                                     </div>
                                 </div>
                                 <div class="item-actions">
-                                    <button type="button" 
-                                            class="btn btn-danger remove-item" 
-                                            onclick="removeFromCart(<?= htmlspecialchars($item['product_id']); ?>)">
-                                        Remove
+                                    <button type="button" class="btn description" onclick="editQuantity(<?= $item['product_id'] ?>)">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button type="button" class="btn description" onclick="removeFromCart(<?= $item['product_id'] ?>)">
+                                        <i class="bi bi-trash"></i>
                                     </button>
                                 </div>
                             </div>
-                            <?php $total += $item['total_price']; ?>
+                            <?php $total += $item['subtotal']; ?>
                         <?php endforeach; ?>
                         
                         <div class="cart-total">
@@ -254,24 +257,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 dataType: 'json',
                 success: function(response) {
                     if (response.success) {
-                        // Remove all items with animation
                         $('.cart-item').fadeOut(300, function() {
                             $('.cart-container').html('<p>Your cart is empty.</p>');
                             $('.cart-total').hide();
                             $('.checkout').hide();
                             updateCartCount();
                         });
+                        showResponseModal('Cart cleared successfully!', true);
                     } else {
-                        alert(response.message || 'Failed to clear cart');
+                        showResponseModal(response.message || 'Failed to clear cart', false);
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error('AJAX Error:', {
-                        status: status,
-                        error: error,
-                        response: xhr.responseText
-                    });
-                    alert('Error occurred while clearing cart');
+                    console.error('AJAX Error:', error);
+                    showResponseModal('Error occurred while clearing cart', false);
                 }
             });
         }
@@ -330,6 +329,29 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <form method="post" action="">
                         <button type="submit" name="checkout" class="btn btn-primary">Place Order</button>
                     </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="responseModal" tabindex="-1" role="dialog" aria-labelledby="responseModalLabel">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="responseModalLabel">Status</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="order-details">
+                        <div class="detail-row">
+                            <div class="label-group">
+                                <span id="responseMessage"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
                 </div>
             </div>
         </div>

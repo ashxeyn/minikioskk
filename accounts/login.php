@@ -19,25 +19,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['user_id'] = $user['user_id'];
         $_SESSION['username'] = $user['username'];
 
-        if ($user['is_admin']) {
-            $_SESSION['role'] = 'admin';
-            header('Location: ../admin/adminDashboard.php');
-        } elseif ($user['role'] === 'pending_manager') {
-            $_SESSION['role'] = 'pending_manager';
-            $_SESSION['canteen_id'] = $accountObj->getManagerCanteen($username);
-            header('Location: pending.php');
-            exit();
-        } elseif ($user['is_manager']) {
-            $_SESSION['role'] = 'manager';
-            $_SESSION['canteen_id'] = $accountObj->getManagerCanteen($username);
-            header('Location: ../manager/managerDashboard.php');
-        } elseif ($user['is_employee'] || $user['is_student']) {
-            $_SESSION['role'] = $user['is_employee'] ? 'employee' : 'student';
-            header('Location: ../customers/customerDashboard.php');
-        } else {
-            // Default case for new users or guests
-            $_SESSION['role'] = 'guest';
-            header('Location: ../customers/customerDashboard.php');
+        switch ($user['role']) {
+            case 'admin':
+                $_SESSION['role'] = 'admin';
+                header('Location: ../admin/adminDashboard.php');
+                break;
+            case 'manager':
+                if ($user['status'] === 'pending') {
+                    $_SESSION['role'] = 'pending_manager';
+                    $_SESSION['canteen_id'] = $accountObj->getManagerCanteen($username);
+                    header('Location: pending.php');
+                } else {
+                    $_SESSION['role'] = 'manager';
+                    $_SESSION['canteen_id'] = $accountObj->getManagerCanteen($username);
+                    header('Location: ../manager/managerDashboard.php');
+                }
+                break;
+            case 'employee':
+                $_SESSION['role'] = 'employee';
+                header('Location: ../customers/customerDashboard.php');
+                break;
+            case 'student':
+                $_SESSION['role'] = 'student';
+                header('Location: ../customers/customerDashboard.php');
+                break;
+            default:
+                // Default case for guests
+                $_SESSION['role'] = 'guest';
+                header('Location: ../customers/customerDashboard.php');
         }
         exit();
     } else {

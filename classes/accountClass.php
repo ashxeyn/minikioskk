@@ -34,61 +34,78 @@ class Account
     }
     
 
-    function signup($last_name, $given_name, $middle_name, $email, $username, $password, $is_student = 0, $is_employee = 0, $is_guest = 0, $program_id = null) {
+    function signup($last_name, $given_name, $middle_name, $email, $username, $password, 
+                  $is_student, $is_employee, $is_guest, $program_id = null, $department_id = null) {
         try {
             $conn = $this->db->connect();
-            
-            // Start transaction
             $conn->beginTransaction();
 
-            // Hash the password
-            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-
-            // Validate email domain for students and employees
-            if (($is_student || $is_employee) && !preg_match('/@wmsu\.edu\.ph$/', $email)) {
-                throw new Exception("WMSU email domain required for students and employees");
+            // Validate program_id if student
+            if ($is_student && $program_id) {
+                $checkProgram = $conn->prepare("SELECT program_id FROM programs WHERE program_id = ?");
+                $checkProgram->execute([$program_id]);
+                if (!$checkProgram->fetch()) {
+                    throw new Exception("Invalid program selected");
+                }
             }
 
-            // For guests, email is optional
-            if ($is_guest && empty($email)) {
-                $email = null;
+            // Validate department_id if employee
+            if ($is_employee && $department_id) {
+                $checkDept = $conn->prepare("SELECT department_id FROM departments WHERE department_id = ?");
+                $checkDept->execute([$department_id]);
+                if (!$checkDept->fetch()) {
+                    throw new Exception("Invalid department selected");
+                }
             }
 
-            // Insert into users table
-            $sql = "INSERT INTO users (last_name, given_name, middle_name, email, username, password, 
-                    is_student, is_employee, is_guest, program_id) 
-                    VALUES (:last_name, :given_name, :middle_name, :email, :username, :password,
-                    :is_student, :is_employee, :is_guest, :program_id)";
+            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+            
+            // Insert into users table with all fields
+            $sql = "INSERT INTO users (
+                        last_name, given_name, middle_name, email, username, password, 
+                        role, status, program_id, department_id
+                    ) VALUES (
+                        :last_name, :given_name, :middle_name, :email, :username, :password,
+                        CASE 
+                            WHEN :is_student = 1 THEN 'student'
+                            WHEN :is_employee = 1 THEN 'employee'
+                            ELSE 'guest'
+                        END,
+                        CASE 
+                            WHEN :is_guest = 1 THEN 'approved'
+                            ELSE 'pending'
+                        END,
+                        NULLIF(:program_id, ''),
+                        NULLIF(:department_id, '')
+                    )";
             
             $query = $conn->prepare($sql);
             
+            // Bind all parameters
             $params = [
                 ':last_name' => $last_name,
                 ':given_name' => $given_name,
                 ':middle_name' => $middle_name,
                 ':email' => $email,
                 ':username' => $username,
-                ':password' => $hashed_password,
+                ':password' => $hashedPassword,
                 ':is_student' => $is_student,
                 ':is_employee' => $is_employee,
                 ':is_guest' => $is_guest,
-                ':program_id' => $program_id
+                ':program_id' => $is_student ? $program_id : null,
+                ':department_id' => $is_employee ? $department_id : null
             ];
-
-            if ($query->execute($params)) {
-                $this->user_id = $conn->lastInsertId();
-                $conn->commit();
-                return true;
-            }
-
-            $conn->rollBack();
-            return false;
-
+            
+            $query->execute($params);
+            
+            $this->user_id = $conn->lastInsertId();
+            $conn->commit();
+            return true;
+            
         } catch (Exception $e) {
             if (isset($conn)) {
                 $conn->rollBack();
             }
-            error_log("Signup error: " . $e->getMessage());
             throw $e;
         }
     }
@@ -138,25 +155,50 @@ class Account
         return $count > 0;
     }
     
-    function login($username, $password)
-    {
-        $sql = "SELECT * FROM Users WHERE username = :username LIMIT 1;";
-        $query = $this->db->connect()->prepare($sql);
-
-        $query->bindParam('username', $username);
-
-        if ($query->execute()) {
-            $data = $query->fetch();
-            if ($data && password_verify($password, $data['password'])) {
+    function login($username, $password) {
+        try {
+            $sql = "SELECT u.*, 
+                        COALESCE(s.student_number, e.employee_number) as id_number,
+                        CASE 
+                            WHEN s.student_id IS NOT NULL THEN p.program_name
+                            WHEN e.employee_id IS NOT NULL THEN d.department_name
+                            ELSE NULL
+                        END as department_program
+                    FROM users u
+                    LEFT JOIN students s ON u.user_id = s.user_id
+                    LEFT JOIN employees e ON u.user_id = e.user_id
+                    LEFT JOIN programs p ON u.program_id = p.program_id
+                    LEFT JOIN departments d ON u.department_id = d.department_id
+                    WHERE u.username = :username";
+            
+            $query = $this->db->connect()->prepare($sql);
+            $query->bindParam(':username', $username);
+            $query->execute();
+            
+            $user = $query->fetch();
+            
+            if ($user && password_verify($password, $user['password'])) {
+                if ($user['status'] !== 'approved' && $user['role'] !== 'guest') {
+                    throw new Exception("Account is pending approval");
+                }
+                
+                $_SESSION['user_id'] = $user['user_id'];
+                $_SESSION['username'] = $user['username'];
+                $_SESSION['role'] = $user['role'];
+                $_SESSION['id_number'] = $user['id_number'];
+                $_SESSION['department_program'] = $user['department_program'];
+                
                 return true;
             }
+            return false;
+            
+        } catch (Exception $e) {
+            throw $e;
         }
-
-        return false;
     }
 
-    function fetch($username) {
-        $sql = "SELECT user_id, username, password, is_admin, is_manager, is_employee, is_student, role, status, canteen_id 
+    public function fetch($username) {
+        $sql = "SELECT user_id, username, password, role, status, canteen_id 
                 FROM users 
                 WHERE username = :username";
                 
@@ -278,53 +320,67 @@ class Account
         return null; 
     }
 
-    public function getPendingManagers() {
-        $sql = "SELECT u.user_id, u.last_name, u.given_name, u.middle_name,u.email, c.name AS canteen_name
-            FROM Users u
-            JOIN Canteens c ON u.canteen_id = c.canteen_id
-            WHERE u.role = 'pending_manager'
-        ";
+    public function getPendingManagers()
+    {
+        $sql = "SELECT u.user_id, up.last_name, up.given_name, up.middle_name, 
+                u.email, c.name AS canteen_name
+                FROM users u
+                JOIN managers m ON u.user_id = m.user_id
+                JOIN user_profiles up ON u.user_id = up.user_id
+                JOIN canteens c ON m.canteen_id = c.canteen_id
+                WHERE m.status = 'pending'";
+        
         $query = $this->db->connect()->prepare($sql);
         $query->execute();
-    
         return $query->fetchAll();
     }
 
-    function approveManager($user_id) {
-        $sql = "UPDATE Users SET is_manager = 1, role = 'manager', status = 'approved' WHERE user_id = :user_id";
-        
-        $query = $this->db->connect()->prepare($sql);
-        $query->bindParam(':user_id', $user_id);
-        
-        return $query->execute();
+    function approveManager($user_id)
+    {
+        try {
+            $this->db->connect()->beginTransaction();
+            
+            $sql = "UPDATE users SET status = 'approved' WHERE user_id = :user_id";
+            $query = $this->db->connect()->prepare($sql);
+            $query->bindParam(':user_id', $user_id);
+            $query->execute();
+            
+            $sql = "UPDATE managers SET status = 'accepted' WHERE user_id = :user_id";
+            $query = $this->db->connect()->prepare($sql);
+            $query->bindParam(':user_id', $user_id);
+            $query->execute();
+            
+            $this->db->connect()->commit();
+            return true;
+            
+        } catch (Exception $e) {
+            $this->db->connect()->rollBack();
+            throw $e;
+        }
     }
     
-    function reject($user_id) {
-        $sql = "SELECT canteen_id FROM Users WHERE user_id = :user_id AND role = 'pending_manager'";
-        $query = $this->db->connect()->prepare($sql);
-        
-        $query->bindParam(':user_id', $user_id);
-        $query->execute();
-        
-        $canteen = $query->fetch(PDO::FETCH_ASSOC);
-    
-        if ($canteen) {
-            $canteen_id = $canteen['canteen_id'];
-    
-            $deleteCanteenSql = "DELETE FROM canteens WHERE canteen_id = :canteen_id";
-            $deleteCanteenQuery = $this->db->connect()->prepare($deleteCanteenSql);
-    
-            $deleteCanteenQuery->bindParam(':canteen_id', $canteen_id);
-            $deleteCanteenQuery->execute();
+    function reject($user_id)
+    {
+        try {
+            $this->db->connect()->beginTransaction();
+            
+            $sql = "UPDATE users SET status = 'rejected' WHERE user_id = :user_id";
+            $query = $this->db->connect()->prepare($sql);
+            $query->bindParam(':user_id', $user_id);
+            $query->execute();
+            
+            $sql = "UPDATE managers SET status = 'rejected' WHERE user_id = :user_id";
+            $query = $this->db->connect()->prepare($sql);
+            $query->bindParam(':user_id', $user_id);
+            $query->execute();
+            
+            $this->db->connect()->commit();
+            return true;
+            
+        } catch (Exception $e) {
+            $this->db->connect()->rollBack();
+            throw $e;
         }
-    
-        $deleteUserSql = "DELETE FROM Users WHERE user_id = :user_id AND role = 'pending_manager'";
-        $deleteUserQuery = $this->db->connect()->prepare($deleteUserSql);
-    
-        $deleteUserQuery->bindParam(':user_id', $user_id);
-        $deleteUserQuery->execute();
-    
-        return true;
     }
     
 
@@ -379,6 +435,16 @@ class Account
         $query->execute(['user_id' => $user_id]);
         $result = $query->fetch();
         return $result['status'] ?? null;
+    }
+
+    public function fetchDepartments() {
+        $sql = "SELECT d.department_id, d.department_name, c.abbreviation as college_abbreviation 
+                FROM departments d
+                JOIN colleges c ON d.college_id = c.college_id
+                ORDER BY c.abbreviation, d.department_name";
+        
+        $query = $this->db->connect()->query($sql);
+        return $query->fetchAll();
     }
 }
 ?>

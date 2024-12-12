@@ -19,38 +19,61 @@ class Stocks
 
     function fetchStockByProductId($product_id)
     {
-        $sql = "SELECT quantity, status FROM stocks WHERE product_id = '" . $product_id . "'";
-        $query = $this->db->connect()->query($sql);
-        return $query->fetch();
+        $sql = "SELECT quantity, last_restock 
+                FROM stocks 
+                WHERE product_id = '" . $product_id . "'";
+        $result = $this->db->connect()->query($sql);
+        
+        if ($result) {
+            $stock = $result->fetch(PDO::FETCH_ASSOC);
+            if ($stock) {
+                $stock['status'] = $stock['quantity'] > 0 ? 'In Stock' : 'Out of Stock';
+                return $stock;
+            }
+        }
+        
+        return ['quantity' => 0, 'status' => 'Out of Stock', 'last_restock' => null];
     }
 
-    function updateStock($product_id, $quantity, $status)
+    function updateStock($product_id, $quantity, $operation = 'subtract')
     {
-        $currentStock = $this->fetchStockByProductId($product_id);
+        try {
+            $sql = "SELECT quantity FROM stocks WHERE product_id = :product_id";
+            $stmt = $this->db->connect()->prepare($sql);
+            $stmt->bindParam(':product_id', $product_id);
+            $stmt->execute();
+            $currentStock = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if (!$currentStock) {
-            return "Product not found.";
-        }
-
-        $newQuantity = $currentStock['quantity'];
-
-        if ($status === 'In Stock') {
-            $newQuantity += $quantity;
-        } elseif ($status === 'Out of Stock') {
-            if ($newQuantity <= 0) {
-                return "Cannot reduce stock below 0.";
+            if (!$currentStock) {
+                throw new Exception("Stock record not found");
             }
-            if ($newQuantity >= $quantity) {
-                $newQuantity -= $quantity;
-            } else {
-                return "Insufficient stock to subtract.";
+
+            $newQuantity = $operation === 'add' 
+                ? $currentStock['quantity'] + $quantity 
+                : $currentStock['quantity'] - $quantity;
+
+            if ($newQuantity < 0) {
+                throw new Exception("Cannot reduce stock below 0");
             }
+
+            $sql = "UPDATE stocks 
+                    SET quantity = :quantity, 
+                        last_restock = CASE 
+                            WHEN :operation = 'add' THEN CURRENT_TIMESTAMP 
+                            ELSE last_restock 
+                        END 
+                    WHERE product_id = :product_id";
+
+            $stmt = $this->db->connect()->prepare($sql);
+            $stmt->bindParam(':quantity', $newQuantity);
+            $stmt->bindParam(':operation', $operation);
+            $stmt->bindParam(':product_id', $product_id);
+            return $stmt->execute();
+
+        } catch (Exception $e) {
+            error_log("Error updating stock: " . $e->getMessage());
+            throw $e;
         }
-
-        $newStatus = $newQuantity > 0 ? 'In Stock' : 'Out of Stock';
-
-        $sql = "UPDATE stocks SET quantity = '" . $newQuantity . "', status = '" . $newStatus . "' WHERE product_id = '" . $product_id . "'";
-        return $this->db->connect()->query($sql);
     }
 }
 ?>

@@ -69,32 +69,37 @@ class Product
         return $result['availability'] == 1;
     }
 
-    function addProduct($canteen_id, $name, $category, $description, $price)
-    {
-        $sql = "INSERT INTO products (canteen_id, name, category, description, price) 
-                VALUES (:canteen_id, :name, :category, :description, :price)";
+    function addProduct($canteen_id, $type_id, $name, $description, $price, $image_url = null) {
+        $sql = "INSERT INTO products (canteen_id, type_id, name, description, price, image_url) 
+                VALUES (:canteen_id, :type_id, :name, :description, :price, :image_url)";
         $query = $this->db->connect()->prepare($sql);
 
         $query->bindParam(':canteen_id', $canteen_id);
+        $query->bindParam(':type_id', $type_id);
         $query->bindParam(':name', $name);
-        $query->bindParam(':category', $category);
         $query->bindParam(':description', $description);
         $query->bindParam(':price', $price);
+        $query->bindParam(':image_url', $image_url);
 
         return $query->execute();
     }
 
-    function updateProduct($product_id, $name, $description, $category, $price) {
+    function updateProduct($product_id, $name, $description, $type_id, $price, $image_url = null) {
         $sql = "UPDATE products 
-                SET name = :name, description = :description, category = :category, price = :price 
+                SET name = :name, 
+                    description = :description, 
+                    type_id = :type_id, 
+                    price = :price,
+                    image_url = :image_url
                 WHERE product_id = :product_id";
         $query = $this->db->connect()->prepare($sql);
 
         $query->bindParam(':product_id', $product_id);
         $query->bindParam(':name', $name);
         $query->bindParam(':description', $description);
-        $query->bindParam(':category', $category);
+        $query->bindParam(':type_id', $type_id);
         $query->bindParam(':price', $price);
+        $query->bindParam(':image_url', $image_url);
 
         return $query->execute();
     }
@@ -206,17 +211,24 @@ class Product
 
     function getFeaturedProducts()
     {
-        $sql = "SELECT p.*, c.name as canteen_name 
-                FROM products p 
-                LEFT JOIN canteens c ON p.canteen_id = c.canteen_id 
-                LEFT JOIN stocks s ON p.product_id = s.product_id 
-                WHERE s.status = 'In Stock' AND s.quantity > 0 
-                ORDER BY RAND() 
-                LIMIT 8";
-        
-        $stmt = $this->db->connect()->prepare($sql);
-        $stmt->execute();
-        return $stmt->fetchAll();
+        try {
+            $sql = "SELECT p.*, pt.name as type_name, c.name as canteen_name, s.quantity 
+                    FROM products p
+                    LEFT JOIN product_types pt ON p.type_id = pt.type_id
+                    LEFT JOIN canteens c ON p.canteen_id = c.canteen_id
+                    LEFT JOIN stocks s ON p.product_id = s.product_id
+                    WHERE p.status = 'available'
+                    AND s.quantity > 0
+                    ORDER BY p.created_at DESC
+                    LIMIT 8";
+                    
+            $query = $this->db->connect()->prepare($sql);
+            $query->execute();
+            return $query->fetchAll();
+        } catch (PDOException $e) {
+            error_log("Error in getFeaturedProducts: " . $e->getMessage());
+            return [];
+        }
     }
 
     function searchProductsByCanteen($canteen_id, $keyword = '', $category = '') {

@@ -171,10 +171,10 @@ function addToCart(productId) {
         product_id: productId
     }, function(response) {
         if (response.success) {
-            alert('Product added to cart!');
+            showResponseModal('Product added to cart successfully!', true);
             updateCartCount();
         } else {
-            alert('Failed to add product to cart.');
+            showResponseModal(response.message || 'Failed to add product to cart.', false);
         }
     }, 'json');
 }
@@ -193,6 +193,18 @@ function getStatusColor(status) {
         case 'cancelled': return 'danger';
         default: return 'secondary';
     }
+}
+
+function showResponseModal(message, success = true) {
+    $('#responseMessage').text(message);
+    if (success) {
+        $('#responseMessage').removeClass('text-danger').addClass('text-success');
+    } else {
+        $('#responseMessage').removeClass('text-success').addClass('text-danger');
+    }
+    
+    const responseModal = new bootstrap.Modal(document.getElementById('responseModal'));
+    responseModal.show();
 }
 </script>
 

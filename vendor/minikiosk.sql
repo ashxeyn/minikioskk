@@ -1,411 +1,365 @@
--- phpMyAdmin SQL Dump
--- version 5.2.1
--- https://www.phpmyadmin.net/
---
--- Host: 127.0.0.1
--- Generation Time: Dec 11, 2024 at 07:52 PM
--- Server version: 10.4.32-MariaDB
--- PHP Version: 8.2.12
+-- Create the database and set character set
+CREATE DATABASE IF NOT EXISTS `minikiosk` 
+DEFAULT CHARACTER SET utf8mb4 
+COLLATE utf8mb4_general_ci;
 
-SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-START TRANSACTION;
-SET time_zone = "+00:00";
+USE `minikiosk`;
 
+-- Drop tables if they exist (in correct order due to foreign key constraints)
+DROP TABLE IF EXISTS `order_items`;
+DROP TABLE IF EXISTS `orders`;
+DROP TABLE IF EXISTS `stocks`;
+DROP TABLE IF EXISTS `products`;
+DROP TABLE IF EXISTS `product_types`;
+DROP TABLE IF EXISTS `categories`;
+DROP TABLE IF EXISTS `managers`;
+DROP TABLE IF EXISTS `employees`;
+DROP TABLE IF EXISTS `students`;
+DROP TABLE IF EXISTS `guests`;
+DROP TABLE IF EXISTS `user_profiles`;
+DROP TABLE IF EXISTS `users`;
+DROP TABLE IF EXISTS `programs`;
+DROP TABLE IF EXISTS `departments`;
+DROP TABLE IF EXISTS `colleges`;
+DROP TABLE IF EXISTS `canteens`;
 
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8mb4 */;
+-- Create tables in proper order (base tables first)
 
---
--- Database: `minikiosk`
---
-
--- --------------------------------------------------------
-
---
--- Table structure for table `canteens`
---
-
-CREATE TABLE `canteens` (
-  `canteen_id` int(11) NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `campus_location` varchar(255) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `canteens`
---
-
-INSERT INTO `canteens` (`canteen_id`, `name`, `campus_location`) VALUES
-(1, 'Romhels Milkteate', 'Campus A fronting open field'),
-(2, 'Barcode', 'Campus A near CTE park'),
-(8, 'Burger House', 'Campus A beside covered court'),
-(9, 'New Canteen', 'College of Law side building'),
-(10, 'Green Canteen', 'Campus A Cafeteria'),
-(11, 'Beverages', 'Campus A Cafeteria'),
-(12, 'Masungit na Tindera', 'Campus B'),
-(13, 'Masungit na Tindera', 'Campus B'),
-(14, 'Patir Place', 'Campus B beside CAIS'),
-(18, 'Masungit na Tindera', 'Campus B beside Garments'),
-(19, 'Basta', 'Campus A near elementary'),
-(21, 'Burgeran', 'Campus A'),
-(25, 'test', 'test'),
-(26, 'test', 'test'),
-(27, 'test', 'test'),
-(28, 'itlog', 'golti'),
-(29, 'itlog', 'golti'),
-(30, 'basta', 'sheesh'),
-(33, 'test', 'Campus A fronting open field'),
-(38, 'Canteen ni Flow.G', 'Harap ng Sementeryo Near Social Work'),
-(40, 'Mike ni Canteen', 'Near'),
-(41, 'Mike ni Canteen', 'Near'),
-(42, 'ASD', 'asd'),
-(43, 'dafsdasd', 'asdgsg'),
-(44, 'asdfsadghhg', 'g');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `orders`
---
-
-CREATE TABLE `orders` (
-  `order_id` int(11) NOT NULL,
-  `user_id` int(11) DEFAULT NULL,
-  `canteen_id` int(11) DEFAULT NULL,
-  `status` enum('pending','accepted','cancelled','completed') DEFAULT 'pending',
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `queue_number` int(11) NOT NULL DEFAULT 1
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `orders`
---
-
-INSERT INTO `orders` (`order_id`, `user_id`, `canteen_id`, `status`, `created_at`, `updated_at`, `queue_number`) VALUES
-(47, 22, 1, 'completed', '2024-11-17 05:27:07', '2024-12-06 15:36:00', 7),
-(54, 11, 1, 'pending', '2024-11-21 06:53:19', '2024-11-21 06:53:19', 8),
-(65, 22, NULL, 'pending', '2024-12-11 18:51:29', '2024-12-11 18:51:29', 1);
-
--- --------------------------------------------------------
-
---
--- Table structure for table `order_items`
---
-
-CREATE TABLE `order_items` (
-  `order_item_id` int(11) NOT NULL,
-  `order_id` int(11) DEFAULT NULL,
-  `product_id` int(11) DEFAULT NULL,
-  `quantity` int(11) NOT NULL,
-  `total_price` decimal(8,2) NOT NULL,
-  `price` decimal(10,2) NOT NULL DEFAULT 0.00,
-  `canteen_id` int(11) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `order_items`
---
-
-INSERT INTO `order_items` (`order_item_id`, `order_id`, `product_id`, `quantity`, `total_price`, `price`, `canteen_id`) VALUES
-(51, 47, 45, 1, 70.00, 0.00, 2),
-(81, 65, 57, 1, 25.00, 25.00, NULL);
-
--- --------------------------------------------------------
-
---
--- Table structure for table `products`
---
-
-CREATE TABLE `products` (
-  `product_id` int(11) NOT NULL,
-  `canteen_id` int(11) DEFAULT NULL,
-  `category` enum('Drinks and Beverages','Snacks','Meals','Fruits') NOT NULL,
-  `name` varchar(255) NOT NULL,
+-- Colleges table
+CREATE TABLE `colleges` (
+  `college_id` int(11) NOT NULL AUTO_INCREMENT,
+  `college_name` varchar(255) NOT NULL,
+  `abbreviation` varchar(50) DEFAULT NULL,
   `description` text DEFAULT NULL,
-  `price` decimal(8,2) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  PRIMARY KEY (`college_id`)
+) ENGINE=InnoDB;
 
---
--- Dumping data for table `products`
---
+-- Departments table
+CREATE TABLE `departments` (
+  `department_id` int(11) NOT NULL AUTO_INCREMENT,
+  `college_id` int(11) NOT NULL,
+  `department_name` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  PRIMARY KEY (`department_id`),
+  FOREIGN KEY (`college_id`) REFERENCES `colleges` (`college_id`) ON DELETE CASCADE
+) ENGINE=InnoDB;
 
-INSERT INTO `products` (`product_id`, `canteen_id`, `category`, `name`, `description`, `price`) VALUES
-(45, 2, 'Snacks', 'Barcode Burger', 'Juicy beef burger with fresh lettuce', 70.00),
-(52, 2, 'Meals', 'Patir', 'Muslim Delicacy', 30.00),
-(53, 9, 'Snacks', 'Lumpia', 'Crispy lumpia', 100.00),
-(54, 18, 'Snacks', 'Patir', 'sccsc', 222.00),
-(55, 1, 'Snacks', 'Empanada', 'Basta', 12.00),
-(57, 38, 'Snacks', 'burgir', 'kkk;l', 25.00);
-
--- --------------------------------------------------------
-
---
--- Table structure for table `programs`
---
-
+-- Programs table
 CREATE TABLE `programs` (
-  `program_id` int(11) NOT NULL,
+  `program_id` int(11) NOT NULL AUTO_INCREMENT,
+  `department_id` int(11) NOT NULL,
   `program_name` varchar(255) NOT NULL,
-  `department` varchar(255) DEFAULT NULL,
-  `college` varchar(255) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `description` text DEFAULT NULL,
+  PRIMARY KEY (`program_id`),
+  FOREIGN KEY (`department_id`) REFERENCES `departments` (`department_id`) ON DELETE CASCADE
+) ENGINE=InnoDB;
 
---
--- Dumping data for table `programs`
---
+-- Canteens table
+CREATE TABLE `canteens` (
+  `canteen_id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `campus_location` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `opening_time` time DEFAULT NULL,
+  `closing_time` time DEFAULT NULL,
+  `status` enum('open','closed','maintenance') DEFAULT 'open',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`canteen_id`)
+) ENGINE=InnoDB;
 
-INSERT INTO `programs` (`program_id`, `program_name`, `department`, `college`) VALUES
-(1, 'BS in Computer Science', 'Computer Science Department', 'College of Computing Studies'),
-(2, 'BS in Information Technology', 'Department of IT', 'College of Computing Studies'),
-(3, 'BS in Nursing', 'Department of nursing', 'College of Nursing'),
-(5, 'BS in Chemistry', 'Chem Dep', 'College of Science and Mathematics');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `stocks`
---
-
-CREATE TABLE `stocks` (
-  `product_id` int(11) NOT NULL,
-  `quantity` int(11) NOT NULL,
-  `status` varchar(50) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `stocks`
---
-
-INSERT INTO `stocks` (`product_id`, `quantity`, `status`) VALUES
-(45, 12313, 'In Stock'),
-(52, 123, 'In Stock'),
-(53, 43, 'In Stock'),
-(55, 234, 'In Stock'),
-(57, 20, 'In Stock');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `users`
---
-
+-- Users table
 CREATE TABLE `users` (
-  `user_id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL AUTO_INCREMENT,
   `email` varchar(255) DEFAULT NULL,
   `username` varchar(255) NOT NULL,
   `password` varchar(255) NOT NULL,
+  `role` enum('admin','manager','employee','student','guest') NOT NULL DEFAULT 'student',
+  `status` enum('pending','approved','rejected') DEFAULT 'pending',
   `last_name` varchar(255) NOT NULL,
   `given_name` varchar(255) NOT NULL,
   `middle_name` varchar(255) DEFAULT NULL,
-  `program_id` int(11) DEFAULT NULL,
-  `canteen_id` int(11) DEFAULT NULL,
-  `is_student` tinyint(1) DEFAULT 0,
-  `is_employee` tinyint(1) DEFAULT 0,
-  `is_manager` tinyint(1) DEFAULT 0,
-  `is_admin` tinyint(1) DEFAULT 0,
-  `is_guest` tinyint(1) DEFAULT 0,
-  `status` enum('pending','approved','rejected') DEFAULT 'pending',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `role` enum('admin','manager','employee','student','guest','pending_manager') DEFAULT 'pending_manager'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `program_id` int(11) DEFAULT NULL,
+  `department_id` int(11) DEFAULT NULL,
+  `canteen_id` int(11) DEFAULT NULL,
+  PRIMARY KEY (`user_id`),
+  UNIQUE KEY `email` (`email`),
+  UNIQUE KEY `username` (`username`),
+  FOREIGN KEY (`program_id`) REFERENCES `programs` (`program_id`),
+  FOREIGN KEY (`department_id`) REFERENCES `departments` (`department_id`),
+  FOREIGN KEY (`canteen_id`) REFERENCES `canteens` (`canteen_id`)
+) ENGINE=InnoDB;
 
---
--- Dumping data for table `users`
---
+-- User profiles table
+CREATE TABLE `user_profiles` (
+  `profile_id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `last_name` varchar(255) NOT NULL,
+  `given_name` varchar(255) NOT NULL,
+  `middle_name` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`profile_id`),
+  FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
+) ENGINE=InnoDB;
 
-INSERT INTO `users` (`user_id`, `email`, `username`, `password`, `last_name`, `given_name`, `middle_name`, `program_id`, `canteen_id`, `is_student`, `is_employee`, `is_manager`, `is_admin`, `is_guest`, `status`, `created_at`, `role`) VALUES
-(1, 'ashxeyn@gmail.com', 'ashxeynx', '$2y$10$mHj.aoz/eLqaREbsNiOt6.KK2UWUjLPviCLHdOEP424VCrE1pAp8W', 'Jimenez', 'Shane Hart', 'Duran', NULL, NULL, 0, 0, 0, 1, 0, 'pending', '2024-11-01 14:27:12', 'admin'),
-(11, 'HZ202300259@wmsu.edu.ph', 'employee01', '$2y$10$g7lVRsgRqO/Kp6xgGwUbQOx9.yWor6oy7zyU5VxfDb8YXVNlUNcqW', 'Kulong', 'Rone Paullan', 'Gellecania', NULL, NULL, 0, 1, 0, 0, 0, 'pending', '2024-11-01 20:49:45', 'employee'),
-(12, 'jazzypark456hd@gmail.com', 'manager12', '$2y$10$puaS8kbvyRyaU/ATlYou0OpDJmTgfp83ahKJGgR7IEoizmYGMmJJ.', 'Roque', 'Jazzper', 'Dimain', NULL, 1, 0, 0, 1, 0, 0, 'pending', '2024-11-01 21:09:19', 'manager'),
-(13, 'margie@gmail.com', 'manager13', '$2y$10$wcKSQGn8m3WduTMiyr4C/esf7kqJmHMw7ZvZsTi.2TpZYP.2EN2hu', 'Clarion', 'Margie', 'Veracruz', NULL, 2, 0, 0, 1, 0, 0, 'pending', '2024-11-01 21:35:21', 'manager'),
-(16, 'hz202300371@wmsu.edu.ph', 'ronron', '$2y$10$jp/VWPy1AZGSPzAr6H9J6Oq7a7SdcC7OLkKeDj9YyKQqn6bOQdPpC', 'Kulong', 'Rone Paullan', 'Gellecania', 1, NULL, 1, 0, 0, 0, 0, 'pending', '2024-11-01 22:08:06', 'student'),
-(22, 'hz202301257@wmsu.edu.ph', 'JazzForYou', '$2y$10$7P2hyEf.y4H0blICcv4rCuFuYvw9aQq3/Vq9yEiutU1hP0j7fPUEm', 'Roque', 'Jazzper', 'Dimain', 1, NULL, 1, 0, 0, 0, 0, 'pending', '2024-11-03 08:20:34', 'student'),
-(23, 'HZ202312339@wmsu.edu.ph', 'customer', '$2y$10$OIswgG9IcDnjK5yJnVMA6uCl8Fm2Dr6AqnvFPcUcR0g.r4fPPr9uO', 'Jimenez', 'John', 'Francisco', 1, NULL, 1, 0, 0, 0, 0, 'pending', '2024-11-26 05:31:44', 'student'),
-(24, 'Sheesh@wmsu.edu.ph', 'sheesh', '$2y$10$1cNAe8nTcO1qlVE/dj67zuOlULkdgvlljWzk2BprdmMozbOk56JhS', 'Sheesh', 'Sheesh', 'Sheesh', NULL, NULL, 0, 1, 0, 0, 0, 'pending', '2024-12-09 04:10:26', 'employee'),
-(25, '', '', '$2y$10$Fr6P3I/CovTyxD/H/WZ3iepO8cQaqVPNUXo9f5f3OXVYF9wn9wT5W', '', '', '', NULL, NULL, 0, 0, 0, 0, 1, 'pending', '2024-12-09 05:05:19', ''),
-(27, 'flowg@gmail.com', 'flow.g', '$2y$10$v0m1JKDZf0h3OgaovCMcOuRDEDiHuywTNwq0MBAeLGwTWvX6oKc66', 'G', 'Flow', '.', NULL, 38, 0, 0, 1, 0, 0, 'pending', '2024-12-10 14:48:11', 'manager'),
-(29, NULL, 'Guest', '$2y$10$1oG5jDaaa6BdTdE10.6G2eMXG5h5KjQHvv7Up4i2YWOZAkUFSaxSq', '', '', '', NULL, NULL, 0, 0, 0, 0, 1, 'pending', '2024-12-11 09:53:03', 'guest'),
-(30, NULL, 'Guest3718', '$2y$10$mxZVgDtmoBNHCWj6vD46leqML9rL8RBwtC8vxhGt8YfptXrb5tN..', '', '', '', NULL, NULL, 0, 0, 0, 0, 1, 'pending', '2024-12-11 12:49:23', 'guest'),
-(31, NULL, 'Guest7809', '$2y$10$g6abLxZZ/fGi895XNimGQOnZ6DdmF5SLCBjhDKe1TMskvRfiWsSm2', '', '', '', NULL, NULL, 0, 0, 0, 0, 1, 'pending', '2024-12-11 12:55:50', 'guest'),
-(32, '2002@wmsu.edu.ph', 'mana123', '$2y$10$SOQzTQVTL/uk8/MxqD9pY.mfnspmadbfzB8821pfh7M2YDTALSRd6', 'Christian jude', 'meow', 'p', NULL, NULL, 0, 1, 0, 0, 0, 'pending', '2024-12-11 13:40:57', 'employee'),
-(33, '2002@gmail.com', 'mana1234', '$2y$10$wCA4lFi0gK0HUsXvWqDul.ir3q2kpHc3wYNr5V3MtqyKnjlwRNBvi', 'Riyal', 'wow', 'p', NULL, NULL, 0, 0, 0, 0, 1, 'pending', '2024-12-11 13:58:26', 'guest'),
-(34, NULL, 'Guest2957', '$2y$10$Cl5DESQ4T2TQ.saho6Frk.lTHDNLLqAnarBOEqaZgpiQ68GZBgUce', '', '', '', NULL, NULL, 0, 0, 0, 0, 1, 'pending', '2024-12-11 14:06:23', 'guest'),
-(35, NULL, 'Guest1208', '$2y$10$S5LAJp4yuz/ax0N1LaBzruAze.NFQbBKeL9Qr2OjRL7mJA0Q6Z77.', '', '', '', NULL, NULL, 0, 0, 0, 0, 1, 'pending', '2024-12-11 14:08:55', 'guest'),
-(36, NULL, 'Guest5182', '$2y$10$BlIgeS3KC9PRaJ2RTfxvcOV.REugT5uO69fVqQx/XUz1LQB.DzfYe', '', '', '', NULL, NULL, 0, 0, 0, 0, 1, 'pending', '2024-12-11 16:44:25', 'guest'),
-(37, NULL, 'Guest1884', '$2y$10$FkajJnB.bmD44flYGipe..8Rj/SJynNBLkmI5nduKy1GCHBMAJMhS', '', '', '', NULL, NULL, 0, 0, 0, 0, 1, 'pending', '2024-12-11 16:54:14', 'guest'),
-(38, NULL, 'Guest2845', '$2y$10$P.xod6We398OGwJnbxQyUOLo05meG2WtdcNNkdo9/ofwnbKcBY1na', '', '', '', NULL, NULL, 0, 0, 0, 0, 1, 'pending', '2024-12-11 17:05:35', 'guest'),
-(39, NULL, 'Guest8458', '$2y$10$IhqRV6epee4BdVCYLI.BBuV7t6q/VsUpMNrGZM4vTKtxqWpUgbDKS', '', '', '', NULL, NULL, 0, 0, 0, 0, 1, 'pending', '2024-12-11 17:05:41', 'guest'),
-(40, 'mike@gmail.com', 'mike123', '$2y$10$y3Zwi4rLUwbhsaQPYPW9jOwsr.llVRyqk5mar9hy/atvVKuuMUBfC', 'jordan', 'Michael', 'flow.g', NULL, 41, 0, 0, 1, 0, 0, 'pending', '2024-12-11 17:08:15', 'manager'),
-(41, NULL, 'Guest1369', '$2y$10$NVDeDwiuKpEe8fu1sF2cT.wWbHbsyvz3YlOtasjeXtCd29l2JAqkK', '', '', '', NULL, NULL, 0, 0, 0, 0, 1, 'pending', '2024-12-11 17:43:47', 'guest'),
-(42, 'asd@gmail.com', 'asd', '$2y$10$hT9ew3YWtRVJ2lP2vSH8WOOiaTFaTtCy7EJoMf9ICrNeE5VrCsPw2', 'asd', 'qwe', 'ashxeynx', NULL, 42, 0, 0, 0, 0, 0, 'pending', '2024-12-11 17:44:18', 'manager'),
-(43, NULL, 'Guest1551', '$2y$10$fXk5VrC.TAVoqpPXP3HbbupHElUQj4mWcKaEile3/JmPIkMfDF8tm', '', '', '', NULL, NULL, 0, 0, 0, 0, 1, 'pending', '2024-12-11 17:51:09', 'guest'),
-(44, NULL, 'Guest5769', '$2y$10$ukCUmx3Te2ZAB8HsV.ba0evTo.cTwDCaHqOWV2CAc/gqI8rgYM5yq', '', '', '', NULL, NULL, 0, 0, 0, 0, 1, 'pending', '2024-12-11 17:51:21', 'guest'),
-(45, 'adsf@gmial.com', 'user11', '$2y$10$6BxbrrktVK6tl8BS8ggRS.rcm8ic6/HqtXW2UVJmo78ItcT47oG/i', 'asdffgdfd', 'dfgdf', 'asd', NULL, 43, 0, 0, 1, 0, 0, 'approved', '2024-12-11 17:52:22', 'manager'),
-(46, NULL, 'Guest7065', '$2y$10$vx.OqdvV/GxUqKd8jLA1te8n7N5lJxlX5VU.7XrTkJeCu5gYShRru', '', '', '', NULL, NULL, 0, 0, 0, 0, 1, 'pending', '2024-12-11 17:57:30', 'guest'),
-(47, 'sdf@gmial.com', 'user1234', '$2y$10$j9jhTjbPfFgpKgTbpm9Cgewq8d8YQtVY0L17f0GdYRDxkj1bcU1ai', 'wdkgj&#039;kafdg', 'asdfldf', 'manager13', NULL, 44, 0, 0, 1, 0, 0, 'approved', '2024-12-11 17:58:12', 'manager'),
-(48, 'Helo@wmsu.edu.ph', 'heloworld', '$2y$10$Mqze5MlGIXEsrQb9zmReMOVXKKhg4RZ1tdwjcv/T0Y6Qp1D/djBKC', 'Hello', 'World', 'asd', NULL, NULL, 0, 1, 0, 0, 0, 'pending', '2024-12-11 18:00:44', 'employee');
+-- User type tables
+CREATE TABLE `students` (
+  `student_id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `program_id` int(11) NOT NULL,
+  `student_number` varchar(50) NOT NULL,
+  `year_level` int(11) DEFAULT NULL,
+  PRIMARY KEY (`student_id`),
+  UNIQUE KEY `student_number` (`student_number`),
+  UNIQUE KEY `user_id` (`user_id`),
+  FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
+  FOREIGN KEY (`program_id`) REFERENCES `programs` (`program_id`)
+) ENGINE=InnoDB;
 
---
--- Triggers `users`
---
-DELIMITER $$
-CREATE TRIGGER `set_user_role` BEFORE INSERT ON `users` FOR EACH ROW BEGIN
-    IF NEW.is_admin = 1 THEN
-        SET NEW.role = 'admin';
-    ELSEIF NEW.is_manager = 1 THEN
-        SET NEW.role = 'manager';
-    ELSEIF NEW.is_employee = 1 THEN
-        SET NEW.role = 'employee';
-    ELSEIF NEW.is_student = 1 THEN
-        SET NEW.role = 'student';
-    ELSEIF NEW.is_guest = 1 THEN
-        SET NEW.role = 'guest';
-    ELSE
-        SET NEW.role = 'pending_manager';
-    END IF;
-END
-$$
-DELIMITER ;
+CREATE TABLE `employees` (
+  `employee_id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `department_id` int(11) NOT NULL,
+  `employee_number` varchar(50) NOT NULL,
+  `position` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`employee_id`),
+  UNIQUE KEY `employee_number` (`employee_number`),
+  UNIQUE KEY `user_id` (`user_id`),
+  FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
+  FOREIGN KEY (`department_id`) REFERENCES `departments` (`department_id`)
+) ENGINE=InnoDB;
 
---
--- Indexes for dumped tables
---
+CREATE TABLE `managers` (
+  `manager_id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `canteen_id` int(11) NOT NULL,
+  `start_date` date NOT NULL,
+  `status` enum('pending','accepted','rejected') DEFAULT 'pending',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`manager_id`),
+  UNIQUE KEY `user_id` (`user_id`),
+  FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
+  FOREIGN KEY (`canteen_id`) REFERENCES `canteens` (`canteen_id`)
+) ENGINE=InnoDB;
 
---
--- Indexes for table `canteens`
---
-ALTER TABLE `canteens`
-  ADD PRIMARY KEY (`canteen_id`);
+CREATE TABLE `guests` (
+  `guest_id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `purpose` text DEFAULT NULL,
+  PRIMARY KEY (`guest_id`),
+  UNIQUE KEY `user_id` (`user_id`),
+  FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
+) ENGINE=InnoDB;
 
---
--- Indexes for table `orders`
---
-ALTER TABLE `orders`
-  ADD PRIMARY KEY (`order_id`),
-  ADD KEY `user_id` (`user_id`),
-  ADD KEY `canteen_id` (`canteen_id`);
+-- Product related tables
+CREATE TABLE `categories` (
+  `category_id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  PRIMARY KEY (`category_id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB;
 
---
--- Indexes for table `order_items`
---
-ALTER TABLE `order_items`
-  ADD PRIMARY KEY (`order_item_id`),
-  ADD KEY `order_id` (`order_id`),
-  ADD KEY `product_id` (`product_id`),
-  ADD KEY `canteen_id` (`canteen_id`);
+CREATE TABLE `product_types` (
+  `type_id` int(11) NOT NULL AUTO_INCREMENT,
+  `category_id` int(11) NOT NULL,
+  `name` varchar(50) NOT NULL,
+  `type` varchar(50) NOT NULL,
+  `description` text DEFAULT NULL,
+  PRIMARY KEY (`type_id`),
+  FOREIGN KEY (`category_id`) REFERENCES `categories` (`category_id`)
+) ENGINE=InnoDB;
 
---
--- Indexes for table `products`
---
-ALTER TABLE `products`
-  ADD PRIMARY KEY (`product_id`),
-  ADD KEY `canteen_id` (`canteen_id`);
+-- Insert initial category data FIRST
+INSERT INTO `categories` (`name`, `description`) VALUES
+('Food', 'All food items'),
+('Beverages', 'All types of drinks'),
+('Utensils', 'Eating and serving utensils'),
+('Toiletries', 'Personal care and hygiene products'),
+('Others', 'Miscellaneous items');
 
---
--- Indexes for table `programs`
---
-ALTER TABLE `programs`
-  ADD PRIMARY KEY (`program_id`);
+-- THEN insert product types
+INSERT INTO `product_types` (`category_id`, `name`, `type`, `description`) VALUES
+((SELECT category_id FROM categories WHERE name = 'Food'), 'Hot Meals', 'food', 'Freshly cooked main dishes'),
+((SELECT category_id FROM categories WHERE name = 'Food'), 'Snacks', 'food', 'Light meals and finger foods'),
+((SELECT category_id FROM categories WHERE name = 'Beverages'), 'Cold Beverages', 'beverage', 'Refreshing drinks and smoothies'),
+((SELECT category_id FROM categories WHERE name = 'Beverages'), 'Hot Beverages', 'beverage', 'Coffee, tea, and other hot drinks'),
+((SELECT category_id FROM categories WHERE name = 'Utensils'), 'Disposable Utensils', 'utensil', 'Single-use plates, cups, and cutlery'),
+((SELECT category_id FROM categories WHERE name = 'Utensils'), 'Reusable Utensils', 'utensil', 'Washable plates and utensils'),
+((SELECT category_id FROM categories WHERE name = 'Toiletries'), 'Personal Care', 'toiletry', 'Basic hygiene products'),
+((SELECT category_id FROM categories WHERE name = 'Toiletries'), 'Cleaning Supplies', 'toiletry', 'Sanitizers and cleaning materials');
 
---
--- Indexes for table `stocks`
---
-ALTER TABLE `stocks`
-  ADD PRIMARY KEY (`product_id`);
+CREATE TABLE `products` (
+  `product_id` int(11) NOT NULL AUTO_INCREMENT,
+  `canteen_id` int(11) NOT NULL,
+  `type_id` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `price` decimal(8,2) NOT NULL,
+  `image_url` varchar(255) DEFAULT NULL,
+  `status` enum('available','unavailable') DEFAULT 'available',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`product_id`),
+  FOREIGN KEY (`canteen_id`) REFERENCES `canteens` (`canteen_id`),
+  FOREIGN KEY (`type_id`) REFERENCES `product_types` (`type_id`)
+) ENGINE=InnoDB;
 
---
--- Indexes for table `users`
---
-ALTER TABLE `users`
-  ADD PRIMARY KEY (`user_id`),
-  ADD UNIQUE KEY `email` (`email`),
-  ADD KEY `program_id` (`program_id`),
-  ADD KEY `canteen_id` (`canteen_id`);
+CREATE TABLE `stocks` (
+  `stock_id` int(11) NOT NULL AUTO_INCREMENT,
+  `product_id` int(11) NOT NULL,
+  `quantity` int(11) NOT NULL DEFAULT 0,
+  `last_restock` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`stock_id`),
+  FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE
+) ENGINE=InnoDB;
 
---
--- AUTO_INCREMENT for dumped tables
---
+-- After all other table definitions but before data insertions, add:
+CREATE TABLE `orders` (
+  `order_id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `canteen_id` int(11) NOT NULL,
+  `total_amount` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `status` enum('pending','accepted','preparing','ready','completed','cancelled') DEFAULT 'pending',
+  `payment_status` enum('unpaid','paid') DEFAULT 'unpaid',
+  `payment_method` enum('cash','e-wallet','card') DEFAULT 'cash',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`order_id`),
+  FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`),
+  FOREIGN KEY (`canteen_id`) REFERENCES `canteens` (`canteen_id`)
+) ENGINE=InnoDB;
 
---
--- AUTO_INCREMENT for table `canteens`
---
-ALTER TABLE `canteens`
-  MODIFY `canteen_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
+CREATE TABLE `order_items` (
+  `item_id` int(11) NOT NULL AUTO_INCREMENT,
+  `order_id` int(11) NOT NULL,
+  `product_id` int(11) NOT NULL,
+  `quantity` int(11) NOT NULL,
+  `unit_price` decimal(10,2) NOT NULL,
+  `subtotal` decimal(10,2) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`item_id`),
+  FOREIGN KEY (`order_id`) REFERENCES `orders` (`order_id`) ON DELETE CASCADE,
+  FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`)
+) ENGINE=InnoDB;
 
---
--- AUTO_INCREMENT for table `orders`
---
-ALTER TABLE `orders`
-  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=66;
+-- Insert sample colleges
+INSERT INTO `colleges` (`college_name`, `abbreviation`, `description`) VALUES
+('College of Computing Studies', 'CCS', 'Computing and IT Programs'),
+('College of Engineering', 'COE', 'Engineering Programs'),
+('College of Liberal Arts', 'CLA', 'Liberal Arts Programs'),
+('College of Science and Mathematics', 'CSM', 'Science and Mathematics Programs');
 
---
--- AUTO_INCREMENT for table `order_items`
---
-ALTER TABLE `order_items`
-  MODIFY `order_item_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=82;
+-- Insert sample departments
+INSERT INTO `departments` (`college_id`, `department_name`, `description`) VALUES
+((SELECT college_id FROM colleges WHERE abbreviation = 'CCS'), 'Information Technology', 'IT Department'),
+((SELECT college_id FROM colleges WHERE abbreviation = 'CCS'), 'Computer Science', 'CS Department'),
+((SELECT college_id FROM colleges WHERE abbreviation = 'COE'), 'Civil Engineering', 'CE Department'),
+((SELECT college_id FROM colleges WHERE abbreviation = 'COE'), 'Mechanical Engineering', 'ME Department'),
+((SELECT college_id FROM colleges WHERE abbreviation = 'CLA'), 'English Department', 'English Studies'),
+((SELECT college_id FROM colleges WHERE abbreviation = 'CSM'), 'Mathematics Department', 'Mathematics Studies');
 
---
--- AUTO_INCREMENT for table `products`
---
-ALTER TABLE `products`
-  MODIFY `product_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=58;
+-- Insert sample programs
+INSERT INTO `programs` (`department_id`, `program_name`, `description`) VALUES
+((SELECT department_id FROM departments WHERE department_name = 'Information Technology'), 'Bachelor of Science in Information Technology', 'BSIT Program'),
+((SELECT department_id FROM departments WHERE department_name = 'Computer Science'), 'Bachelor of Science in Computer Science', 'BSCS Program'),
+((SELECT department_id FROM departments WHERE department_name = 'Civil Engineering'), 'Bachelor of Science in Civil Engineering', 'BSCE Program'),
+((SELECT department_id FROM departments WHERE department_name = 'Mechanical Engineering'), 'Bachelor of Science in Mechanical Engineering', 'BSME Program');
 
---
--- AUTO_INCREMENT for table `programs`
---
-ALTER TABLE `programs`
-  MODIFY `program_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+-- Insert sample canteens
+INSERT INTO `canteens` (`name`, `campus_location`, `description`, `opening_time`, `closing_time`, `status`) VALUES
+('Main Canteen', 'Main Campus', 'Primary campus canteen', '07:00:00', '20:00:00', 'open'),
+('CCS Canteen', 'CCS Building', 'Computing Studies canteen', '08:00:00', '17:00:00', 'open'),
+('Engineering Cafe', 'Engineering Building', 'Engineering building cafe', '07:30:00', '18:00:00', 'open'),
+('Science Hub', 'Science Complex', 'Science building food court', '08:00:00', '19:00:00', 'open');
 
---
--- AUTO_INCREMENT for table `users`
---
-ALTER TABLE `users`
-  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=49;
+-- Insert sample admin user
+INSERT INTO `users` (
+    `email`, `username`, `password`, `role`, `status`, 
+    `last_name`, `given_name`, `middle_name`
+) VALUES (
+    'admin@wmsu.edu.ph', 
+    'admin', 
+    '$2y$10$8WxhJz0q.Y9HYVPgCB8Z8.1P.P8QC8Z3s5GxCPd0ZJz0SCn2.ZkxK', -- password: admin123
+    'admin',
+    'approved',
+    'Admin',
+    'System',
+    'A'
+);
 
---
--- Constraints for dumped tables
---
+-- Insert sample manager
+INSERT INTO `users` (
+    `email`, `username`, `password`, `role`, `status`, 
+    `last_name`, `given_name`, `middle_name`, `canteen_id`
+) VALUES (
+    'manager@wmsu.edu.ph',
+    'manager',
+    '$2y$10$8WxhJz0q.Y9HYVPgCB8Z8.1P.P8QC8Z3s5GxCPd0ZJz0SCn2.ZkxK', -- password: admin123
+    'manager',
+    'approved',
+    'Manager',
+    'Canteen',
+    'M',
+    (SELECT canteen_id FROM canteens WHERE name = 'Main Canteen')
+);
 
---
--- Constraints for table `orders`
---
-ALTER TABLE `orders`
-  ADD CONSTRAINT `orders_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `orders_ibfk_2` FOREIGN KEY (`canteen_id`) REFERENCES `canteens` (`canteen_id`) ON DELETE SET NULL,
-  ADD CONSTRAINT `orders_ibfk_3` FOREIGN KEY (`canteen_id`) REFERENCES `canteens` (`canteen_id`);
+-- Insert sample products
+INSERT INTO `products` (`canteen_id`, `type_id`, `name`, `description`, `price`, `status`) VALUES
+((SELECT canteen_id FROM canteens WHERE name = 'Main Canteen'),
+ (SELECT type_id FROM product_types WHERE name = 'Hot Meals'),
+ 'Chicken Adobo', 'Classic Filipino adobo with rice', 75.00, 'available'),
+ 
+((SELECT canteen_id FROM canteens WHERE name = 'Main Canteen'),
+ (SELECT type_id FROM product_types WHERE name = 'Hot Meals'),
+ 'Sinigang', 'Sour soup with pork and vegetables', 80.00, 'available'),
+ 
+((SELECT canteen_id FROM canteens WHERE name = 'Main Canteen'),
+ (SELECT type_id FROM product_types WHERE name = 'Cold Beverages'),
+ 'Iced Tea', 'Refreshing cold tea', 25.00, 'available'),
+ 
+((SELECT canteen_id FROM canteens WHERE name = 'CCS Canteen'),
+ (SELECT type_id FROM product_types WHERE name = 'Snacks'),
+ 'Sandwich', 'Fresh vegetable sandwich', 45.00, 'available');
 
---
--- Constraints for table `order_items`
---
-ALTER TABLE `order_items`
-  ADD CONSTRAINT `fk_order_items_orders` FOREIGN KEY (`order_id`) REFERENCES `orders` (`order_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_order_items_products` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `order_items_ibfk_1` FOREIGN KEY (`canteen_id`) REFERENCES `canteens` (`canteen_id`),
-  ADD CONSTRAINT `order_items_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`);
+-- Insert initial stocks
+INSERT INTO `stocks` (`product_id`, `quantity`, `last_restock`) VALUES
+((SELECT product_id FROM products WHERE name = 'Chicken Adobo'), 50, CURRENT_TIMESTAMP),
+((SELECT product_id FROM products WHERE name = 'Sinigang'), 30, CURRENT_TIMESTAMP),
+((SELECT product_id FROM products WHERE name = 'Iced Tea'), 100, CURRENT_TIMESTAMP),
+((SELECT product_id FROM products WHERE name = 'Sandwich'), 40, CURRENT_TIMESTAMP);
 
---
--- Constraints for table `products`
---
-ALTER TABLE `products`
-  ADD CONSTRAINT `products_ibfk_1` FOREIGN KEY (`canteen_id`) REFERENCES `canteens` (`canteen_id`) ON DELETE CASCADE;
+-- Move the sample order data insertion to after ALL other data insertions
+-- (after users, canteens, and products are inserted)
+-- At the very end of the file, add:
 
---
--- Constraints for table `stocks`
---
-ALTER TABLE `stocks`
-  ADD CONSTRAINT `stocks_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE;
+-- Insert sample orders
+INSERT INTO `orders` (`user_id`, `canteen_id`, `total_amount`, `status`, `payment_status`) 
+SELECT 
+    u.user_id,
+    c.canteen_id,
+    150.00,
+    'completed',
+    'paid'
+FROM 
+    users u,
+    canteens c
+WHERE 
+    u.username = 'admin'
+    AND c.name = 'Main Canteen'
+LIMIT 1;
 
---
--- Constraints for table `users`
---
-ALTER TABLE `users`
-  ADD CONSTRAINT `users_ibfk_1` FOREIGN KEY (`program_id`) REFERENCES `programs` (`program_id`) ON DELETE SET NULL,
-  ADD CONSTRAINT `users_ibfk_2` FOREIGN KEY (`canteen_id`) REFERENCES `canteens` (`canteen_id`) ON DELETE SET NULL;
-COMMIT;
-
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+-- Insert sample order items
+INSERT INTO `order_items` (`order_id`, `product_id`, `quantity`, `unit_price`, `subtotal`)
+SELECT 
+    (SELECT MAX(order_id) FROM orders),
+    p.product_id,
+    2,
+    75.00,
+    150.00
+FROM 
+    products p
+WHERE 
+    p.name = 'Chicken Adobo'
+LIMIT 1;

@@ -112,6 +112,30 @@ $products = $productObj->fetchProductsByCanteen($canteen_id);
     </div>
 </div>
 
+<!-- Add this modal HTML after your existing order modal -->
+<div class="modal fade" id="responseModal" tabindex="-1" role="dialog" aria-labelledby="responseModalLabel">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="responseModalLabel">Order Status</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="order-details">
+                    <div class="detail-row">
+                        <div class="label-group">
+                            <span id="responseMessage"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
 /* Modal Styles */
 .modal-content {
@@ -260,6 +284,21 @@ $products = $productObj->fetchProductsByCanteen($canteen_id);
         padding: 10px;
     }
 }
+
+#responseMessage {
+    font-size: 1.1rem;
+    padding: 20px;
+    text-align: center;
+    display: block;
+}
+
+.text-success {
+    color: #28a745;
+}
+
+.text-danger {
+    color: #dc3545;
+}
 </style>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -276,7 +315,6 @@ function openOrderModal(productId, productName, price) {
     $('#modal_product_price').text('₱' + price.toFixed(2));
     updateTotalPrice();
     
-   
     const orderModal = new bootstrap.Modal(document.getElementById('orderModal'));
     orderModal.show();
 }
@@ -285,6 +323,23 @@ function updateTotalPrice() {
     const quantity = $('#quantity').val();
     const totalPrice = currentPrice * quantity;
     $('#modal_total_price').text('₱' + totalPrice.toFixed(2));
+}
+
+function showResponseModal(message, success = true) {
+    const orderModal = bootstrap.Modal.getInstance(document.getElementById('orderModal'));
+    if (orderModal) {
+        orderModal.hide();
+    }
+    
+    $('#responseMessage').text(message);
+    if (success) {
+        $('#responseMessage').removeClass('text-danger').addClass('text-success');
+    } else {
+        $('#responseMessage').removeClass('text-success').addClass('text-danger');
+    }
+    
+    const responseModal = new bootstrap.Modal(document.getElementById('responseModal'));
+    responseModal.show();
 }
 
 function addToCart() {
@@ -301,17 +356,15 @@ function addToCart() {
         },
         success: function(response) {
             if (response.success) {
-                alert('Product added to cart successfully!');
-                const orderModal = bootstrap.Modal.getInstance(document.getElementById('orderModal'));
-                orderModal.hide();
+                showResponseModal('Product added to cart successfully!', true);
                 updateCartCount();
             } else {
-                alert(response.message || 'Failed to add product to cart.');
+                showResponseModal(response.message || 'Failed to add product to cart.', false);
             }
         },
         error: function(xhr, status, error) {
             console.error('Cart Error:', error);
-            alert('Error occurred while adding to cart. Please try again.');
+            showResponseModal('Error occurred while adding to cart. Please try again.', false);
         }
     });
 }

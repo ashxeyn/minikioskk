@@ -211,90 +211,24 @@ class Order
             $conn = $this->db->connect();
             $conn->beginTransaction();
 
-            // Get the canteen_id for the product
-            $sql = "SELECT p.canteen_id, p.price 
-                    FROM products p 
-                    WHERE p.product_id = :product_id";
-            $stmt = $conn->prepare($sql);
-            $stmt->execute(['product_id' => $product_id]);
-            $product = $stmt->fetch(PDO::FETCH_ASSOC);
-
+            // Get product details
+            $product = $this->getProductById($product_id);
             if (!$product) {
                 throw new Exception("Product not found");
             }
 
-            // Get or create pending order with canteen_id
-            $sql = "SELECT o.* FROM orders o 
-                   WHERE o.user_id = :user_id 
-                   AND o.status = 'pending' 
-                   AND o.canteen_id = :canteen_id
-                   ORDER BY o.created_at DESC 
-                   LIMIT 1";
-            $stmt = $conn->prepare($sql);
-            $stmt->execute([
-                'user_id' => $user_id,
-                'canteen_id' => $product['canteen_id']
-            ]);
-            $order = $stmt->fetch();
-
-            if (!$order) {
-                // Create new order with canteen_id
-                $sql = "INSERT INTO orders (user_id, canteen_id, status, created_at) 
-                        VALUES (:user_id, :canteen_id, 'pending', NOW())";
-                $stmt = $conn->prepare($sql);
-                $stmt->execute([
-                    'user_id' => $user_id,
-                    'canteen_id' => $product['canteen_id']
-                ]);
-                $order_id = $conn->lastInsertId();
-            } else {
-                $order_id = $order['order_id'];
-            }
-
-            // Get product price
-            $sql = "SELECT price FROM products WHERE product_id = :product_id";
-            $query = $conn->prepare($sql);
-            $query->bindParam(':product_id', $product_id);
-            $query->execute();
-            $product = $query->fetch();
-
-            if (!$product) {
-                throw new Exception("Product not found");
-            }
-
-            $total_price = $product['price'] * $quantity;
+            // Get or create pending order
+            $order = $this->getOrCreatePendingOrder($user_id);
+            $subtotal = $product['price'] * $quantity;
 
             // Check if product already exists in order
-            $sql = "SELECT order_item_id, quantity FROM order_items 
-                    WHERE order_id = :order_id AND product_id = :product_id";
-            $query = $conn->prepare($sql);
-            $query->bindParam(':order_id', $order_id);
-            $query->bindParam(':product_id', $product_id);
-            $query->execute();
-            $existing_item = $query->fetch();
+            $existing_item = $this->getExistingCartItem($order['order_id'], $product_id);
 
             if ($existing_item) {
-                // Update existing item
-                $sql = "UPDATE order_items 
-                        SET quantity = quantity + :quantity,
-                            total_price = (quantity + :quantity) * :price 
-                        WHERE order_id = :order_id AND product_id = :product_id";
-                $query = $conn->prepare($sql);
-                $query->bindParam(':quantity', $quantity);
-                $query->bindParam(':price', $product['price']);
+                $this->updateCartItemQuantity($existing_item, $quantity, $product['price']);
             } else {
-                // Insert new item
-                $sql = "INSERT INTO order_items (order_id, product_id, quantity, price, total_price) 
-                        VALUES (:order_id, :product_id, :quantity, :price, :total_price)";
-                $query = $conn->prepare($sql);
-                $query->bindParam(':total_price', $total_price);
-                $query->bindParam(':price', $product['price']);
+                $this->addNewCartItem($order['order_id'], $product_id, $quantity, $product['price'], $subtotal);
             }
-
-            $query->bindParam(':order_id', $order_id);
-            $query->bindParam(':product_id', $product_id);
-            $query->bindParam(':quantity', $quantity);
-            $query->execute();
 
             $conn->commit();
             return true;
@@ -416,18 +350,18 @@ function updateOrderTotalPrice($order_id)
 {
     try {
         $sql = "UPDATE orders o 
-                SET total_price = (
-                    SELECT COALESCE(SUM(total_price), 0)
+                SET total_amount = (
+                    SELECT COALESCE(SUM(subtotal), 0) 
                     FROM order_items 
                     WHERE order_id = :order_id
                 )
-                WHERE o.order_id = :order_id";
+                WHERE order_id = :order_id";
         
         $query = $this->db->connect()->prepare($sql);
         $query->bindParam(':order_id', $order_id);
         return $query->execute();
-    } catch (Exception $e) {
-        error_log("Error updating order total price: " . $e->getMessage());
+    } catch (PDOException $e) {
+        error_log($e->getMessage());
         return false;
     }
 }
@@ -516,18 +450,26 @@ function getCurrentQuantity($order_id, $product_id) {
             
             $order_id = $conn->lastInsertId();
 
-            // Insert order items
-            $sql = "INSERT INTO order_items (order_id, product_id, canteen_id, quantity, total_price) 
-                    VALUES (:order_id, :product_id, :canteen_id, :quantity, :total_price)";
+            // Insert order items - Updated to match database schema
+            $sql = "INSERT INTO order_items (order_id, product_id, quantity, unit_price, subtotal) 
+                    VALUES (:order_id, :product_id, :quantity, :unit_price, :subtotal)";
             $stmt = $conn->prepare($sql);
 
             foreach ($cartItems as $item) {
+                // Get product price
+                $product = $this->getProductById($item['product_id']);
+                if (!$product) {
+                    throw new Exception("Product not found");
+                }
+
+                $subtotal = $product['price'] * $item['quantity'];
+                
                 $stmt->execute([
                     'order_id' => $order_id,
                     'product_id' => $item['product_id'],
-                    'canteen_id' => $canteen['canteen_id'],
                     'quantity' => $item['quantity'],
-                    'total_price' => $item['total_price']
+                    'unit_price' => $product['price'],
+                    'subtotal' => $subtotal
                 ]);
             }
 
@@ -616,7 +558,7 @@ function getCurrentQuantity($order_id, $product_id) {
                 // Update the total price of the order
                 $sql = "UPDATE orders o 
                        SET o.total_amount = (
-                           SELECT SUM(oi.total_price) 
+                           SELECT SUM(oi.subtotal) 
                            FROM order_items oi 
                            WHERE oi.order_id = :order_id
                        )
@@ -658,16 +600,14 @@ function getCurrentQuantity($order_id, $product_id) {
             throw new Exception("Product not found.");
         }
 
-        $total_price = $product['price'] * $new_quantity;
-
-        error_log("Updating order: order_id = $order_id, product_id = $product_id, quantity = $new_quantity, total_price = $total_price");
+        $subtotal = $product['price'] * $new_quantity;
 
         $sql = "UPDATE order_items 
-                SET quantity = :quantity, total_price = :total_price 
+                SET quantity = :quantity, subtotal = :subtotal 
                 WHERE order_id = :order_id AND product_id = :product_id";
         $query = $this->db->connect()->prepare($sql);
         $query->bindParam(':quantity', $new_quantity);
-        $query->bindParam(':total_price', $total_price);
+        $query->bindParam(':subtotal', $subtotal);
         $query->bindParam(':order_id', $order_id);
         $query->bindParam(':product_id', $product_id);
         $query->execute();
@@ -675,7 +615,8 @@ function getCurrentQuantity($order_id, $product_id) {
     
     function getCartItems($user_id)
     {
-        $sql = "SELECT oi.*, p.name, p.price as unit_price 
+        $sql = "SELECT oi.item_id, oi.order_id, oi.product_id, oi.quantity, 
+                       oi.unit_price, oi.subtotal, p.name 
                 FROM orders o 
                 JOIN order_items oi ON o.order_id = oi.order_id 
                 JOIN products p ON oi.product_id = p.product_id 
@@ -744,6 +685,33 @@ function getCurrentQuantity($order_id, $product_id) {
         } catch (Exception $e) {
             error_log("Error clearing cart: " . $e->getMessage());
             return false;
+        }
+    }
+
+    function addOrderItem($order_id, $product_id, $quantity) {
+        try {
+            // Get product price
+            $product = $this->getProductById($product_id);
+            if (!$product) {
+                throw new Exception("Product not found");
+            }
+
+            $subtotal = $quantity * $product['price'];
+            
+            $sql = "INSERT INTO order_items (order_id, product_id, quantity, unit_price, subtotal) 
+                    VALUES (:order_id, :product_id, :quantity, :unit_price, :subtotal)";
+            
+            $query = $this->db->connect()->prepare($sql);
+            $query->bindParam(':order_id', $order_id);
+            $query->bindParam(':product_id', $product_id);
+            $query->bindParam(':quantity', $quantity);
+            $query->bindParam(':unit_price', $product['price']);
+            $query->bindParam(':subtotal', $subtotal);
+            
+            return $query->execute();
+        } catch (Exception $e) {
+            error_log("Error adding order item: " . $e->getMessage());
+            throw $e;
         }
     }
 }

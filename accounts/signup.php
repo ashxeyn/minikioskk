@@ -7,10 +7,11 @@ require_once '../classes/accountClass.php';
 $accountObj = new Account();
 $signupErr = $usernameErr = $emailErr = '';
 $last_name = $given_name = $middle_name = $email = $username = $password = '';
-$program_id = null;
+$program_id = $department_id = null;
 $role = isset($_POST['role']) ? $_POST['role'] : '';
 
 $programs = $accountObj->fetchPrograms();
+$departments = $accountObj->fetchDepartments();
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $last_name = clean_input($_POST['last_name']);
@@ -26,10 +27,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $is_employee = ($role === 'employee') ? 1 : 0;
     $is_guest = ($role === 'guest') ? 1 : 0;
     
+    // Validate program_id for students
+    if ($role === 'student' && empty($_POST['program_id'])) {
+        $signupErr = "Please select a program";
+        throw new Exception($signupErr);
+    }
+
+    // Validate department_id for employees
+    if ($role === 'employee' && empty($_POST['department_id'])) {
+        $signupErr = "Please select a department";
+        throw new Exception($signupErr);
+    }
+
     // Get program_id for students
     $program_id = null;
     if ($role === 'student' && !empty($_POST['program_id'])) {
         $program_id = clean_input($_POST['program_id']);
+    }
+
+    // Get department_id for employees
+    $department_id = null;
+    if ($role === 'employee' && !empty($_POST['department_id'])) {
+        $department_id = clean_input($_POST['department_id']);
     }
 
     try {
@@ -51,10 +70,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $is_student,
             $is_employee,
             $is_guest,
-            $program_id
+            $program_id,
+            $department_id
         )) {
             $_SESSION['user_id'] = $accountObj->user_id;
             $_SESSION['username'] = $username;
+            $_SESSION['role'] = $is_student ? 'student' : ($is_employee ? 'employee' : 'guest');
             header('Location: ../customers/customerDashboard.php');
             exit;
         } else {
@@ -136,6 +157,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 
             </div>
 
+            <div id="departmentSelect" class="input-group" style="display: <?= ($role === 'employee') ? 'block' : 'none' ?>;">
+                <select name="department_id" <?= ($role === 'employee') ? 'required' : '' ?>>
+                    <option value="" disabled selected>Select Department</option>
+                    <?php foreach ($departments as $department): ?>
+                        <option value="<?= $department['department_id'] ?>" 
+                            <?= ($department_id == $department['department_id']) ? 'selected' : '' ?>>
+                            <?= clean_input($department['department_name']) ?> 
+                            (<?= clean_input($department['college_abbreviation']) ?>)
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
             <div class="input-group">
                 <input type="text" name="username" placeholder="" value="<?= $username ?>" required>
                 <label for="username">Username</label>
@@ -163,14 +197,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <script>
         function toggleProgramSelect(role) {
             const programSelect = document.getElementById('programSelect');
+            const departmentSelect = document.getElementById('departmentSelect');
             const emailHelp = document.getElementById('emailHelp');
             
             if (role === 'student') {
                 programSelect.style.display = 'block';
                 programSelect.querySelector('select').required = true;
+                departmentSelect.style.display = 'none';
+                departmentSelect.querySelector('select').required = false;
+            } else if (role === 'employee') {
+                programSelect.style.display = 'none';
+                programSelect.querySelector('select').required = false;
+                departmentSelect.style.display = 'block';
+                departmentSelect.querySelector('select').required = true;
             } else {
                 programSelect.style.display = 'none';
                 programSelect.querySelector('select').required = false;
+                departmentSelect.style.display = 'none';
+                departmentSelect.querySelector('select').required = false;
             }
             
             if (role === 'guest') {
@@ -277,8 +321,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             box-shadow: 0 0 5px rgba(8, 127, 140, 0.5);
         }
 
-        #programSelect {
-            margin-top: 10px;
+        #programSelect, #departmentSelect {
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        #programSelect select, #departmentSelect select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #BEB7A4;
+            border-radius: 5px;
+            color: #33363F;
+            background-color: white;
         }
 
         .actions button {
@@ -381,6 +435,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             color: #33363F;
             background-color: white;
         }
+
+
+        #departmentSelect {
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        #departmentSelect select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #BEB7A4;
+            border-radius: 5px;
+            color: #33363F;
+            background-color: white;
+        }
+
+
     </style>
 </body>
 </html>
