@@ -22,7 +22,7 @@ require_once '../classes/accountClass.php';
             <li class="nav-item">
                 <a href="#" id="statusLink" class="nav-link align-middle px-0" onclick="loadOrderStatusSection()">
                     <i class="fs-5 bi-table"></i>
-                    <span class="ms-1 d-none d-sm-inline">Status</span>
+                    <span class="ms-1 d-none d-sm-inline">Orders</span>
                 </a>
             </li>
         </ul>

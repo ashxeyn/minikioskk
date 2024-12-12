@@ -345,8 +345,8 @@ function showResponseModal(message, success = true) {
 function addToCart() {
     const productId = $('#product_id').val();
     const quantity = $('#quantity').val();
-    const unitPrice = parseFloat($('#modal_product_price').text().replace('₱', ''));
-    const subtotal = quantity * unitPrice;
+    const productName = $('#modal_product_name').text();
+    const unitPrice = currentPrice;
 
     $.ajax({
         url: '../ajax/addToCart.php',
@@ -355,17 +355,21 @@ function addToCart() {
         data: {
             product_id: productId,
             quantity: quantity,
-            unit_price: unitPrice,
-            subtotal: subtotal
+            product_name: productName,
+            unit_price: unitPrice
         },
         success: function(response) {
             if (response.success) {
-                // Close the order modal
                 const orderModal = bootstrap.Modal.getInstance(document.getElementById('orderModal'));
                 orderModal.hide();
                 
                 showResponseModal('Product added to cart successfully!', true);
-                updateCartCount();
+                setTimeout(() => {
+                    const responseModal = bootstrap.Modal.getInstance(document.getElementById('responseModal'));
+                    if (responseModal) {
+                        responseModal.hide();
+                    }
+                }, 1500);
             } else {
                 showResponseModal(response.message || 'Failed to add product to cart.', false);
             }

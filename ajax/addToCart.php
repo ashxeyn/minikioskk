@@ -1,42 +1,39 @@
 <?php
 session_start();
-require_once '../classes/orderClass.php';
+require_once '../classes/cartClass.php';
 
 header('Content-Type: application/json');
 
 try {
     if (!isset($_SESSION['user_id'])) {
-        throw new Exception('Please login to add items to cart');
+        throw new Exception("Please login to add items to cart");
     }
 
+    if (!isset($_POST['product_id'], $_POST['quantity'])) {
+        throw new Exception("Invalid request parameters");
+    }
+
+    $cartObj = new Cart();
     $user_id = $_SESSION['user_id'];
-    
-    // Add debug logging
-    error_log("Attempting to add to cart for user_id: " . $user_id);
-    
-    $product_id = $_POST['product_id'] ?? null;
-    $quantity = $_POST['quantity'] ?? null;
+    $product_id = $_POST['product_id'];
+    $quantity = intval($_POST['quantity']);
 
-    if (!$product_id || !$quantity) {
-        throw new Exception('Missing required parameters');
-    }
+    // Add to cart
+    $result = $cartObj->addToCart($user_id, $product_id, $quantity);
 
-    $orderObj = new Order();
-    
-    // Use the updated addToCart method
-    if ($orderObj->addToCart($user_id, $product_id, $quantity)) {
+    if ($result) {
         echo json_encode([
-            'success' => true, 
+            'success' => true,
             'message' => 'Item added to cart successfully'
         ]);
     } else {
-        throw new Exception('Failed to add item to cart');
+        throw new Exception("Failed to add item to cart");
     }
 
 } catch (Exception $e) {
-    error_log("Cart error: " . $e->getMessage());
+    error_log("Add to cart error: " . $e->getMessage());
     echo json_encode([
-        'success' => false, 
+        'success' => false,
         'message' => $e->getMessage()
     ]);
 } 

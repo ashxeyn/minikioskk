@@ -2,29 +2,23 @@
 session_start();
 require_once '../classes/orderClass.php';
 
-header('Content-Type: application/json');
+$response = ['success' => false, 'message' => ''];
 
 try {
     if (!isset($_SESSION['user_id'])) {
-        throw new Exception('Please login to clear cart');
+        throw new Exception('User not logged in');
     }
 
-    $user_id = $_SESSION['user_id'];
     $orderObj = new Order();
-    
-    if ($orderObj->clearCart($user_id)) {
-        echo json_encode([
-            'success' => true,
-            'message' => 'Cart cleared successfully'
-        ]);
+    if ($orderObj->clearCart($_SESSION['user_id'])) {
+        $response['success'] = true;
+        $response['message'] = 'Cart cleared successfully';
     } else {
         throw new Exception('Failed to clear cart');
     }
-
 } catch (Exception $e) {
-    error_log("Error clearing cart: " . $e->getMessage());
-    echo json_encode([
-        'success' => false,
-        'message' => $e->getMessage()
-    ]);
-} 
+    $response['message'] = $e->getMessage();
+}
+
+header('Content-Type: application/json');
+echo json_encode($response); 

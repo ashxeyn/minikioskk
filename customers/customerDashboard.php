@@ -19,7 +19,7 @@ $userInfo = $account->UserInfo();
 // Get user's orders
 $userOrders = [];
 if ($account->user_id) {
-    $userOrders = $orderObj->getUserOrders($account->user_id);
+    $userOrders = $orderObj->getOrdersByUser($account->user_id);
 }
 
 // Get available canteens

@@ -1,10 +1,10 @@
 <?php
 session_start();
-require_once '../classes/orderClass.php';
+require_once '../classes/cartClass.php';
 require_once '../classes/accountClass.php';
 require_once '../classes/stocksClass.php';
 
-$orderObj = new Order();
+$cartObj = new Cart();
 $account = new Account();
 $stocksObj = new Stocks();
 
@@ -13,22 +13,10 @@ $user_id = $_SESSION['user_id'] ?? null;
 $userInfo = $account->UserInfo($user_id);
 
 // Fetch cart items
-$cartItems = $orderObj->getCartItems($user_id);
+$cartItems = $cartObj->getCartItems($user_id);
 $canCheckout = true;
 $errorMessages = [];
-$total = 0;
-
-// Check stock availability for each item and calculate total
-foreach ($cartItems as &$item) {
-    $stock = $stocksObj->fetchStockByProductId($item['product_id']);
-    if (!$stock || $stock['quantity'] < $item['quantity']) {
-        $canCheckout = false;
-        $errorMessages[] = "Insufficient stock for {$item['name']}";
-    }
-    // Calculate subtotal for each item
-    $item['subtotal'] = $item['unit_price'] * $item['quantity'];
-    $total += $item['subtotal'];
-}
+$total = $cartObj->getCartTotal($user_id);
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     try {
@@ -94,6 +82,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     } catch (Exception $e) {
         $errorMessages[] = $e->getMessage();
     }
+}
+
+if (!isset($_SESSION['user_id'])) {
+    header('Location: ../accounts/login.php');
+    exit;
 }
 ?>
 
@@ -213,60 +206,81 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <body>
     
     <div class="container mt-4">
-       
+        <h2 class="mb-4">My Cart</h2>
         
-        <?php if (!empty($errorMessages)): ?>
-            <div class="alert alert-danger">
-                <?php foreach($errorMessages as $error): ?>
-                    <p><?php echo htmlspecialchars($error); ?></p>
-                <?php endforeach; ?>
-            </div>
-        <?php endif; ?>
+        <?php if (!empty($cartItems)): ?>
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-end mb-3">
+                        <button type="button" class="btn btn-danger" onclick="clearCart()">
+                            <i class="bi bi-trash"></i> Clear All Items
+                        </button>
+                    </div>
 
-        <?php if (empty($cartItems)): ?>
-            <div class="alert alert-info">Your cart is empty.</div>
-        <?php else: ?>
-            <div id="contentArea" class="container mt-4">
-                <h2>Your Cart</h2>
-                <?php if (!empty($cartItems)): ?>
-                    <div class="cart-container">
-                        <div class="cart-actions">
-                            <button type="button" class="btn btn-danger clear-all">
-                                Clear All Items
-                            </button>
-                        </div>
-                        
-                        <?php foreach ($cartItems as $item): ?>
-                            <div class="cart-item" data-product-id="<?= htmlspecialchars($item['product_id']); ?>">
-                                <div class="item-info">
-                                    <h4 class="item-name"><?= htmlspecialchars($item['name']); ?></h4>
-                                    <div class="item-details">
-                                        <p class="price">Price: ₱<?= number_format($item['unit_price'], 2); ?></p>
-                                        <div class="quantity">
-                                            <p>Quantity: <?= htmlspecialchars($item['quantity']); ?></p>
+                    <?php foreach ($cartItems as $item): ?>
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col-md-6">
+                                        <h5 class="item-name"><?= htmlspecialchars($item['name']); ?></h5>
+                                        <p class="text-muted mb-0">Unit Price: ₱<?= number_format($item['unit_price'], 2); ?></p>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="quantity d-flex align-items-center">
+                                            <span class="me-2">Qty:</span>
+                                            <div class="input-group input-group-sm" style="width: 120px;">
+                                                <button type="button" class="btn btn-outline-secondary" onclick="updateQuantity(<?= $item['product_id']; ?>, 'decrease')">-</button>
+                                                <input type="number" class="form-control text-center" value="<?= htmlspecialchars($item['quantity']); ?>" 
+                                                       id="qty_<?= $item['product_id']; ?>" min="1" readonly>
+                                                <button type="button" class="btn btn-outline-secondary" onclick="updateQuantity(<?= $item['product_id']; ?>, 'increase')">+</button>
+                                            </div>
                                         </div>
-                                        <p class="total">₱<?= number_format($item['subtotal'], 2); ?></p>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <p class="mb-0 text-end">₱<?= number_format($item['subtotal'], 2); ?></p>
+                                    </div>
+                                    <div class="col-md-2 text-end">
+                                        <form method="POST" style="display: inline;">
+                                            <input type="hidden" name="product_id" value="<?= $item['product_id']; ?>">
+                                            <button type="submit" name="remove_item" class="btn btn-outline-danger btn-sm">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
                                     </div>
                                 </div>
-                                <div class="item-actions">
-                                    <button type="button" class="btn description" onclick="editQuantity(<?= $item['product_id'] ?>)">
-                                        <i class="bi bi-pencil"></i>
-                                    </button>
-                                    <button type="button" class="btn description" onclick="removeFromCart(<?= $item['product_id'] ?>)">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </div>
                             </div>
-                        <?php endforeach; ?>
-                        
-                        <div class="cart-total">
-                            <p>Total: ₱<?= number_format($total, 2); ?></p>
                         </div>
-                        
-                        <!-- Checkout button -->
-                        <button type="button" class="btn checkout">Proceed to Checkout</button>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        <?php else: ?>
+            <div class="alert alert-info">Your cart is empty</div>
+        <?php endif; ?>
+
+        <!-- Total and Checkout Section -->
+        <?php if (!empty($cartItems)): ?>
+            <div class="card mt-3">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <?php if (!empty($errorMessages)): ?>
+                                <div class="alert alert-warning">
+                                    <?php foreach ($errorMessages as $error): ?>
+                                        <p class="mb-0"><?= htmlspecialchars($error); ?></p>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="text-end">
+                                <h4 class="mb-3">Total: ₱<?= number_format($total, 2); ?></h4>
+                                <button type="button" class="btn btn-primary btn-lg" onclick="openCheckoutModal()">
+                                    <i class="bi bi-cart-check"></i> Proceed to Checkout
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                <?php endif; ?>
+                </div>
             </div>
         <?php endif; ?>
     </div>
@@ -276,24 +290,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- Clear Cart Modal -->
-    <div class="modal fade" id="clearCartModal" tabindex="-1" aria-labelledby="clearCartModalLabel" aria-hidden="true">
+    <div class="modal fade" id="clearCartModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="clearCartModalLabel">Clear Cart Confirmation</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title">Clear Cart</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p>Are you sure you want to remove all items from your cart?</p>
-                    <div class="order-summary">
-                        <h6>Items to be removed:</h6>
-                        <div id="modalClearCartItems"></div>
-                        <hr>
-                        <div class="d-flex justify-content-between">
-                            <strong>Total Amount to Clear:</strong>
-                            <span id="modalClearCartAmount"></span>
-                        </div>
-                    </div>
+                    <p>Are you sure you want to clear your cart?</p>
+                    <div id="modalClearCartItems"></div>
+                    <hr>
+                    <p class="text-end fw-bold">Total: <span id="modalClearCartAmount"></span></p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -304,29 +312,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     </div>
 
     <!-- Checkout Modal -->
-    <div class="modal fade" id="checkoutModal" tabindex="-1" aria-labelledby="checkoutModalLabel" aria-hidden="true">
+    <div class="modal fade" id="checkoutModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="checkoutModalLabel">Order Confirmation</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title">Confirm Order</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="order-summary">
-                        <h6>Order Summary:</h6>
-                        <div id="modalCartItems"></div>
-                        <hr>
-                        <div class="d-flex justify-content-between">
-                            <strong>Total Amount:</strong>
-                            <span id="modalTotalAmount"></span>
-                        </div>
-                    </div>
+                    <div id="modalCartItems"></div>
+                    <hr>
+                    <p class="text-end fw-bold">Total Amount: <span id="modalTotalAmount"></span></p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <form method="post" action="../ajax/placeOrder.php">
-                        <button type="submit" class="btn btn-primary">Place Order</button>
-                    </form>
+                    <button type="button" class="btn btn-primary" onclick="placeOrder()">Place Order</button>
                 </div>
             </div>
         </div>
@@ -351,70 +351,30 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     </div>
 
     <script>
-        // Initialize Bootstrap modals
-        document.addEventListener('DOMContentLoaded', function() {
-            // Make sure clearCart and openCheckoutModal are available
-            if (typeof window.clearCart === 'undefined') {
-                window.clearCart = function() {
-                    let modalCartItems = '';
-                    let total = 0;
+        function clearCart() {
+            let modalCartItems = '';
+            let total = 0;
 
-                    $('.cart-item').each(function() {
-                        const name = $(this).find('.item-name').text();
-                        const quantity = $(this).find('.quantity').text().replace('Quantity: ', '');
-                        const price = $(this).find('.total').text();
-                        
-                        modalCartItems += `<div class="d-flex justify-content-between mb-2">
-                            <span>${name} x ${quantity}</span>
-                            <span>${price}</span>
-                        </div>`;
-                        
-                        total += parseFloat(price.replace('₱', '').replace(',', ''));
-                    });
-
-                    $('#modalClearCartItems').html(modalCartItems);
-                    $('#modalClearCartAmount').text('₱' + total.toFixed(2));
-
-                    const clearCartModal = new bootstrap.Modal(document.getElementById('clearCartModal'));
-                    clearCartModal.show();
-                };
-            }
-
-            if (typeof window.openCheckoutModal === 'undefined') {
-                window.openCheckoutModal = function() {
-                    let modalCartItems = '';
-                    let total = 0;
-
-                    $('.cart-item').each(function() {
-                        const name = $(this).find('.item-name').text();
-                        const quantity = $(this).find('.quantity').text().replace('Quantity: ', '');
-                        const price = $(this).find('.total').text();
-                        
-                        modalCartItems += `<div class="d-flex justify-content-between mb-2">
-                            <span>${name} x ${quantity}</span>
-                            <span>${price}</span>
-                        </div>`;
-                        
-                        total += parseFloat(price.replace('₱', '').replace(',', ''));
-                    });
-
-                    $('#modalCartItems').html(modalCartItems);
-                    $('#modalTotalAmount').text('₱' + total.toFixed(2));
-
-                    const checkoutModal = new bootstrap.Modal(document.getElementById('checkoutModal'));
-                    checkoutModal.show();
-                };
-            }
-
-            // Add click handlers
-            $('.clear-all').on('click', function() {
-                clearCart();
+            // Correctly select cart items from the card elements
+            $('.card-body .card').each(function() {
+                const name = $(this).find('.item-name').text();
+                const quantity = $(this).find('.quantity span:last').text();
+                const price = $(this).find('.mb-0.text-end').text().replace('₱', '').replace(',', '');
+                
+                modalCartItems += `<div class="d-flex justify-content-between mb-2">
+                    <span>${name} x ${quantity}</span>
+                    <span>₱${price}</span>
+                </div>`;
+                
+                total += parseFloat(price);
             });
 
-            $('.checkout').on('click', function() {
-                openCheckoutModal();
-            });
-        });
+            $('#modalClearCartItems').html(modalCartItems);
+            $('#modalClearCartAmount').text('₱' + total.toFixed(2));
+
+            const clearCartModal = new bootstrap.Modal(document.getElementById('clearCartModal'));
+            clearCartModal.show();
+        }
 
         function confirmClearCart() {
             $.ajax({
@@ -422,105 +382,149 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 type: 'POST',
                 dataType: 'json',
                 success: function(response) {
+                    const clearCartModal = bootstrap.Modal.getInstance(document.getElementById('clearCartModal'));
+                    clearCartModal.hide();
+                    
                     if (response.success) {
-                        // Close the clear cart modal
-                        const clearCartModal = bootstrap.Modal.getInstance(document.getElementById('clearCartModal'));
-                        clearCartModal.hide();
-                        
-                        // Update the cart display to show empty cart
-                        $('.cart-container').html('<div class="alert alert-info">Your cart is empty.</div>');
-                        
-                        // Show success message
                         showResponseModal('Cart cleared successfully!', true);
-                        
-                        // Update cart count to 0
-                        if (typeof updateCartCount === 'function') {
-                            updateCartCount(0);
-                        }
-                        
-                        // Refresh the page after a short delay
-                        setTimeout(function() {
+                        setTimeout(() => {
                             location.reload();
                         }, 1500);
                     } else {
                         showResponseModal(response.message || 'Failed to clear cart', false);
                     }
                 },
-                error: function(xhr, status, error) {
-                    console.error('AJAX Error:', error);
+                error: function() {
                     showResponseModal('Error occurred while clearing cart', false);
                 }
             });
         }
 
-        // Update the checkout form submission
-        $('#checkoutModal form').on('submit', function(e) {
-            e.preventDefault();
-            
+        function openCheckoutModal() {
+            let modalCartItems = '';
+            let total = 0;
+
+            // Correctly select cart items from the card elements
+            $('.card-body .card').each(function() {
+                const name = $(this).find('.item-name').text();
+                const quantity = $(this).find('.quantity span:last').text();
+                const price = $(this).find('.mb-0.text-end').text().replace('₱', '').replace(',', '');
+                
+                modalCartItems += `<div class="d-flex justify-content-between mb-2">
+                    <span>${name} x ${quantity}</span>
+                    <span>₱${price}</span>
+                </div>`;
+                
+                total += parseFloat(price);
+            });
+
+            $('#modalCartItems').html(modalCartItems);
+            $('#modalTotalAmount').text('₱' + total.toFixed(2));
+
+            const checkoutModal = new bootstrap.Modal(document.getElementById('checkoutModal'));
+            checkoutModal.show();
+        }
+
+        function placeOrder() {
             $.ajax({
-                url: $(this).attr('action'),
+                url: '../ajax/placeOrder.php',
                 type: 'POST',
                 data: {
                     checkout: true
                 },
                 dataType: 'json',
                 success: function(response) {
+                    const checkoutModal = bootstrap.Modal.getInstance(document.getElementById('checkoutModal'));
+                    checkoutModal.hide();
+                    
                     if (response.success) {
-                        // Close checkout modal
-                        const checkoutModal = bootstrap.Modal.getInstance(document.getElementById('checkoutModal'));
-                        checkoutModal.hide();
-                        
-                        // Show success message before redirecting
                         showResponseModal('Order placed successfully!', true);
-                        
-                        // Refresh the current page after a short delay
-                        setTimeout(function() {
-                            location.reload();
+                        setTimeout(() => {
+                            window.location.href = 'orderStatus.php';
                         }, 1500);
                     } else {
                         showResponseModal(response.message || 'Failed to place order', false);
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error('AJAX Error:', error);
-                    let errorMessage = 'Error occurred while placing order';
-                    
-                    // Try to parse response text
-                    try {
-                        const response = JSON.parse(xhr.responseText);
-                        errorMessage = response.message || errorMessage;
-                    } catch(e) {
-                        // If response isn't JSON, check if it's a PHP error
-                        if (xhr.responseText.includes('</b>')) {
-                            // Strip HTML tags from PHP error
-                            errorMessage = xhr.responseText.replace(/<[^>]*>/g, '');
-                        }
-                    }
-                    
-                    showResponseModal(errorMessage, false);
+                    console.error('Order Error:', error);
+                    showResponseModal('Error occurred while placing order. Please try again.', false);
                 }
             });
-        });
+        }
 
         function showResponseModal(message, success) {
-            // Update modal content
             $('#responseMessage').text(message);
-            
-            // Update modal class based on success/failure
             const responseModal = $('#responseModal');
-            responseModal.removeClass('success error')
-                        .addClass(success ? 'success' : 'error');
+            responseModal.removeClass('success error').addClass(success ? 'success' : 'error');
+            new bootstrap.Modal(document.getElementById('responseModal')).show();
+        }
+
+        function updateQuantity(productId, action) {
+            const qtyInput = document.getElementById(`qty_${productId}`);
+            let currentQty = parseInt(qtyInput.value);
+            let newQty = action === 'increase' ? currentQty + 1 : currentQty - 1;
             
-            // Show the modal
-            const modal = new bootstrap.Modal(document.getElementById('responseModal'));
-            modal.show();
+            if (newQty < 1) return; // Prevent negative quantities
             
-            // If this is a success message for clearing cart, reload the page after modal is closed
-            if (success && message === 'Cart cleared successfully!') {
-                $('#responseModal').on('hidden.bs.modal', function () {
-                    location.reload();
-                });
-            }
+            $.ajax({
+                url: '../ajax/updateCartQuantity.php',
+                type: 'POST',
+                data: {
+                    product_id: productId,
+                    new_quantity: newQty
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        // Update quantity input
+                        qtyInput.value = newQty;
+                        
+                        // Update subtotal
+                        const unitPrice = parseFloat($(qtyInput)
+                            .closest('.card-body')
+                            .find('.text-muted.mb-0')
+                            .text()
+                            .replace('Unit Price: ₱', '')
+                            .replace(',', ''));
+                        
+                        const newSubtotal = (unitPrice * newQty).toFixed(2);
+                        $(qtyInput)
+                            .closest('.row')
+                            .find('.mb-0.text-end')
+                            .text('₱' + numberWithCommas(newSubtotal));
+                        
+                        // Update cart total
+                        updateCartTotal();
+                    } else {
+                        showResponseModal(response.message || 'Failed to update quantity', false);
+                    }
+                },
+                error: function() {
+                    showResponseModal('Error occurred while updating quantity', false);
+                }
+            });
+        }
+
+        // Helper function to format numbers with commas
+        function numberWithCommas(x) {
+            return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
+        // Function to update cart total
+        function updateCartTotal() {
+            let total = 0;
+            $('.card-body .card').each(function() {
+                const subtotal = parseFloat($(this)
+                    .find('.mb-0.text-end')
+                    .text()
+                    .replace('₱', '')
+                    .replace(',', ''));
+                total += subtotal;
+            });
+            
+            // Update the total display
+            $('h4.mb-3').text('Total: ₱' + numberWithCommas(total.toFixed(2)));
         }
     </script>
 </body>
