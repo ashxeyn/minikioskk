@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Dec 13, 2024 at 01:45 PM
+-- Generation Time: Dec 13, 2024 at 02:31 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -52,7 +52,8 @@ INSERT INTO `canteens` (`canteen_id`, `name`, `campus_location`, `description`, 
 (7, 'Leo', 'A', '', '00:00:00', '00:00:00', 'open', '2024-12-13 01:03:34'),
 (8, 'Leo1', 'A', '', '00:00:00', '00:00:00', 'open', '2024-12-13 01:04:15'),
 (9, 'Save', 'A', '', '00:00:00', '00:00:00', 'open', '2024-12-13 01:06:48'),
-(10, 'Load', 'A', '', '00:00:00', '00:00:00', 'open', '2024-12-13 01:09:09');
+(10, 'Load', 'A', '', '00:00:00', '00:00:00', 'open', '2024-12-13 01:09:09'),
+(11, 'Buns', 'A', '', '00:00:00', '00:00:00', 'open', '2024-12-13 13:29:07');
 
 -- --------------------------------------------------------
 
@@ -67,13 +68,6 @@ CREATE TABLE `carts` (
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `status` enum('active','completed','abandoned') DEFAULT 'active'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `carts`
---
-
-INSERT INTO `carts` (`cart_id`, `user_id`, `created_at`, `updated_at`, `status`) VALUES
-(33, 25, '2024-12-13 01:28:05', '2024-12-13 01:28:05', 'active');
 
 -- --------------------------------------------------------
 
@@ -91,13 +85,6 @@ CREATE TABLE `cart_items` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `cart_items`
---
-
-INSERT INTO `cart_items` (`cart_item_id`, `cart_id`, `product_id`, `quantity`, `unit_price`, `subtotal`, `created_at`, `updated_at`) VALUES
-(66, 33, 7, 1, 59.00, 59.00, '2024-12-13 01:28:05', '2024-12-13 01:28:05');
 
 -- --------------------------------------------------------
 
@@ -219,7 +206,8 @@ INSERT INTO `managers` (`manager_id`, `user_id`, `canteen_id`, `start_date`, `st
 (1, 8, 6, '0000-00-00', 'accepted', '2024-12-13 00:47:23'),
 (2, 20, 8, '0000-00-00', 'accepted', '2024-12-13 01:04:15'),
 (3, 22, 9, '0000-00-00', 'pending', '2024-12-13 01:06:48'),
-(4, 24, 10, '0000-00-00', 'accepted', '2024-12-13 01:09:10');
+(4, 24, 10, '0000-00-00', 'accepted', '2024-12-13 01:09:10'),
+(5, 27, 11, '2024-12-13', 'pending', '2024-12-13 13:29:07');
 
 -- --------------------------------------------------------
 
@@ -251,7 +239,13 @@ INSERT INTO `orders` (`order_id`, `user_id`, `canteen_id`, `total_amount`, `stat
 (5, 3, 1, 1500.00, 'placed', 'unpaid', 'cash', '2024-12-12 20:38:36', '2024-12-12 20:38:36'),
 (6, 3, 1, 1725.00, 'placed', 'unpaid', 'cash', '2024-12-12 20:59:25', '2024-12-12 20:59:25'),
 (7, 3, 1, 75.00, 'placed', 'unpaid', 'cash', '2024-12-12 21:01:57', '2024-12-12 21:01:57'),
-(8, 25, 1, 1500.00, 'placed', 'unpaid', 'cash', '2024-12-13 01:25:46', '2024-12-13 01:25:46');
+(8, 25, 1, 1500.00, 'placed', 'unpaid', 'cash', '2024-12-13 01:25:46', '2024-12-13 01:25:46'),
+(9, 26, 10, 118.00, 'placed', 'unpaid', 'cash', '2024-12-13 13:13:03', '2024-12-13 13:13:03'),
+(10, 26, 10, 177.00, 'placed', 'unpaid', 'cash', '2024-12-13 13:13:34', '2024-12-13 13:13:34'),
+(11, 25, 10, 118.00, 'completed', 'unpaid', 'cash', '2024-12-13 13:14:29', '2024-12-13 13:15:07'),
+(12, 25, 1, 80.00, 'placed', 'unpaid', 'cash', '2024-12-13 13:20:04', '2024-12-13 13:20:04'),
+(13, 25, 1, 80.00, 'placed', 'unpaid', 'cash', '2024-12-13 13:20:27', '2024-12-13 13:20:27'),
+(14, 25, 1, 80.00, 'placed', 'unpaid', 'cash', '2024-12-13 13:23:24', '2024-12-13 13:23:24');
 
 -- --------------------------------------------------------
 
@@ -285,7 +279,13 @@ INSERT INTO `order_items` (`item_id`, `order_id`, `product_id`, `quantity`, `uni
 (9, 6, 4, 1, 45.00, 45.00, '2024-12-12 20:59:25'),
 (10, 6, 1, 21, 75.00, 1575.00, '2024-12-12 20:59:25'),
 (11, 7, 1, 1, 75.00, 75.00, '2024-12-12 21:01:57'),
-(12, 8, 1, 20, 75.00, 1500.00, '2024-12-13 01:25:46');
+(12, 8, 1, 20, 75.00, 1500.00, '2024-12-13 01:25:46'),
+(13, 9, 7, 2, 59.00, 118.00, '2024-12-13 13:13:03'),
+(14, 10, 7, 3, 59.00, 177.00, '2024-12-13 13:13:34'),
+(15, 11, 7, 2, 59.00, 118.00, '2024-12-13 13:14:29'),
+(16, 12, 2, 1, 80.00, 80.00, '2024-12-13 13:20:04'),
+(17, 13, 2, 1, 80.00, 80.00, '2024-12-13 13:20:27'),
+(18, 14, 2, 1, 80.00, 80.00, '2024-12-13 13:23:24');
 
 -- --------------------------------------------------------
 
@@ -393,13 +393,14 @@ CREATE TABLE `stocks` (
 
 INSERT INTO `stocks` (`stock_id`, `product_id`, `quantity`, `last_restock`, `updated_at`) VALUES
 (1, 1, 29, '2024-12-12 18:13:17', '2024-12-13 01:25:46'),
-(2, 2, 34, '2024-12-12 18:13:17', '2024-12-12 20:59:25'),
+(2, 2, 31, '2024-12-12 18:13:17', '2024-12-13 13:23:24'),
 (3, 3, 104, '2024-12-12 18:13:17', '2024-12-12 20:59:25'),
 (4, 4, 39, '2024-12-12 18:13:17', '2024-12-12 20:59:25'),
 (1, 1, 29, '2024-12-12 18:13:17', '2024-12-13 01:25:46'),
-(2, 2, 34, '2024-12-12 18:13:17', '2024-12-12 20:59:25'),
+(2, 2, 31, '2024-12-12 18:13:17', '2024-12-13 13:23:24'),
 (3, 3, 104, '2024-12-12 18:13:17', '2024-12-12 20:59:25'),
-(4, 4, 39, '2024-12-12 18:13:17', '2024-12-12 20:59:25');
+(4, 4, 39, '2024-12-12 18:13:17', '2024-12-12 20:59:25'),
+(0, 7, 13, NULL, '2024-12-13 13:14:29');
 
 -- --------------------------------------------------------
 
@@ -461,7 +462,9 @@ INSERT INTO `users` (`user_id`, `email`, `username`, `password`, `role`, `status
 (22, 'Save@wmsu.edu.ph', 'Save', '$2y$10$02pMGPkUQus0/jUoJvGukuKGjws8Vrp2m2gml8EhiIqcNx6CBr4LK', 'manager', 'pending', 'Save', 'Save', 'O', '2024-12-13 01:06:48', NULL, NULL, NULL),
 (23, NULL, 'Guest5228', '$2y$10$.f2ZHWqnEUscR9lKQyx1JuXmv9th3ccYwEtNsFU4PtWRkJpc6Lr9a', 'guest', 'approved', '', '', '', '2024-12-13 01:08:31', NULL, NULL, NULL),
 (24, 'Load@wmsu.edu.ph', 'Load', '$2y$10$wDrx6IefyezC68q2syj0oe.39UVeRNeLUFnWjDcOQLeE1cXDJ4YUu', 'manager', 'approved', 'Load', 'Load', 'O', '2024-12-13 01:09:10', NULL, NULL, NULL),
-(25, 'Mustard@wmsu.edu.ph', 'Mustard', '$2y$10$0kgoZaNIXIpCxblmhCftIuV8jjmNbrBhYiSlcNd.vzuDE3vj/uDJm', 'student', 'pending', 'Mustard', 'Mustard', 'O', '2024-12-13 01:12:44', 2, NULL, NULL);
+(25, 'Mustard@wmsu.edu.ph', 'Mustard', '$2y$10$0kgoZaNIXIpCxblmhCftIuV8jjmNbrBhYiSlcNd.vzuDE3vj/uDJm', 'student', 'pending', 'Mustard', 'Mustard', 'O', '2024-12-13 01:12:44', 2, NULL, NULL),
+(26, 'Lux@wmsu.edu.ph', 'Lux', '$2y$10$dFWutFM29llzG.kAIhqhx.RZNOmsLDPjhN8TJAOn6ODIz/22ZJ7de', 'student', 'pending', 'Lux', 'Lux', 'O', '2024-12-13 13:12:03', 2, NULL, NULL),
+(27, 'bun@wmsu.edu.ph', 'Bun', '$2y$10$WBLOflY2Y0mxzW6N0Y.lgeJDrviGZQAdnV16zIJJseiyobNAJBHk2', 'manager', 'pending', 'Bun', 'Bun', 'O', '2024-12-13 13:29:07', NULL, NULL, NULL);
 
 --
 -- Indexes for dumped tables
@@ -603,19 +606,19 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `canteens`
 --
 ALTER TABLE `canteens`
-  MODIFY `canteen_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `canteen_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `carts`
 --
 ALTER TABLE `carts`
-  MODIFY `cart_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
+  MODIFY `cart_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=39;
 
 --
 -- AUTO_INCREMENT for table `cart_items`
 --
 ALTER TABLE `cart_items`
-  MODIFY `cart_item_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=67;
+  MODIFY `cart_item_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=72;
 
 --
 -- AUTO_INCREMENT for table `categories`
@@ -651,19 +654,19 @@ ALTER TABLE `guests`
 -- AUTO_INCREMENT for table `managers`
 --
 ALTER TABLE `managers`
-  MODIFY `manager_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `manager_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT for table `order_items`
 --
 ALTER TABLE `order_items`
-  MODIFY `item_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `item_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT for table `products`
@@ -687,7 +690,7 @@ ALTER TABLE `students`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
+  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
 -- Constraints for dumped tables
