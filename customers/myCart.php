@@ -84,10 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
-if (!isset($_SESSION['user_id'])) {
-    header('Location: ../accounts/login.php');
-    exit;
-}
+    
 ?>
 
 <!DOCTYPE html>
@@ -240,12 +237,9 @@ if (!isset($_SESSION['user_id'])) {
                                         <p class="mb-0 text-end">₱<?= number_format($item['subtotal'], 2); ?></p>
                                     </div>
                                     <div class="col-md-2 text-end">
-                                        <form method="POST" style="display: inline;">
-                                            <input type="hidden" name="product_id" value="<?= $item['product_id']; ?>">
-                                            <button type="submit" name="remove_item" class="btn btn-outline-danger btn-sm">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </form>
+                                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeFromCart(<?= $item['product_id']; ?>)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -273,7 +267,7 @@ if (!isset($_SESSION['user_id'])) {
                         </div>
                         <div class="col-md-6">
                             <div class="text-end">
-                                <h4 class="mb-3">Total: ₱<?= number_format($total, 2); ?></h4>
+                                <h4 class="mb-3" id="cartTotal">Total: ₱<?= number_format($total, 2); ?></h4>
                                 <button type="button" class="btn btn-primary btn-lg" onclick="openCheckoutModal()">
                                     <i class="bi bi-cart-check"></i> Proceed to Checkout
                                 </button>
@@ -345,6 +339,25 @@ if (!isset($_SESSION['user_id'])) {
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Remove Item Modal -->
+    <div class="modal fade" id="removeItemModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Remove Item</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to remove this item from your cart?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmRemove">Remove</button>
                 </div>
             </div>
         </div>
@@ -525,7 +538,67 @@ if (!isset($_SESSION['user_id'])) {
             });
             
             // Update the total display
-            $('h4.mb-3').text('Total: ₱' + numberWithCommas(total.toFixed(2)));
+            $('#cartTotal').text('₱' + numberWithCommas(total.toFixed(2)));
+        }
+
+        function removeFromCart(productId) {
+            const removeItemModal = new bootstrap.Modal(document.getElementById('removeItemModal'));
+            
+            document.getElementById('confirmRemove').onclick = function() {
+                $.ajax({
+                    url: '../ajax/removeFromCart.php',
+                    type: 'POST',
+                    data: {
+                        product_id: productId
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        removeItemModal.hide();
+                        if (response.success) {
+                            // Remove the item's card from the DOM
+                            const itemCard = $(`button[onclick="removeFromCart(${productId})"]`).closest('.card');
+                            itemCard.fadeOut(300, function() {
+                                $(this).remove();
+                                // Update cart total
+                                updateCartTotal();
+                                // Update cart count in header
+                                updateCartCount();
+                                
+                                // Check if cart is empty after removal
+                                if ($('.card-body .card').length === 0) {
+                                    $('.card-body').html('<div class="alert alert-info">Your cart is empty</div>');
+                                    // Hide the checkout section
+                                    $('.checkout-section').hide();
+                                }
+                            });
+                            showResponseModal('Item removed successfully!', true);
+                        } else {
+                            showResponseModal(response.message || 'Failed to remove item from cart', false);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        removeItemModal.hide();
+                        console.error('Remove from cart error:', error);
+                        showResponseModal('Error occurred while removing item from cart. Please try again.', false);
+                    }
+                });
+            };
+
+            removeItemModal.show();
+        }
+
+        // Make sure this function exists to update the cart count in the header
+        function updateCartCount() {
+            $.ajax({
+                url: '../ajax/getCartCount.php',
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    if (response.count !== undefined) {
+                        $('#cartCount').text(response.count);
+                    }
+                }
+            });
         }
     </script>
 </body>

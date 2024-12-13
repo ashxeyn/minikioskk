@@ -265,5 +265,47 @@ class Cart {
             throw $e;
         }
     }
+
+    public function removeFromCart($user_id, $product_id) {
+        try {
+            $db = $this->db->connect();
+            
+            // Start transaction
+            if (!$db->inTransaction()) {
+                $db->beginTransaction();
+            }
+
+            // Get the cart ID first
+            $sql = "SELECT cart_id FROM carts WHERE user_id = :user_id";
+            $stmt = $db->prepare($sql);
+            $stmt->execute(['user_id' => $user_id]);
+            $cart = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$cart) {
+                throw new Exception("Cart not found");
+            }
+
+            // Delete the cart item
+            $sql = "DELETE FROM cart_items 
+                    WHERE cart_id = :cart_id 
+                    AND product_id = :product_id";
+            
+            $stmt = $db->prepare($sql);
+            $result = $stmt->execute([
+                'cart_id' => $cart['cart_id'],
+                'product_id' => $product_id
+            ]);
+
+            $db->commit();
+            return $result;
+
+        } catch (Exception $e) {
+            if ($db && $db->inTransaction()) {
+                $db->rollBack();
+            }
+            error_log("Error removing from cart: " . $e->getMessage());
+            throw $e;
+        }
+    }
 }
 ?> 
