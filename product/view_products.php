@@ -68,6 +68,7 @@ try {
     </div>
 </div>
 
+
 <div class="table-responsive">
     <table class="table table-striped table-hover" id="productTable">
         <thead>
@@ -120,3 +121,4 @@ try {
         </tbody>
     </table>
 </div> 
+</div>

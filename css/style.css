@@ -97,7 +97,7 @@ body {
 .col-md-3 {
     background: linear-gradient(to top, #BEB7A4, #FF7F11);
     flex: 0 0 auto;
-    width: max-content;
+    width: 200px !important;
     height: calc(100vh - 55px);
 }
 

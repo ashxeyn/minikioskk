@@ -65,18 +65,15 @@ $programs = $program->fetchPrograms();
 
 <script>
 $(document).ready(function() {
-    // Initialize DataTable
     const table = $('#programsTable').DataTable({
         dom: 'lrtip', // Removes default search box
         pageLength: 10
     });
 
-    // Search functionality
     $('#searchProgram').on('keyup', function() {
         table.search(this.value).draw();
     });
 
-    // College filter
     $('#collegeFilter').on('change', function() {
         const collegeId = $(this).val();
         if (collegeId) {
