@@ -307,5 +307,17 @@ class Cart {
             throw $e;
         }
     }
+
+    public function getCartCount($user_id) {
+        try {
+            $sql = "SELECT COUNT(*) FROM cart WHERE user_id = :user_id";
+            $stmt = $this->db->connect()->prepare($sql);
+            $stmt->execute(['user_id' => $user_id]);
+            return $stmt->fetchColumn();
+        } catch (Exception $e) {
+            error_log("Error getting cart count: " . $e->getMessage());
+            return 0;
+        }
+    }
 }
 ?> 

@@ -1,126 +1,88 @@
 .cart-container {
-    height: 600px;
-    width: 100%; /* Adjust width to simulate receipt size */
-    padding: 40px;
-    border-radius: 10px;
-    background-color: #fff;
-    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
-    overflow-y: scroll;
+    background-color: #9a9a9b;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
 }
 
-.cart-item {
-    display: flex; /* Use flexbox for alignment */
-    justify-content: space-between; /* Items are spaced apart */
-    border-bottom: 1px solid #e0e0e0;
-    padding-bottom: 10px;
+.card {
+    border: none;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
     margin-bottom: 20px;
+    border-radius: 12px;
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
 }
 
 .item-name {
-    padding: 15px;
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.quantity .form-control {
+    border: 1px solid #e0e0e0;
+    background-color: #fff;
+    font-weight: 500;
+}
+
+.quantity .btn {
+    border: 1px solid #e0e0e0;
+    background-color: #fff;
+    color: #2c3e50;
     font-weight: bold;
-    font-size: 25px;
-    margin: 0;
 }
 
-.item-details {
-    font-size: 18px;
-    text-align: left;
+.quantity .btn:hover {
+    background-color: #f8f9fa;
 }
 
-.cart-total {
-    color: #1C666F;
-    font-size: 30px;
-    padding-right: 5%;
-    text-align: right;
-    font-weight: bold;
-    margin-top: 15px;
+.btn-outline-danger {
+    border-radius: 8px;
+    padding: 8px 15px;
 }
 
-form {
-    padding-right: 4%;
-    display: flex;
-    align-items: end;
-    flex-direction: row;
-    justify-content: flex-end;
-}
-
-.btn.checkout {
-    width: 200px;
-    color: white;
-    padding: 10px 10px;
-    background-color: #FF1B1C;
-    text-align: center;
+.btn-primary {
+    background-color: #4361ee;
     border: none;
-    border-radius: 5px;
-    transition: all 0.3s ease; 
-    cursor: pointer;
-}
-
-.btn.checkout:hover {
-    color: #ffffff;
-    background-color: #D41718; /* Darker red on hover */
-    transform: scale(1.05); /* Slightly enlarges the button */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Adds a shadow for a lifted effect */
-}
-
-p {
-    margin-bottom: 5px !important;
-}
-
-.description {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.bi.bi-trash {
-    color: #D41718;
-    padding: 5px;
-}
-
-.total {
-    font-weight: bold;
-}
-
-.quantity {
-    color: #a1a1a1;
-}
-
-.bi.bi-pencil {
-    color: #1100cb;
-}
-
-.btn.description {
-    padding: 5px;
-}
-
-h2 {
-    margin-top: 30px !important;
-}
-
-.order-summary {
-    padding: 15px;
-}
-
-.modal-content {
+    padding: 12px 25px;
     border-radius: 10px;
+    font-weight: 600;
+    transition: all 0.3s;
 }
 
-.modal-header {
-    background-color: #FF7F11;
-    color: white;
-    border-top-left-radius: 10px;
-    border-top-right-radius: 10px;
+.btn-primary:hover {
+    background-color: #3046c0;
+    transform: translateY(-2px);
 }
 
-.modal-footer .btn-primary {
-    background-color: #FF7F11;
-    border-color: #FF7F11;
+.total-section {
+    background-color: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
 }
 
-.modal-footer .btn-primary:hover {
-    background-color: #e67300;
-    border-color: #e67300;
+.total-amount {
+    color: #2c3e50;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .cart-container {
+        padding: 15px;
+    }
+    
+    .quantity {
+        margin-top: 10px;
+    }
+    
+    .total-section {
+        margin-top: 20px;
+    }
 }
 

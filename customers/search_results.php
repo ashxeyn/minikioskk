@@ -1,71 +1,19 @@
 <?php
 session_start();
 require_once '../tools/functions.php';
-require_once '../classes/accountClass.php';
 require_once '../classes/canteenClass.php';
 require_once '../classes/productClass.php';
 
-// Handle user authentication
-$account = new Account();
-$isLoggedIn = isset($_SESSION['user_id']);
-if ($isLoggedIn) {
-    $account->user_id = $_SESSION['user_id'];
-    $userInfo = $account->UserInfo();
-}
-
-// Create instances of the Canteen and Product classes
 $canteenObj = new Canteen();
-$productObj = new Product();
-
-// Handle search logic
 $keyword = isset($_GET['search']) ? clean_input($_GET['search']) : '';
 $search_type = isset($_GET['search_type']) ? clean_input($_GET['search_type']) : 'all';
-
-// Get search results based on type
 $searchResults = $canteenObj->searchCanteensAndProducts($keyword, $search_type);
-
-// Get the separate arrays
 $canteens = ($search_type === 'menu') ? [] : $searchResults['canteens'];
 $menuItems = ($search_type === 'canteens') ? [] : $searchResults['products'];
-
 ?>
 
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard & Menu</title>
-    <link rel="stylesheet" href="../css/customer.css">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-</head>
-
-<body>
-    <!-- Dashboard Section -->
-    <h3>
-        <?php
-        if ($isLoggedIn) {
-            echo "Welcome to Dashboard, {$_SESSION['username']}!";
-        } else {
-            echo "Welcome to Dashboard!";
-        }
-        ?>
-    </h3>
-
-    <!-- Search Form Section -->
-    <form autocomplete="off" method="GET" class="search-form">
-        <div class="search-container">
-            <input type="search" id="search" name="search" placeholder="Search canteens or menu items..." value="<?= htmlspecialchars($keyword) ?>">
-            <button type="submit" class="search-btn">Search</button>
-        </div>
-        <div class="search-options">
-            <label><input type="radio" name="search_type" value="all" <?= (!isset($_GET['search_type']) || $_GET['search_type'] === 'all') ? 'checked' : '' ?>> All</label>
-            <label><input type="radio" name="search_type" value="canteens" <?= (isset($_GET['search_type']) && $_GET['search_type'] === 'canteens') ? 'checked' : '' ?>> Canteens Only</label>
-            <label><input type="radio" name="search_type" value="menu" <?= (isset($_GET['search_type']) && $_GET['search_type'] === 'menu') ? 'checked' : '' ?>> Menu Items Only</label>
-        </div>
-    </form>
-
+<!-- Only return the results section -->
+<div id="searchResultsContent">
     <!-- Canteens Section -->
     <h3>Canteens</h3>
     <div class="canteen-container">
@@ -101,8 +49,4 @@ $menuItems = ($search_type === 'canteens') ? [] : $searchResults['products'];
             <p class="no-result">No menu items found.</p>
         <?php endif; ?>
     </div>
-
-    <!-- Content Area -->
-    <div id="contentArea"></div>
-</body>
-</html>
+</div> 

@@ -566,7 +566,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                 
                                 // Check if cart is empty after removal
                                 if ($('.card-body .card').length === 0) {
-                                    $('.card-body').html('<div class="alert alert-info">Your cart is empty</div>');
+                                    $('.card-body').html('<div class="alert-info">Your cart is empty</div>');
                                     // Hide the checkout section
                                     $('.checkout-section').hide();
                                 }

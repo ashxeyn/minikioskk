@@ -24,22 +24,46 @@ $(document).ready(function () {
 // Function to load the home section into the main content area
 function loadHomeSection() {
     console.log('Loading home section...');
-    $.ajax({
-        url: "../customers/home.php",
-        method: 'GET',
-        success: function (response) {
-            console.log('Home content successfully loaded.');
-            $('#contentArea').html(response);
-        },
-        error: function (xhr, status, error) {
-            console.error('Error loading home section:', error);
-            $('#contentArea').html('<p class="text-danger">Failed to load the Home section. Please try again.</p>');
-        }
+    $('#searchSection').show();
+    $.get('search_results.php', function(data) {
+        $('#contentArea').html(data);
+        initializeSearchHandlers();
+    });
+}
+
+function initializeSearchHandlers() {
+    // Handle form submission
+    $('#searchForm').on('submit', function(e) {
+        e.preventDefault();
+        performSearch($(this));
+    });
+
+    // Handle radio button changes
+    $('input[name="search_type"]').on('change', function() {
+        performSearch($(this).closest('form'));
+    });
+
+    // Handle real-time search
+    let searchTimeout;
+    $('#search').on('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            performSearch($(this).closest('form'));
+        }, 500);
+    });
+}
+
+function performSearch(form) {
+    const formData = form.serialize();
+    
+    $.get('search_results.php?' + formData, function(data) {
+        $('#contentArea').html(data);
     });
 }
 
 // Function to load the Cart section into the main content area
 function loadCartSection() {
+    $('#searchSection').hide();
     $.ajax({
         url: 'myCart.php',
         type: 'GET',
@@ -49,7 +73,7 @@ function loadCartSection() {
             $('#contentArea').html(response);
             
             // Reinitialize event handlers after loading content
-            initializeCartHandlers();
+            initializeCartHandlers();   
         },
         error: function(xhr, status, error) {
             console.error('Error loading cart:', error);
@@ -59,6 +83,7 @@ function loadCartSection() {
 
 // Function to dynamically load canteen details into the main content area
 function loadCanteenDetails(canteenId) {
+    $('#searchSection').hide();
     console.log('AJAX request to fetch canteen details for ID:', canteenId);
     $.ajax({
         url: '../customers/viewCanteen.php',
@@ -76,18 +101,9 @@ function loadCanteenDetails(canteenId) {
 
 // Function to load the Order Status section into the main content area
 function loadOrderStatusSection() {
-    console.log('Loading order status section...');
-    $.ajax({
-        url: "../customers/orderStatus.php",
-        method: 'GET',
-        success: function (response) {
-            console.log('Order status content successfully loaded.');
-            $('#contentArea').html(response);
-        },
-        error: function (xhr, status, error) {
-            console.error('Error loading order status section:', error);
-            $('#contentArea').html('<p class="text-danger">Failed to load the Order Status section. Please try again.</p>');
-        }
+    $('#searchSection').hide();
+    $.get('orderStatus.php', function(data) {
+        $('#contentArea').html(data);
     });
 }
 

@@ -502,6 +502,22 @@ class Order
             return [];
         }
     }
+
+    public function getOrderItems($order_id) {
+        try {
+            $sql = "SELECT oi.product_id, oi.quantity 
+                    FROM order_items oi 
+                    WHERE oi.order_id = :order_id";
+                    
+            $stmt = $this->db->connect()->prepare($sql);
+            $stmt->execute(['order_id' => $order_id]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+        } catch (Exception $e) {
+            error_log("Error getting order items: " . $e->getMessage());
+            throw $e;
+        }
+    }
 }
 
 ?>

@@ -64,7 +64,7 @@ body {
     max-width: 250px;  /* Set a reasonable max-width */
     overflow-x: hidden;
     color: #33363F;
-    background-color: #BEB7A4;
+    background-color: #ffffff;
     z-index: 1050; /* Ensure it's on top of other elements */
 }
 
@@ -79,7 +79,7 @@ body {
 }
 
 .dropdown-item:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: hwb(39 1% 9% / 0.815);
 }
 
 /* Content Area */

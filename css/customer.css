@@ -1,15 +1,19 @@
-
 .canteen {
     background-color: #087F8C;
 }
 
 .canteen-container, .menu-container {
-    margin: 20px;
+    margin: 25px 0;
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, max-content));
     justify-content: center; 
     align-items: start; 
-    grid-gap: 20px;
+    grid-gap: 25px;
+}
+
+.cart-container {
+    background-color: transparent;
+    opacity: 1;
 }
 
 .canteen, .menu-item {
@@ -101,5 +105,272 @@ h2 {
 
 .hidden {
     display: none !important;
+}
+
+.search-form {
+    margin: 20px 0;
+    text-align: center;
+}
+
+.search-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    max-width: 100%;
+}
+
+.search-container input[type="search"] {
+    width: 220px;
+    padding: 10px 20px;
+    border: 2px solid #e0e0e0;
+    border-radius: 30px;
+    font-size: 14px;
+    outline: none;
+}
+
+.search-container input[type="search"]:focus {
+    border-color: #FF7F11;
+}
+
+.search-btn {
+    padding: 10px 25px;
+    background-color: #FF7F11;
+    color: white;
+    border: none;
+    border-radius: 30px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.search-btn:hover {
+    background-color: #e67300;
+}
+
+.search-options {
+    display: inline-flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.search-options label {
+    font-size: 14px;
+    color: #666;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+
+.search-options input[type="radio"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #FF7F11;
+    cursor: pointer;
+}
+
+#contentArea {
+    padding: 0 20px;
+    margin-top: 20px !important;
+}
+
+h3 {
+    margin: 30px 0 20px 0;
+    font-size: 22px;
+    color: #333;
+    padding-left: 10px;
+}
+
+@media (max-width: 768px) {
+    .search-section {
+        padding: 15px;
+    }
+    
+    .search-container {
+        max-width: 100%;
+    }
+    
+    .search-options {
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+    
+    #contentArea {
+        padding: 0 15px;
+    }
+}
+
+.welcome-message {
+    padding: 15px 25px;
+    margin: 0;
+    background-color: #f8f9fa;
+    display: flex;
+    align-items: center;
+}
+
+.welcome-message h2 {
+    color: #333;
+    font-family: 'Amaranth', sans-serif;
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+/* Add these styles to fix navbar conflicts */
+.navbar {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    width: 100%;
+}
+
+/* Adjust main content to prevent overlap */
+.container-fluid {
+   
+    margin-top: 0;
+}
+
+/* Ensure sidebar doesn't conflict with navbar */
+.sidebar {
+    padding-top: 0;
+    margin-top: 0;
+}
+
+/* Adjust content area spacing */
+.col.py-3 {
+    padding-top: 1rem !important;
+}
+
+/* Fix any double scrollbars */
+body {
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.search-section {
+    padding: 20px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    margin: 20px 0;
+}
+
+.search-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.search-input-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: #f5f5f5;
+    border-radius: 50px;
+    padding: 5px 5px 5px 20px;
+    transition: all 0.3s ease;
+}
+
+.search-input-container:focus-within {
+    background: #fff;
+    box-shadow: 0 0 0 2px #ff6b00;
+}
+
+.search-icon {
+    color: #666;
+    font-size: 1.2rem;
+    margin-right: 10px;
+}
+
+#search {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 12px;
+    font-size: 1rem;
+    color: #333;
+    outline: none;
+}
+
+#search::placeholder {
+    color: #999;
+}
+
+.search-btn {
+    background: #ff6b00;
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 50px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.search-btn:hover {
+    background: #ff8533;
+}
+
+.search-filters {
+    display: flex;
+    gap: 20px;
+    padding: 0 10px;
+}
+
+.filter-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.filter-option input[type="radio"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #ddd;
+    border-radius: 50%;
+    outline: none;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.filter-option input[type="radio"]:checked {
+    border-color: #ff6b00;
+}
+
+.filter-option input[type="radio"]:checked::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 10px;
+    height: 10px;
+    background: #ff6b00;
+    border-radius: 50%;
+}
+
+.filter-option label {
+    color: #555;
+    font-size: 0.95rem;
+    cursor: pointer;
+}
+
+@media (max-width: 768px) {
+    .search-filters {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .search-input-container {
+        flex-direction: column;
+        border-radius: 12px;
+        padding: 10px;
+    }
+    
+    .search-btn {
+        width: 100%;
+        margin-top: 10px;
+    }
 }
 

@@ -162,11 +162,17 @@ $products = $productObj->fetchProductsByCanteen($canteen_id);
 
 .order-details {
     padding: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
 }
 
 .detail-row {
     padding: 10px 0;
     border-bottom: 1px solid #eef0f3;
+    width: 100%;
+    max-width: 300px;
 }
 
 .detail-row:last-child {

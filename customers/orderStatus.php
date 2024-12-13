@@ -15,12 +15,8 @@ if (isset($_SESSION['user_id'])) {
         $orders = [];
     }
 } else {
-    // Handle the case where user_id is not defined
     $orders = [];
 }
-
-// Add debugging
-error_log("Session data in orderStatus.php: " . print_r($_SESSION, true));
 ?>
 
 <!DOCTYPE html>
@@ -28,88 +24,258 @@ error_log("Session data in orderStatus.php: " . print_r($_SESSION, true));
 <head>
     <title>Order Status</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="stylesheet" href="../css/customer-order.css">
 </head>
 <body>
 <div id="contentArea" class="container mt-4">
     <h2>Your Order Status</h2>
+    
     <?php if (!empty($orders)): ?>
-        <?php foreach ($orders as $order): ?>
-            <div class="order-card <?= $order['order_id'] === ($_SESSION['last_order']['order_id'] ?? null) ? 'latest-order' : '' ?>">
-                <div class="order-row">
-                    <p><strong>Order ID:</strong></p>
-                    <p><?= htmlspecialchars($order['order_id']); ?></p>
-                </div>
-                <div class="order-row">
-                    <p><strong>Status:</strong></p>
-                    <p class="status-<?= strtolower($order['status']) ?>">
-                        <?= htmlspecialchars(ucfirst($order['status'])); ?>
-                    </p>
-                </div>
-                <div class="order-row">
-                    <p><strong>Queue Number:</strong></p>
-                    <p><?= date('Ymd', strtotime($order['created_at'])) . str_pad($order['order_id'], 4, '0', STR_PAD_LEFT); ?></p>
-                </div>
-                <div class="order-row">
-                    <p><strong>Canteen:</strong></p>
-                    <p><?= htmlspecialchars($order['canteen_name'] ?? 'Not Available'); ?></p>
-                </div>
-                <div class="order-row">
-                    <p><strong>Items:</strong></p>
-                    <p><?= htmlspecialchars($order['items'] ?? 'No items'); ?></p>
-                </div>
-                <div class="order-row">
-                    <p><strong>Total Amount:</strong></p>
-                    <p>₱<?= number_format($order['total_amount'], 2); ?></p>
-                </div>
-                <div class="order-row">
-                    <p><strong>Created At:</strong></p>
-                    <p><?= date('F j, Y, g:i a', strtotime($order['created_at'])); ?></p>
+        <div class="orders-grid">
+            <!-- Active Orders Section - Takes 2 grids -->
+            <div class="orders-section active-section">
+                <h3>Active Orders</h3>
+                <div class="orders-grid-container">
+                    <?php 
+                    $hasActiveOrders = false;
+                    foreach ($orders as $order): 
+                        if ($order['status'] !== 'completed'):
+                            $hasActiveOrders = true;
+                    ?>
+                        <div class="order-card <?= $order['order_id'] === ($_SESSION['last_order']['order_id'] ?? null) ? 'latest-order' : '' ?>">
+                            <div class="order-row">
+                                <p><strong>Order ID:</strong></p>
+                                <p><?= htmlspecialchars($order['order_id']); ?></p>
+                            </div>
+                            <div class="order-row">
+                                <p><strong>Status:</strong></p>
+                                <p class="status-<?= strtolower($order['status']) ?>">
+                                    <?= htmlspecialchars(ucfirst($order['status'])); ?>
+                                </p>
+                            </div>
+                            <div class="order-row">
+                                <p><strong>Queue Number:</strong></p>
+                                <p><?= date('Ymd', strtotime($order['created_at'])) . str_pad($order['order_id'], 4, '0', STR_PAD_LEFT); ?></p>
+                            </div>
+                            <div class="order-row">
+                                <p><strong>Canteen:</strong></p>
+                                <p><?= htmlspecialchars($order['canteen_name'] ?? 'Not Available'); ?></p>
+                            </div>
+                            <div class="order-row">
+                                <p><strong>Items:</strong></p>
+                                <p><?= htmlspecialchars($order['items'] ?? 'No items'); ?></p>
+                            </div>
+                            <div class="order-row">
+                                <p><strong>Total Amount:</strong></p>
+                                <p>₱<?= number_format($order['total_amount'], 2); ?></p>
+                            </div>
+                            <div class="order-row">
+                                <p><strong>Created At:</strong></p>
+                                <p><?= date('F j, Y, g:i a', strtotime($order['created_at'])); ?></p>
+                            </div>
+                        </div>
+                    <?php 
+                        endif;
+                    endforeach; 
+                    if (!$hasActiveOrders): ?>
+                        <p class="no-orders">No active orders.</p>
+                    <?php endif; ?>
                 </div>
             </div>
-        <?php endforeach; ?>
+
+            <!-- Completed Orders Section - Takes 2 grids -->
+            <div class="orders-section completed-section">
+                <h3>Completed Orders</h3>
+                <div class="orders-grid-container">
+                    <?php 
+                    $hasCompletedOrders = false;
+                    foreach ($orders as $order): 
+                        if ($order['status'] === 'completed'):
+                            $hasCompletedOrders = true;
+                    ?>
+                        <div class="order-card completed">
+                            <div class="order-row">
+                                <p><strong>Order ID:</strong></p>
+                                <p><?= htmlspecialchars($order['order_id']); ?></p>
+                            </div>
+                            <div class="order-row">
+                                <p><strong>Status:</strong></p>
+                                <p class="status-completed">Completed</p>
+                            </div>
+                            <div class="order-row">
+                                <p><strong>Canteen:</strong></p>
+                                <p><?= htmlspecialchars($order['canteen_name'] ?? 'Not Available'); ?></p>
+                            </div>
+                            <div class="order-row">
+                                <p><strong>Items:</strong></p>
+                                <p><?= htmlspecialchars($order['items'] ?? 'No items'); ?></p>
+                            </div>
+                            <div class="order-row">
+                                <p><strong>Total Amount:</strong></p>
+                                <p>₱<?= number_format($order['total_amount'], 2); ?></p>
+                            </div>
+                            <div class="order-row">
+                                <p><strong>Completed At:</strong></p>
+                                <p><?= date('F j, Y, g:i a', strtotime($order['created_at'])); ?></p>
+                            </div>
+                            
+                        </div>
+                    <?php 
+                        endif;
+                    endforeach; 
+                    if (!$hasCompletedOrders): ?>
+                        <p class="no-orders">No completed orders.</p>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
     <?php else: ?>
         <div class="alert alert-info">No orders found.</div>
     <?php endif; ?>
 </div>
 
 <style>
-    .order-card {
-        background: white;
-        border-radius: 8px;
-        padding: 20px;
-        margin-bottom: 20px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+/* Update grid layout */
+.orders-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    padding: 20px;
+}
+
+.active-section {
+    grid-column: span 2;
+}
+
+.completed-section {
+    grid-column: span 2;
+}
+
+/* Update container to center cards */
+.orders-grid-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    min-height: 200px; /* Minimum height instead of fixed height */
+    overflow-y: visible; /* Remove scrollbar */
+}
+
+/* Update order card styles */
+.order-card {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    width: 90%; /* Fixed width for cards */
+    max-width: 400px; /* Maximum width */
+}
+
+.orders-section {
+    margin-bottom: 0;
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.orders-section h3 {
+    color: #333;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #eee;
+    text-align: center;
+}
+
+/* Center no orders message */
+.no-orders {
+    color: #666;
+    font-style: italic;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    text-align: center;
+    width: 90%;
+    max-width: 400px;
+    margin: auto;
+}
+
+/* Responsive design */
+@media (max-width: 1200px) {
+    .orders-grid {
+        grid-template-columns: 1fr;
     }
+
+    .active-section,
+    .completed-section {
+        grid-column: span 1;
+    }
+}
+
+/* Keep existing status styles */
+.status-pending {
+    color: #ffc107;
+    font-weight: bold;
+}
     
-    .order-row {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 10px;
-        padding: 5px 0;
-        border-bottom: 1px solid #eee;
-    }
+.status-completed {
+    color: #28a745;
+    font-weight: bold;
+}
     
-    .status-pending {
-        color: #ffc107;
-        font-weight: bold;
-    }
+.status-cancelled {
+    color: #dc3545;
+    font-weight: bold;
+}
     
-    .status-completed {
-        color: #28a745;
-        font-weight: bold;
-    }
-    
-    .status-cancelled {
-        color: #dc3545;
-        font-weight: bold;
-    }
-    
-    .latest-order {
-        border: 2px solid #007bff;
-    }
+.latest-order {
+    border: 2px solid #007bff;
+}
+
+/* Add these new styles */
+.reorder-section {
+    margin-top: 15px;
+    text-align: center;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+.reorder-btn {
+    width: 100%;
+    padding: 8px 15px;
+    background-color: #28a745;
+    border-color: #28a745;
+    transition: all 0.3s ease;
+}
+
+.reorder-btn:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+    transform: translateY(-2px);
+}
+
+.reorder-btn i {
+    margin-right: 5px;
+}
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+
+
+// Function to update cart count if needed
+function updateCartCount(count) {
+    const cartCountElement = document.getElementById('cartCount');
+    if (cartCountElement) {
+        cartCountElement.textContent = count;
+    }
+}
+</script>
 </body>
 </html>

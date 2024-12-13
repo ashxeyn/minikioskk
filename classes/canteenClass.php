@@ -68,9 +68,7 @@ class Canteen
                     'name' => $row['name'],
                     'campus_location' => $row['campus_location'],
                     'description' => $row['description'],
-                    'opening_time' => $row['opening_time'],
-                    'closing_time' => $row['closing_time'],
-                    'status' => $row['status'],
+                    
                     'created_at' => $row['created_at']
                 ];
             }
@@ -137,20 +135,56 @@ class Canteen
         }
     }
 
-    function searchCanteensAndProducts($keyword)
-    {
-        $sql = "SELECT c.canteen_id, c.name AS canteen_name, c.campus_location, p.product_id, p.name AS product_name, p.description, p.price
-                FROM canteens c
-                LEFT JOIN products p ON c.canteen_id = p.canteen_id
-                WHERE c.name LIKE :keyword OR c.campus_location LIKE :keyword OR p.name LIKE :keyword OR p.description LIKE :keyword";
-        
-        $query = $this->db->connect()->prepare($sql);
-        $searchKeyword = '%' . $keyword . '%';
-        $query->bindParam(':keyword', $searchKeyword);
-        $query->execute();
-        
-        return $query->fetchAll();
-    }  
+    public function searchCanteensAndProducts($keyword = '', $search_type = 'all') {
+        try {
+            $db = $this->db->connect();
+            $searchTerm = "%" . $keyword . "%";
+            $canteens = [];
+            $products = [];
+            
+            // Get canteens if search type is 'all' or 'canteens'
+            if ($search_type === 'all' || $search_type === 'canteens') {
+                $sql = "SELECT canteen_id, name, campus_location, description, 
+                               opening_time, closing_time, status, created_at 
+                        FROM canteens 
+                        WHERE (name LIKE :keyword 
+                        OR campus_location LIKE :keyword 
+                        OR description LIKE :keyword)
+                        AND status != 'maintenance'
+                        ORDER BY name ASC";
+
+                $stmt = $db->prepare($sql);
+                $stmt->bindParam(':keyword', $searchTerm);
+                $stmt->execute();
+                $canteens = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            }
+
+            // Get products if search type is 'all' or 'menu'
+            if ($search_type === 'all' || $search_type === 'menu') {
+                $sql = "SELECT p.*, c.name as canteen_name, c.status as canteen_status
+                        FROM products p 
+                        JOIN canteens c ON p.canteen_id = c.canteen_id 
+                        WHERE (p.name LIKE :keyword 
+                        OR p.description LIKE :keyword)
+                        AND c.status != 'maintenance'
+                        ORDER BY p.name ASC";
+
+                $stmt = $db->prepare($sql);
+                $stmt->bindParam(':keyword', $searchTerm);
+                $stmt->execute();
+                $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            }
+
+            return [
+                'canteens' => $canteens,
+                'products' => $products
+            ];
+
+        } catch (PDOException $e) {
+            error_log("Error in searchCanteensAndProducts: " . $e->getMessage());
+            return ['canteens' => [], 'products' => []];
+        }
+    }
 
     function registerCanteen()
     {
