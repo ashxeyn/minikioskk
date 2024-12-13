@@ -2,19 +2,24 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="stockModalLabel">Stock In</h5>
+                <h5 class="modal-title" id="stockModalLabel">Update Stock</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <form id="stockForm">
                     <input type="hidden" name="product_id" id="stockProductId">
-                    <div class="mb-3 quantity">
-                        <label for="stock_quantity" class="form-label">Quantity</label>
-                        <input type="number" name="quantity" id="stock_quantity" class="form-control" required min="1">
+                    <div class="mb-3">
+                        <label for="quantity" class="form-label">Add Quantity</label>
+                        <input type="number" 
+                               class="form-control" 
+                               id="quantity" 
+                               name="quantity" 
+                               min="1" 
+                               required>
                     </div>
-                    <input type="hidden" name="status" value="In Stock">
                     <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary">Add Stock</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Update Stock</button>
                     </div>
                 </form>
             </div>

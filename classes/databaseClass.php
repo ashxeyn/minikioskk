@@ -1,17 +1,17 @@
 <?php 
 class Database{
 
-    private $host = 'localhost';
-    private $dbname = 'minikiosk';
-    private $username = 'root';
-    private $password = '';
+    private $host = "localhost";
+    private $username = "root";
+    private $password = "";
+    private $database = "minikiosk";
     private $conn = null;
 
     public function connect() {
         try {
             if ($this->conn === null) {
                 $this->conn = new PDO(
-                    "mysql:host=$this->host;dbname=$this->dbname",
+                    "mysql:host=" . $this->host . ";dbname=" . $this->database,
                     $this->username,
                     $this->password
                 );
@@ -19,7 +19,7 @@ class Database{
             }
             return $this->conn;
         } catch(PDOException $e) {
-            error_log("Connection Error: " . $e->getMessage());
+            error_log("Connection error: " . $e->getMessage());
             throw new Exception("Database connection failed");
         }
     }

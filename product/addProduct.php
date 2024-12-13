@@ -1,41 +1,94 @@
 <?php
 require_once '../classes/productClass.php';
+require_once '../classes/stocksClass.php';
 require_once '../tools/functions.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+header('Content-Type: application/json');
+
+try {
+    // Debug incoming data
+    error_log("Received POST data: " . print_r($_POST, true));
+
+    // Validate input
+    if (empty($_POST['name']) || empty($_POST['type_id']) || 
+        empty($_POST['price']) || empty($_POST['canteen_id']) || 
+        empty($_POST['initial_stock'])) {
+        throw new Exception("All required fields must be filled");
+    }
+
+    // Clean and prepare data
+    $product_data = [
+        'canteen_id' => clean_input($_POST['canteen_id']),
+        'type_id' => clean_input($_POST['type_id']),
+        'name' => clean_input($_POST['name']),
+        'description' => clean_input($_POST['description']),
+        'price' => clean_input($_POST['price'])
+    ];
+
+    $initial_stock = clean_input($_POST['initial_stock']);
+
+    // Validate numeric fields
+    if (!is_numeric($product_data['price']) || $product_data['price'] <= 0) {
+        throw new Exception("Invalid price value");
+    }
+
+    if (!is_numeric($initial_stock) || $initial_stock < 0) {
+        throw new Exception("Invalid stock value");
+    }
+
+    // Verify type_id exists
+    $db = new Database();
+    $conn = $db->connect();
+    $stmt = $conn->prepare("SELECT type_id FROM product_types WHERE type_id = ?");
+    $stmt->execute([$product_data['type_id']]);
+    if (!$stmt->fetch()) {
+        throw new Exception("Invalid product type selected");
+    }
+
+    // Start transaction
+    $conn->beginTransaction();
+
     try {
         $productObj = new Product();
-        
-        // Clean and validate inputs
-        $canteen_id = clean_input($_POST['canteen_id']);
-        $name = clean_input($_POST['name']);
-        $type_id = clean_input($_POST['type_id']);
-        $description = clean_input($_POST['description']);
-        $price = clean_input($_POST['price']);
-        
-        // Validate required fields
-        if (empty($canteen_id) || empty($name) || empty($type_id) || empty($description) || empty($price)) {
-            echo 'failure: All fields are required';
-            exit;
+        // Add product
+        $product_id = $productObj->addProduct($product_data);
+        error_log("Product added with ID: " . $product_id);
+
+        if (!$product_id) {
+            throw new Exception("Failed to add product");
         }
 
-        // Validate numeric fields
-        if (!is_numeric($price) || $price <= 0) {
-            echo 'failure: Invalid price';
-            exit;
+        // Add initial stock
+        $stockObj = new Stocks();
+        $stock_data = [
+            'product_id' => $product_id,
+            'quantity' => $initial_stock
+        ];
+
+        $stock_result = $stockObj->addStock($stock_data);
+        error_log("Stock addition result: " . ($stock_result ? "success" : "failure"));
+
+        if (!$stock_result) {
+            throw new Exception("Failed to add initial stock");
         }
 
-        if (!is_numeric($canteen_id) || !is_numeric($type_id)) {
-            echo 'failure: Invalid selection';
-            exit;
-        }
+        $conn->commit();
+        echo json_encode([
+            'status' => 'success',
+            'message' => 'Product added successfully',
+            'product_id' => $product_id
+        ]);
 
-        $result = $productObj->addProduct($name, $type_id, $description, $price, $canteen_id);
-        echo $result ? 'success' : 'failure: Could not add product';
-        
     } catch (Exception $e) {
-        error_log("Error in addProduct.php: " . $e->getMessage());
-        echo 'failure: ' . $e->getMessage();
+        $conn->rollBack();
+        throw $e;
     }
+
+} catch (Exception $e) {
+    error_log("Error in addProduct.php: " . $e->getMessage());
+    echo json_encode([
+        'status' => 'error',
+        'message' => $e->getMessage()
+    ]);
 }
 ?>

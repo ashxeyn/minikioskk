@@ -2,32 +2,53 @@
 require_once '../classes/stocksClass.php';
 require_once '../tools/functions.php';
 
-$stockObj = new Stocks();
+header('Content-Type: application/json');
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+try {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        throw new Exception('Invalid request method');
+    }
+
+    if (empty($_POST['product_id']) || empty($_POST['quantity'])) {
+        throw new Exception('Missing required fields');
+    }
+
     $product_id = clean_input($_POST['product_id']);
     $quantity = clean_input($_POST['quantity']);
-    $status = 'In Stock'; // Always set to In Stock
-    
-    $res = array("status" => "failure");
-    
-    if (empty($product_id) || empty($quantity)) {
-        echo json_encode($res);
-        exit;
+
+    if (!is_numeric($quantity) || $quantity <= 0) {
+        throw new Exception('Invalid quantity value');
     }
 
-    $stock = $stockObj->fetchStockByProductId($product_id);
-    if ($stock) {
-        // Add to existing stock
-        $updateStock = $stockObj->updateStock($product_id, $quantity);
-        $res['status'] = $updateStock ? 'success' : 'failure';
+    $stockObj = new Stocks();
+    $currentStock = $stockObj->fetchStockByProductId($product_id);
+
+    if ($currentStock) {
+        // Update existing stock
+        $result = $stockObj->updateStock($product_id, $quantity);
     } else {
         // Create new stock record
-        $addStock = $stockObj->addStock($product_id, $quantity, $status);
-        $res['status'] = $addStock ? 'success' : 'failure';
+        $stock_data = [
+            'product_id' => $product_id,
+            'quantity' => $quantity
+        ];
+        $result = $stockObj->addStock($stock_data);
     }
-    echo json_encode($res);
-} else {
-    echo json_encode(array("status" => "failure"));
+
+    if ($result) {
+        echo json_encode([
+            'status' => 'success',
+            'message' => 'Stock updated successfully'
+        ]);
+    } else {
+        throw new Exception('Failed to update stock');
+    }
+
+} catch (Exception $e) {
+    error_log("Error in updateStock.php: " . $e->getMessage());
+    echo json_encode([
+        'status' => 'error',
+        'message' => $e->getMessage()
+    ]);
 }
 ?>

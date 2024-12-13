@@ -10,11 +10,20 @@ class Stocks
         $this->db = new Database();
     }
 
-    function addStock($product_id, $quantity, $status)
-    {
-        $sql = "INSERT INTO stocks (product_id, quantity, status) 
-                VALUES ('" . $product_id . "', '" . $quantity . "', '" . $status . "')";
-        return $this->db->connect()->query($sql);  
+    function addStock($data) {
+        try {
+            $sql = "INSERT INTO stocks (product_id, quantity) 
+                    VALUES (:product_id, :quantity)";
+                    
+            $stmt = $this->db->connect()->prepare($sql);
+            return $stmt->execute([
+                'product_id' => $data['product_id'],
+                'quantity' => $data['quantity']
+            ]);
+        } catch (PDOException $e) {
+            error_log("Error in addStock: " . $e->getMessage());
+            throw new Exception("Failed to add stock: " . $e->getMessage());
+        }
     }
 
     function fetchStockByProductId($product_id)
@@ -30,14 +39,10 @@ class Stocks
         }
     }
 
-    function updateStock($product_id, $quantity_change)
-    {
+    public function updateStock($product_id, $quantity_to_add) {
         try {
             $db = $this->db->connect();
-            
-            if (!$db->inTransaction()) {
-                $db->beginTransaction();
-            }
+            $db->beginTransaction();
 
             // Get current stock
             $sql = "SELECT quantity FROM stocks WHERE product_id = :product_id FOR UPDATE";
@@ -45,34 +50,40 @@ class Stocks
             $stmt->execute(['product_id' => $product_id]);
             $current = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if (!$current) {
-                throw new Exception("Stock record not found");
+            if ($current) {
+                // Update existing stock
+                $new_quantity = $current['quantity'] + $quantity_to_add;
+                $sql = "UPDATE stocks 
+                        SET quantity = :quantity,
+                            updated_at = NOW()
+                        WHERE product_id = :product_id";
+            } else {
+                // Insert new stock record
+                $new_quantity = $quantity_to_add;
+                $sql = "INSERT INTO stocks (product_id, quantity) 
+                        VALUES (:product_id, :quantity)";
             }
-
-            // Add to existing quantity (stock in only)
-            $new_quantity = $current['quantity'] + $quantity_change;
-
-            // Update stock
-            $sql = "UPDATE stocks 
-                    SET quantity = :quantity,
-                        updated_at = NOW()
-                    WHERE product_id = :product_id";
 
             $stmt = $db->prepare($sql);
             $result = $stmt->execute([
-                'quantity' => $new_quantity,
-                'product_id' => $product_id
+                'product_id' => $product_id,
+                'quantity' => $new_quantity
             ]);
 
-            $db->commit();
-            return $result;
+            if ($result) {
+                $db->commit();
+                return true;
+            }
+
+            $db->rollBack();
+            return false;
 
         } catch (Exception $e) {
             if (isset($db) && $db->inTransaction()) {
                 $db->rollBack();
             }
             error_log("Error updating stock: " . $e->getMessage());
-            return false;
+            throw new Exception("Failed to update stock: " . $e->getMessage());
         }
     }
 }

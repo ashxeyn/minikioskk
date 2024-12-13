@@ -30,11 +30,11 @@ try {
         echo "<div class='alert alert-info'>No products found.</div>";
     }
     
-    // Continue with the rest of the table output...
-    include 'productTable.php'; // Move the table HTML to a separate file
+    // Include the product table template with correct path
+    include __DIR__ . '/productTable.php';
     
 } catch (Exception $e) {
-    error_log("Error in view_products.php: " . $e->getMessage());
+    error_log("Error in view_products: " . $e->getMessage());
     echo "<div class='alert alert-danger'>Error loading products: " . htmlspecialchars($e->getMessage()) . "</div>";
 }
 ?>

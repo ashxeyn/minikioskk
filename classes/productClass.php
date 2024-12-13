@@ -3,7 +3,7 @@ require_once '../classes/databaseClass.php';
 
 class Product
 {
-    protected $db;
+    public $db;
 
     function __construct()
     {
@@ -82,32 +82,30 @@ class Product
         return $result['availability'] == 1;
     }
 
-    function addProduct($name, $type_id, $description, $price, $canteen_id) {
+    function addProduct($data) {
         try {
-            // First verify that the canteen exists
-            $checkCanteen = "SELECT canteen_id FROM canteens WHERE canteen_id = :canteen_id";
-            $stmt = $this->db->connect()->prepare($checkCanteen);
-            $stmt->bindParam(':canteen_id', $canteen_id);
-            $stmt->execute();
+            $sql = "INSERT INTO products (canteen_id, type_id, name, description, price, status) 
+                    VALUES (:canteen_id, :type_id, :name, :description, :price, :status)";
             
-            if ($stmt->rowCount() === 0) {
-                throw new Exception("Invalid canteen selected");
-            }
+            $db = $this->db->connect();
+            $stmt = $db->prepare($sql);
+            
+            $result = $stmt->execute([
+                'canteen_id' => $data['canteen_id'],
+                'type_id' => $data['type_id'],
+                'name' => $data['name'],
+                'description' => $data['description'],
+                'price' => $data['price'],
+                'status' => 'available'
+            ]);
 
-            $sql = "INSERT INTO products (name, type_id, description, price, canteen_id) 
-                    VALUES (:name, :type_id, :description, :price, :canteen_id)";
-            
-            $stmt = $this->db->connect()->prepare($sql);
-            $stmt->bindParam(':name', $name);
-            $stmt->bindParam(':type_id', $type_id);
-            $stmt->bindParam(':description', $description);
-            $stmt->bindParam(':price', $price);
-            $stmt->bindParam(':canteen_id', $canteen_id);
-            
-            return $stmt->execute();
+            if ($result) {
+                return $db->lastInsertId();
+            }
+            return false;
         } catch (PDOException $e) {
             error_log("Error in addProduct: " . $e->getMessage());
-            throw new Exception("Failed to add product");
+            throw new Exception("Failed to add product: " . $e->getMessage());
         }
     }
 
@@ -177,15 +175,23 @@ class Product
 
     function getProductsByCanteen($canteen_id)
     {
-        $sql = "SELECT p.product_id, p.name, p.description, p.category, p.price, p.availability, s.quantity, c.name AS canteen_name
-                FROM products p
-                LEFT JOIN stocks s ON p.product_id = s.product_id
-                LEFT JOIN canteens c ON p.canteen_id = c.canteen_id
-                WHERE p.canteen_id = :canteen_id AND p.availability = 1";
-        $query = $this->db->connect()->prepare($sql);
-        $query->bindParam(':canteen_id', $canteen_id);
-        $query->execute();
-        return $query->fetchAll();
+        try {
+            $sql = "SELECT p.product_id, p.name, p.description, p.category, p.price, p.availability, 
+                           s.quantity, c.name AS canteen_name
+                    FROM products p
+                    LEFT JOIN stocks s ON p.product_id = s.product_id
+                    LEFT JOIN canteens c ON p.canteen_id = c.canteen_id
+                    WHERE p.canteen_id = :canteen_id 
+                    AND p.availability = 1";
+                    
+            $stmt = $this->db->connect()->prepare($sql);
+            $stmt->bindParam(':canteen_id', $canteen_id);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            error_log("Error in getProductsByCanteen: " . $e->getMessage());
+            return [];
+        }
     }
     
 
@@ -281,13 +287,15 @@ class Product
 
     function getCategories() {
         try {
-            $sql = "SELECT * FROM product_types ORDER BY name";
-            $query = $this->db->connect()->prepare($sql);
-            $query->execute();
-            return $query->fetchAll(PDO::FETCH_ASSOC);
+            $sql = "SELECT pt.type_id, pt.name 
+                    FROM product_types pt 
+                    ORDER BY pt.name";
+            $stmt = $this->db->connect()->prepare($sql);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
-            error_log("Error fetching categories: " . $e->getMessage());
-            return [];
+            error_log("Error in getCategories: " . $e->getMessage());
+            throw new Exception("Failed to load categories");
         }
     }
 
@@ -338,6 +346,17 @@ class Product
             error_log("Error fetching category name: " . $e->getMessage());
             return '';
         }
+    }
+
+    function fetchAllProductsWithCanteens() {
+        $sql = "SELECT p.*, c.name as canteen_name 
+                FROM products p 
+                JOIN canteens c ON p.canteen_id = c.canteen_id 
+                ORDER BY c.name, p.name";
+        
+        $query = $this->db->connect()->prepare($sql);
+        $query->execute();
+        return $query->fetchAll();
     }
 }
 ?>
