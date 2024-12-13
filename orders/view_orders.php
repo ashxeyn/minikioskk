@@ -19,42 +19,60 @@ try {
 ?>
 
 <div id="orderTable">
-    <!-- Search and Filters -->
+    <!-- Entries control and search row -->
     <div class="row mb-3">
-        <!-- Search Box -->
-        <div class="col-md-4">
-            <div class="input-group">
-                <input type="text" id="searchInput" class="form-control" placeholder="Search orders...">
-                <span class="input-group-text"><i class="bi bi-search"></i></span>
+        <!-- Show entries dropdown -->
+        <div class="col-md-2">
+            <div class="entries-wrapper">
+                Show 
+                <select id="entriesPerPage" class="form-select form-select-sm d-inline-block w-auto">
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+                entries
             </div>
         </div>
-        
-        
-        <!-- Status Filter -->
-        <div class="col-md-4">
-            <select id="statusFilter" class="form-select">
-                <option value="">All Statuses</option>
-                <option value="placed">Placed</option>
-                <option value="accepted">Accepted</option>
-                <option value="preparing">Preparing</option>
-                <option value="ready">Ready</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
-            </select>
-        </div>
-        
-        <!-- Product Filter -->
-        <div class="col-md-4">
-            <select id="productFilter" class="form-select">
-                <option value="">All Products</option>
-                <?php 
-                $products = $orderObj->getUniqueProducts($canteenId);
-                foreach($products as $product): 
-                    $name = htmlspecialchars($product['name'], ENT_QUOTES, 'UTF-8');
-                ?>
-                    <option value="<?= $name ?>"><?= $name ?></option>
-                <?php endforeach; ?>
-            </select>
+
+        <!-- Existing search and filters -->
+        <div class="col-md-10">
+            <div class="row">
+                <!-- Your existing filters here -->
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <input type="text" id="searchInput" class="form-control" placeholder="Search orders...">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    </div>
+                </div>
+                
+                <!-- Status Filter -->
+                <div class="col-md-4">
+                    <select id="statusFilter" class="form-select">
+                        <option value="">All Statuses</option>
+                        <option value="placed">Placed</option>
+                        <option value="accepted">Accepted</option>
+                        <option value="preparing">Preparing</option>
+                        <option value="ready">Ready</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+                
+                <!-- Product Filter -->
+                <div class="col-md-4">
+                    <select id="productFilter" class="form-select">
+                        <option value="">All Products</option>
+                        <?php 
+                        $products = $orderObj->getUniqueProducts($canteenId);
+                        foreach($products as $product): 
+                            $name = htmlspecialchars($product['name'], ENT_QUOTES, 'UTF-8');
+                        ?>
+                            <option value="<?= $name ?>"><?= $name ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -112,6 +130,28 @@ try {
     <?php else: ?>
         <div class="alert alert-info">No orders found.</div>
     <?php endif; ?>
+
+    <!-- Add pagination controls after the table -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="table-info">
+                Showing <span id="startEntry">1</span> to <span id="endEntry">10</span> of <span id="totalEntries">0</span> entries
+            </div>
+        </div>
+        <div class="col-md-6">
+            <nav aria-label="Table navigation" class="float-end">
+                <ul class="pagination mb-0">
+                    <li class="page-item disabled" id="prevPage">
+                        <a class="page-link" href="#" tabindex="-1">Previous</a>
+                    </li>
+                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item" id="nextPage">
+                        <a class="page-link" href="#">Next</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
 </div>
 
 <!-- Order Details Modal -->
@@ -130,19 +170,53 @@ try {
 </div>
 
 <style>
+.product-thumbnail {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.no-image {
+    color: #999;
+    font-size: 0.8em;
+}
+
 .badge {
     padding: 0.5em 0.8em;
+}
+
+.btn-group {
+    gap: 0.25rem;
 }
 
 .table th {
     background-color: #f8f9fa;
 }
 
-.btn-sm {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.875rem;
+/* Modal backdrop transparency */
+.modal-backdrop {
+    opacity: 0.7 !important;
 }
 
+.modal-backdrop.show {
+    opacity: 0.7 !important;
+}
+
+/* Additional styles specific to orders */
+.action-buttons {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.queue-number {
+    font-weight: bold;
+    padding: 0.3em 0.6em;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+}
+
+/* Search and filter styles */
 .input-group {
     margin-bottom: 0;
 }
@@ -155,7 +229,7 @@ try {
     margin-bottom: 1rem;
 }
 
-/* Add loading indicator styles */
+/* Loading indicator styles */
 .loading {
     opacity: 0.5;
     pointer-events: none;
@@ -170,6 +244,24 @@ try {
     background: rgba(255, 255, 255, 0.8);
     padding: 1rem;
     border-radius: 4px;
+}
+
+.entries-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.pagination {
+    margin: 0;
+}
+
+.table-info {
+    padding: 0.5rem 0;
+}
+
+.page-link {
+    padding: 0.375rem 0.75rem;
 }
 </style>
 
@@ -254,73 +346,96 @@ document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('searchInput');
     const statusFilter = document.getElementById('statusFilter');
     const productFilter = document.getElementById('productFilter');
+    const entriesPerPage = document.getElementById('entriesPerPage');
+    const tableBody = document.querySelector('tbody');
+    const startEntry = document.getElementById('startEntry');
+    const endEntry = document.getElementById('endEntry');
+    const totalEntries = document.getElementById('totalEntries');
+    const prevPage = document.getElementById('prevPage');
+    const nextPage = document.getElementById('nextPage');
     
-    function filterTable() {
-        const searchTerm = searchInput.value.toLowerCase().trim();
+    let currentPage = 1;
+    let rows = Array.from(tableBody.querySelectorAll('tr'));
+    
+    function updateTableInfo() {
+        const total = rows.filter(row => row.style.display !== 'none').length;
+        const start = (currentPage - 1) * parseInt(entriesPerPage.value) + 1;
+        const end = Math.min(start + parseInt(entriesPerPage.value) - 1, total);
+        
+        startEntry.textContent = total === 0 ? 0 : start;
+        endEntry.textContent = end;
+        totalEntries.textContent = total;
+        
+        // Update pagination
+        const totalPages = Math.ceil(total / parseInt(entriesPerPage.value));
+        prevPage.classList.toggle('disabled', currentPage === 1);
+        nextPage.classList.toggle('disabled', currentPage === totalPages || total === 0);
+    }
+    
+    function filterAndPaginateTable() {
+        const searchTerm = searchInput.value.toLowerCase();
         const statusTerm = statusFilter.value.toLowerCase();
         const productTerm = productFilter.value.toLowerCase();
         
-        const rows = document.querySelectorAll('tbody tr');
-        
         rows.forEach(row => {
+            // Your existing filter logic here
             let showRow = true;
+            // ... existing filter conditions ...
             
-            // Search filter
-            if (searchTerm) {
-                const orderId = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
-                const username = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
-                const customerName = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
-                
-                showRow = orderId.includes(searchTerm) || 
-                         username.includes(searchTerm) || 
-                         customerName.includes(searchTerm);
-            }
-            
-            // Status filter
-            if (showRow && statusTerm) {
-                const status = row.querySelector('.badge').textContent.toLowerCase();
-                showRow = status === statusTerm;
-            }
-            
-            // Product filter
-            if (showRow && productTerm) {
-                const products = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
-                showRow = products.includes(productTerm);
-            }
-            
-            // Show/hide row
             row.style.display = showRow ? '' : 'none';
         });
         
-        // Show/hide "No orders found" message
-        const visibleRows = document.querySelectorAll('tbody tr[style=""]').length;
-        const noOrdersMessage = document.querySelector('.alert-info');
-        if (noOrdersMessage) {
-            noOrdersMessage.style.display = visibleRows === 0 ? '' : 'none';
-        }
+        // Apply pagination
+        const pageSize = parseInt(entriesPerPage.value);
+        const start = (currentPage - 1) * pageSize;
+        const visibleRows = rows.filter(row => row.style.display !== 'none');
+        
+        visibleRows.forEach((row, index) => {
+            row.style.display = (index >= start && index < start + pageSize) ? '' : 'none';
+        });
+        
+        updateTableInfo();
     }
     
-    // Add event listeners
-    searchInput.addEventListener('input', filterTable);
-    statusFilter.addEventListener('change', filterTable);
-    productFilter.addEventListener('change', filterTable);
+    // Event listeners
+    entriesPerPage.addEventListener('change', () => {
+        currentPage = 1;
+        filterAndPaginateTable();
+    });
     
-    // Add clear filters button
-    const clearFiltersBtn = document.createElement('button');
-    clearFiltersBtn.className = 'btn btn-secondary mt-2';
-    clearFiltersBtn.textContent = 'Clear Filters';
-    clearFiltersBtn.onclick = function() {
-        searchInput.value = '';
-        statusFilter.value = '';
-        productFilter.value = '';
-        filterTable();
-    };
+    prevPage.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (currentPage > 1) {
+            currentPage--;
+            filterAndPaginateTable();
+        }
+    });
     
-    // Add the clear filters button after the filters row
-    const filtersRow = document.querySelector('.row.mb-3');
-    filtersRow.insertAdjacentElement('afterend', clearFiltersBtn);
+    nextPage.addEventListener('click', (e) => {
+        e.preventDefault();
+        const visibleRows = rows.filter(row => row.style.display !== 'none');
+        const totalPages = Math.ceil(visibleRows.length / parseInt(entriesPerPage.value));
+        if (currentPage < totalPages) {
+            currentPage++;
+            filterAndPaginateTable();
+        }
+    });
     
-    // Initialize filters
-    filterTable();
+    // Initialize table
+    filterAndPaginateTable();
+    
+    // Add to your existing filter event listeners
+    searchInput.addEventListener('input', () => {
+        currentPage = 1;
+        filterAndPaginateTable();
+    });
+    statusFilter.addEventListener('change', () => {
+        currentPage = 1;
+        filterAndPaginateTable();
+    });
+    productFilter.addEventListener('change', () => {
+        currentPage = 1;
+        filterAndPaginateTable();
+    });
 });
 </script>

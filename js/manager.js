@@ -63,4 +63,163 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
     });
+
+    // Handle initial page load if employee section is active
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('section') === 'employees') {
+        loadEmployeeSection();
+    }
 });
+
+// Load different sections of the manager dashboard
+function loadEmployeeSection() {
+    $.ajax({
+        url: '../canteen/view_employees.php',
+        method: 'GET',
+        success: function(response) {
+            $('#contentArea').html(response);
+        },
+        error: function(xhr, status, error) {
+            console.error('Error loading employee section:', error);
+            $('#contentArea').html('<div class="alert alert-danger">Error loading employee section</div>');
+        }
+    });
+}
+
+function loadProductSection() {
+    $.ajax({
+        url: '../product/view_products.php',
+        method: 'GET',
+        success: function(response) {
+            $('#contentArea').html(response);
+        },
+        error: function(xhr, status, error) {
+            console.error('Error loading product section:', error);
+            $('#contentArea').html('<div class="alert alert-danger">Error loading product section</div>');
+        }
+    });
+}
+
+function loadOrderSection() {
+    $.ajax({
+        url: '../order/view_orders.php',
+        method: 'GET',
+        success: function(response) {
+            $('#contentArea').html(response);
+        },
+        error: function(xhr, status, error) {
+            console.error('Error loading order section:', error);
+            $('#contentArea').html('<div class="alert alert-danger">Error loading order section</div>');
+        }
+    });
+}
+
+function loadAnalyticsSection() {
+    $.ajax({
+        url: 'view_manager_analytics.php',
+        method: 'GET',
+        success: function(response) {
+            $('#contentArea').html(response);
+        },
+        error: function(xhr, status, error) {
+            console.error('Error loading analytics section:', error);
+            $('#contentArea').html('<div class="alert alert-danger">Error loading analytics section</div>');
+        }
+    });
+}
+
+// Document ready function to initialize any necessary features
+$(document).ready(function() {
+    // Add any initialization code here
+});
+
+// Add Employee Functions
+function submitAddEmployee() {
+    const form = document.getElementById('addEmployeeForm');
+    const formData = new FormData(form);
+
+    fetch('../ajax/addEmployee.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            $('#addEmployeeModal').modal('hide');
+            location.reload(); // Refresh to show new employee
+        } else {
+            alert(data.message || 'Error adding employee');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error adding employee');
+    });
+}
+
+// Edit Employee Functions
+function editEmployee(userId) {
+    fetch(`../ajax/getEmployee.php?user_id=${userId}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('editUserId').value = data.user_id;
+            document.getElementById('editLastName').value = data.last_name;
+            document.getElementById('editGivenName').value = data.given_name;
+            document.getElementById('editMiddleName').value = data.middle_name || '';
+            document.getElementById('editEmail').value = data.email;
+            document.getElementById('editUsername').value = data.username;
+            $('#editEmployeeModal').modal('show');
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error loading employee details');
+        });
+}
+
+function submitEditEmployee() {
+    const form = document.getElementById('editEmployeeForm');
+    const formData = new FormData(form);
+
+    fetch('../ajax/updateEmployee.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            $('#editEmployeeModal').modal('hide');
+            location.reload(); // Refresh to show updated employee
+        } else {
+            alert(data.message || 'Error updating employee');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating employee');
+    });
+}
+
+// Delete Employee Function
+function deleteEmployee(userId) {
+    if (confirm('Are you sure you want to delete this employee?')) {
+        fetch('../ajax/deleteEmployee.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `user_id=${userId}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload(); // Refresh to remove deleted employee
+            } else {
+                alert(data.message || 'Error deleting employee');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error deleting employee');
+        });
+    }
+}

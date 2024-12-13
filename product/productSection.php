@@ -19,3 +19,4 @@ include 'stockModal.html';
 <!-- Include JavaScript -->
 <script src="../js/admin.js"></script>
 <script src="../js/product.js"></script>
+<script src="../js/productOperations.js"></script>

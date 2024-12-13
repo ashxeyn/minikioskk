@@ -27,6 +27,10 @@ class Database{
     public function prepare($sql) {
         return $this->connect()->prepare($sql);
     }
+
+    public function getConnection() {
+        return $this->connect();
+    }
 }
 //$objdb = new Database;
 //$objdb->connect();

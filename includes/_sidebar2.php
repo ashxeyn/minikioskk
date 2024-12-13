@@ -23,11 +23,17 @@ require_once '../classes/accountClass.php';
                         <span class="ms-1 d-none d-sm-inline">Orders</span>
                     </a>
                 </li>
-                <li class="side-nav-title">Settings</li>
                 <li class="nav-item">
                     <a href="#" class="nav-link align-middle px-0" id="productButton" onclick="loadProductsSection()">
                         <i class="fs-5 bi-box-seam"></i>
                         <span class="ms-1 d-none d-sm-inline">Products</span>
+                    </a>
+                </li>
+                <li class="side-nav-title">Management</li>    
+                <li class="nav-item">
+                    <a href="#" class="nav-link align-middle px-0" id="employeeButton" onclick="loadEmployeeSection()">
+                        <i class="fs-5 bi-people"></i>
+                        <span class="ms-1 d-none d-sm-inline">Co-Employees</span>
                     </a>
                 </li>
             </ul>

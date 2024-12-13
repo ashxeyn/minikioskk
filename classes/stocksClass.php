@@ -10,15 +10,19 @@ class Stocks
         $this->db = new Database();
     }
 
-    function addStock($data) {
+    function addStock($data_or_product_id, $quantity = null) {
         try {
+            // Handle both parameter formats
+            $product_id = is_array($data_or_product_id) ? $data_or_product_id['product_id'] : $data_or_product_id;
+            $final_quantity = is_array($data_or_product_id) ? $data_or_product_id['quantity'] : $quantity;
+
             $sql = "INSERT INTO stocks (product_id, quantity) 
                     VALUES (:product_id, :quantity)";
                     
             $stmt = $this->db->connect()->prepare($sql);
             return $stmt->execute([
-                'product_id' => $data['product_id'],
-                'quantity' => $data['quantity']
+                'product_id' => $product_id,
+                'quantity' => $final_quantity
             ]);
         } catch (PDOException $e) {
             error_log("Error in addStock: " . $e->getMessage());

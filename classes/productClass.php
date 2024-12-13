@@ -87,8 +87,7 @@ class Product
             $sql = "INSERT INTO products (canteen_id, type_id, name, description, price, status) 
                     VALUES (:canteen_id, :type_id, :name, :description, :price, :status)";
             
-            $db = $this->db->connect();
-            $stmt = $db->prepare($sql);
+            $stmt = $this->db->connect()->prepare($sql);
             
             $result = $stmt->execute([
                 'canteen_id' => $data['canteen_id'],
@@ -96,16 +95,16 @@ class Product
                 'name' => $data['name'],
                 'description' => $data['description'],
                 'price' => $data['price'],
-                'status' => 'available'
+                'status' => $data['status']
             ]);
 
             if ($result) {
-                return $db->lastInsertId();
+                return $this->db->connect()->lastInsertId();
             }
             return false;
         } catch (PDOException $e) {
-            error_log("Error in addProduct: " . $e->getMessage());
-            throw new Exception("Failed to add product: " . $e->getMessage());
+            error_log("Error adding product: " . $e->getMessage());
+            throw new Exception("Error adding product to database");
         }
     }
 
@@ -287,15 +286,13 @@ class Product
 
     function getCategories() {
         try {
-            $sql = "SELECT pt.type_id, pt.name 
-                    FROM product_types pt 
-                    ORDER BY pt.name";
+            $sql = "SELECT type_id, name FROM product_types WHERE status = 'active'";
             $stmt = $this->db->connect()->prepare($sql);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
-            error_log("Error in getCategories: " . $e->getMessage());
-            throw new Exception("Failed to load categories");
+            error_log("Error fetching categories: " . $e->getMessage());
+            throw new Exception("Error fetching categories");
         }
     }
 
@@ -357,6 +354,10 @@ class Product
         $query = $this->db->connect()->prepare($sql);
         $query->execute();
         return $query->fetchAll();
+    }
+
+    public function getConnection() {
+        return $this->db->connect();
     }
 }
 ?>
