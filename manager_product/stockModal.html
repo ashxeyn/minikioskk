@@ -1,0 +1,48 @@
+<div class="modal fade" id="stockModal" tabindex="-1" aria-labelledby="stockModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="stockModalLabel">Stock In</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="stockForm">
+                    <input type="hidden" name="product_id" id="stockProductId">
+                    <div class="mb-3 quantity">
+                        <label for="stock_quantity" class="form-label">Quantity</label>
+                        <input type="number" name="quantity" id="stock_quantity" class="form-control" required min="1">
+                    </div>
+                    <input type="hidden" name="status" value="In Stock">
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Add Stock</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .quantity {
+        display: flex;
+        padding: 0px 50px 0px 50px;
+        gap: 100px;
+        justify-content: flex-start;
+    }
+
+    .quantity .form-label {
+        margin-right: 15px;
+        width: 110px; 
+        text-align: right; 
+    }
+    
+    .modal-footer {
+        padding: 10px 10px 0px;
+    }
+    
+    .modal-body {
+        position: relative;
+        flex: 1 1 auto;
+        padding-bottom: 0px;
+    }
+</style>

@@ -248,35 +248,42 @@ class Product
     }
 
     function searchProductsByCanteen($canteen_id, $keyword = '', $category = '') {
-        $sql = "SELECT p.product_id, p.name, p.description, p.type_id, p.price, 
-                s.quantity, s.updated_at, c.name AS canteen_name
-                FROM products p
-                LEFT JOIN stocks s ON p.product_id = s.product_id
-                LEFT JOIN canteens c ON p.canteen_id = c.canteen_id
-                WHERE p.canteen_id = :canteen_id";
+        try {
+            $sql = "SELECT p.*, pt.name as category_name, s.quantity, 
+                    c.name AS canteen_name 
+                    FROM products p
+                    LEFT JOIN stocks s ON p.product_id = s.product_id
+                    LEFT JOIN product_types pt ON p.type_id = pt.type_id
+                    LEFT JOIN canteens c ON p.canteen_id = c.canteen_id
+                    WHERE p.canteen_id = :canteen_id";
 
-        if ($keyword) {
-            $sql .= " AND (p.name LIKE :keyword OR p.description LIKE :keyword)";
+            if ($keyword) {
+                $sql .= " AND (p.name LIKE :keyword OR p.description LIKE :keyword)";
+            }
+
+            if ($category) {
+                $sql .= " AND p.type_id = :category";
+            }
+
+            $query = $this->db->connect()->prepare($sql);
+            $query->bindParam(':canteen_id', $canteen_id);
+
+            if ($keyword) {
+                $searchKeyword = '%' . $keyword . '%';
+                $query->bindParam(':keyword', $searchKeyword);
+            }
+
+            if ($category) {
+                $query->bindParam(':category', $category);
+            }
+
+            $query->execute();
+            return $query->fetchAll(PDO::FETCH_ASSOC);
+            
+        } catch (PDOException $e) {
+            error_log("Error in searchProductsByCanteen: " . $e->getMessage());
+            return [];
         }
-
-        if ($category) {
-            $sql .= " AND p.type_id = :category";
-        }
-
-        $query = $this->db->connect()->prepare($sql);
-        $query->bindParam(':canteen_id', $canteen_id);
-
-        if ($keyword) {
-            $searchKeyword = '%' . $keyword . '%';
-            $query->bindParam(':keyword', $searchKeyword);
-        }
-
-        if ($category) {
-            $query->bindParam(':category', $category);
-        }
-
-        $query->execute();
-        return $query->fetchAll(PDO::FETCH_ASSOC);
     }
 
     function getCategories() {

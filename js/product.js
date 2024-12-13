@@ -22,23 +22,54 @@ function showAlert(message, type) {
 }
 
 function loadProductTable() {
+    const userRole = document.body.dataset.userRole;
+    const url = userRole === 'admin' ? '../admin/getProducts.php' : '../manager_product/getProducts.php';
+
     $.ajax({
-        url: 'view_products.php',
+        url: url,
         method: 'GET',
         success: function(response) {
-            $('#productTableContent').html(response);
-            // Reinitialize DataTable if needed
-            if ($.fn.DataTable.isDataTable('#productTable')) {
-                $('#productTable').DataTable().destroy();
+            if (typeof response === 'string') {
+                response = JSON.parse(response);
             }
-            $('#productTable').DataTable({
-                dom: 'lrtip',
-                pageLength: 10,
-                order: [[0, 'asc']]
-            });
+
+            if (response.status === 'success') {
+                const products = response.data;
+                let tableBody = '';
+                
+                products.forEach(product => {
+                    const stockStatus = product.quantity > 0 ? 'In Stock' : 'Out of Stock';
+                    const stockClass = product.quantity > 0 ? 'text-success' : 'text-danger';
+                    
+                    tableBody += `
+                        <tr>
+                            <td>${product.name}</td>
+                            <td>${product.category_name || 'N/A'}</td>
+                            <td>${product.description}</td>
+                            <td>₱${parseFloat(product.price).toFixed(2)}</td>
+                            <td>${product.quantity || 0}</td>
+                            <td class="${stockClass}">${stockStatus}</td>
+                            <td>${product.updated_at || 'N/A'}</td>
+                            <td>
+                                <button class="btn btn-warning btn-sm" onclick="openEditModal(${product.product_id})">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-danger btn-sm" onclick="openDeleteModal(${product.product_id})">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                                <button class="btn btn-info btn-sm" onclick="openStockModal(${product.product_id})">
+                                    <i class="bi bi-box"></i>
+                                </button>
+                            </td>
+                        </tr>`;
+                });
+                
+                $('#productTableBody').html(tableBody);
+            }
         },
         error: function(xhr, status, error) {
-            showAlert('Error loading product table: ' + error, 'danger');
+            console.error('Error loading products:', error);
+            showAlert('Error loading products. Please try again.', 'danger');
         }
     });
 }
@@ -165,14 +196,14 @@ $('#addProductForm').submit(function(e) {
     const formData = $(this).serialize();
     
     $.ajax({
-        url: '../product/addProduct.php',
+        url: '../manager_product/addProduct.php',
         method: 'POST',
         data: formData,
         success: function(response) {
             if (response.startsWith('success')) {
                 $('#addProductModal').modal('hide');
                 showAlert('Product added successfully!', 'success');
-                loadProductTable(); // Refresh the product table
+                loadProductTable();
             } else {
                 const errorMsg = response.replace('failure:', '');
                 showAlert('Error adding product: ' + errorMsg, 'danger');
@@ -191,16 +222,15 @@ function openStockModal(product_id) {
 
 $('#stockForm').submit(function (e) {
     e.preventDefault();
-
     const formData = new FormData(this);
 
     $.ajax({
-        url: '../product/updateStock.php',
+        url: '../manager_product/updateStock.php',
         method: 'POST',
         data: formData,
-        processData: false, 
-        contentType: false, 
-        dataType: 'json', 
+        processData: false,
+        contentType: false,
+        dataType: 'json',
         success: function (response) {
             if (response.status === 'success') {
                 $('#stockForm')[0].reset();
@@ -208,7 +238,7 @@ $('#stockForm').submit(function (e) {
                 loadProductTable();
             } else {
                 alert('Failed to update stock.');
-            }        
+            }
         },
         error: function (xhr, status, error) {
             console.error('AJAX Error:', status, error);
@@ -328,13 +358,44 @@ function loadCanteens() {
 }
 
 $(document).ready(function () {
+    const userRole = document.body.dataset.userRole;
+    
+    // Hide category management and canteen selection for managers
+    if (userRole === 'admin') {
+        $('.category-management').show();
+        $('#canteen_select').show();
+    } else {
+        $('.category-management').hide();
+        $('#canteen_select').hide();
+        // Remove category management button if it exists
+        $('.btn-manage-categories').remove();
+    }
+    
     loadProductTable();
     
-    // Load categories and canteens when add product modal opens
+    // Load only categories for managers when adding products
     $('#addProductModal').on('show.bs.modal', function() {
-        console.log('Modal opening - loading canteens and categories');
-        loadCanteens();
         loadCategories();
+        // Remove canteen loading for managers
         $('#addProductForm')[0].reset();
+    });
+    
+    // Update search functionality for managers
+    $('#searchProducts').on('input', function() {
+        const keyword = $(this).val();
+        const userRole = document.body.dataset.userRole;
+        
+        $.ajax({
+            url: '../manager_product/search_products.php',
+            method: 'GET',
+            data: { 
+                keyword: keyword,
+                canteen_id: userRole === 'manager' ? document.body.dataset.canteenId : null
+            },
+            success: function(response) {
+                // Refresh table with search results
+                loadProductTable();
+            }
+        });
     });
 });

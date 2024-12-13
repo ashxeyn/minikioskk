@@ -1,0 +1,34 @@
+<div class="modal fade" id="categoryModal" tabindex="-1" aria-labelledby="categoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="categoryModalLabel">Manage Categories</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Add Category Form -->
+                <form id="addCategoryForm" class="mb-4">
+                    <div class="input-group">
+                        <input type="text" id="newCategoryName" class="form-control" placeholder="New category name" required>
+                        <button type="submit" class="btn btn-primary">Add</button>
+                    </div>
+                </form>
+
+                <!-- Categories List -->
+                <div class="table-responsive">
+                    <table class="table table-hover" id="categoriesTable">
+                        <thead>
+                            <tr>
+                                <th>Category Name</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 
