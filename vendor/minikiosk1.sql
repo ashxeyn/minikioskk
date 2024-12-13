@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Dec 13, 2024 at 02:44 AM
+-- Generation Time: Dec 13, 2024 at 01:45 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `minikiosk`
+-- Database: `minikiosk1`
 --
 
 -- --------------------------------------------------------
@@ -206,7 +206,7 @@ CREATE TABLE `managers` (
   `manager_id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
   `canteen_id` int(11) NOT NULL,
-  `start_date` date NOT NULL,
+  `start_date` date NOT NULL DEFAULT curdate(),
   `status` enum('pending','accepted','rejected') DEFAULT 'pending',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -367,6 +367,10 @@ INSERT INTO `programs` (`program_id`, `department_id`, `program_name`, `descript
 (1, 1, 'Bachelor of Science in Information Technology', 'BSIT Program'),
 (2, 2, 'Bachelor of Science in Computer Science', 'BSCS Program'),
 (3, 3, 'Bachelor of Science in Civil Engineering', 'BSCE Program'),
+(4, 4, 'Bachelor of Science in Mechanical Engineering', 'BSME Program'),
+(1, 1, 'Bachelor of Science in Information Technology', 'BSIT Program'),
+(2, 2, 'Bachelor of Science in Computer Science', 'BSCS Program'),
+(3, 3, 'Bachelor of Science in Civil Engineering', 'BSCE Program'),
 (4, 4, 'Bachelor of Science in Mechanical Engineering', 'BSME Program');
 
 -- --------------------------------------------------------
@@ -388,6 +392,10 @@ CREATE TABLE `stocks` (
 --
 
 INSERT INTO `stocks` (`stock_id`, `product_id`, `quantity`, `last_restock`, `updated_at`) VALUES
+(1, 1, 29, '2024-12-12 18:13:17', '2024-12-13 01:25:46'),
+(2, 2, 34, '2024-12-12 18:13:17', '2024-12-12 20:59:25'),
+(3, 3, 104, '2024-12-12 18:13:17', '2024-12-12 20:59:25'),
+(4, 4, 39, '2024-12-12 18:13:17', '2024-12-12 20:59:25'),
 (1, 1, 29, '2024-12-12 18:13:17', '2024-12-13 01:25:46'),
 (2, 2, 34, '2024-12-12 18:13:17', '2024-12-12 20:59:25'),
 (3, 3, 104, '2024-12-12 18:13:17', '2024-12-12 20:59:25'),
@@ -455,32 +463,6 @@ INSERT INTO `users` (`user_id`, `email`, `username`, `password`, `role`, `status
 (24, 'Load@wmsu.edu.ph', 'Load', '$2y$10$wDrx6IefyezC68q2syj0oe.39UVeRNeLUFnWjDcOQLeE1cXDJ4YUu', 'manager', 'approved', 'Load', 'Load', 'O', '2024-12-13 01:09:10', NULL, NULL, NULL),
 (25, 'Mustard@wmsu.edu.ph', 'Mustard', '$2y$10$0kgoZaNIXIpCxblmhCftIuV8jjmNbrBhYiSlcNd.vzuDE3vj/uDJm', 'student', 'pending', 'Mustard', 'Mustard', 'O', '2024-12-13 01:12:44', 2, NULL, NULL);
 
--- --------------------------------------------------------
-
---
--- Table structure for table `user_profiles`
---
-
-CREATE TABLE `user_profiles` (
-  `profile_id` int(11) NOT NULL,
-  `user_id` int(11) NOT NULL,
-  `last_name` varchar(255) NOT NULL,
-  `given_name` varchar(255) NOT NULL,
-  `middle_name` varchar(255) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `user_profiles`
---
-
-INSERT INTO `user_profiles` (`profile_id`, `user_id`, `last_name`, `given_name`, `middle_name`, `created_at`, `updated_at`) VALUES
-(1, 8, 'ReiRie', 'Rieei', 'O', '2024-12-13 00:47:23', '2024-12-13 00:47:23'),
-(2, 20, 'Leo1', 'Leo1', 'l', '2024-12-13 01:04:15', '2024-12-13 01:04:15'),
-(3, 22, 'Save', 'Save', 'O', '2024-12-13 01:06:48', '2024-12-13 01:06:48'),
-(4, 24, 'Load', 'Load', 'O', '2024-12-13 01:09:10', '2024-12-13 01:09:10');
-
 --
 -- Indexes for dumped tables
 --
@@ -547,8 +529,8 @@ ALTER TABLE `guests`
 --
 ALTER TABLE `managers`
   ADD PRIMARY KEY (`manager_id`),
-  ADD UNIQUE KEY `user_id` (`user_id`),
-  ADD KEY `canteen_id` (`canteen_id`);
+  ADD KEY `canteen_id` (`canteen_id`),
+  ADD KEY `user_id` (`user_id`);
 
 --
 -- Indexes for table `orders`
@@ -585,15 +567,13 @@ ALTER TABLE `product_types`
 -- Indexes for table `programs`
 --
 ALTER TABLE `programs`
-  ADD PRIMARY KEY (`program_id`),
-  ADD KEY `department_id` (`department_id`);
+  ADD KEY `programs_ibfk_1` (`department_id`);
 
 --
 -- Indexes for table `stocks`
 --
 ALTER TABLE `stocks`
-  ADD PRIMARY KEY (`stock_id`),
-  ADD KEY `product_id` (`product_id`);
+  ADD KEY `stocks_ibfk_1` (`product_id`);
 
 --
 -- Indexes for table `students`
@@ -614,13 +594,6 @@ ALTER TABLE `users`
   ADD KEY `program_id` (`program_id`),
   ADD KEY `department_id` (`department_id`),
   ADD KEY `canteen_id` (`canteen_id`);
-
---
--- Indexes for table `user_profiles`
---
-ALTER TABLE `user_profiles`
-  ADD PRIMARY KEY (`profile_id`),
-  ADD KEY `user_id` (`user_id`);
 
 --
 -- AUTO_INCREMENT for dumped tables
@@ -705,18 +678,6 @@ ALTER TABLE `product_types`
   MODIFY `type_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
--- AUTO_INCREMENT for table `programs`
---
-ALTER TABLE `programs`
-  MODIFY `program_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
-
---
--- AUTO_INCREMENT for table `stocks`
---
-ALTER TABLE `stocks`
-  MODIFY `stock_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
-
---
 -- AUTO_INCREMENT for table `students`
 --
 ALTER TABLE `students`
@@ -727,12 +688,6 @@ ALTER TABLE `students`
 --
 ALTER TABLE `users`
   MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
-
---
--- AUTO_INCREMENT for table `user_profiles`
---
-ALTER TABLE `user_profiles`
-  MODIFY `profile_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- Constraints for dumped tables
@@ -775,7 +730,7 @@ ALTER TABLE `guests`
 --
 ALTER TABLE `managers`
   ADD CONSTRAINT `managers_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `managers_ibfk_2` FOREIGN KEY (`canteen_id`) REFERENCES `canteens` (`canteen_id`);
+  ADD CONSTRAINT `managers_ibfk_2` FOREIGN KEY (`canteen_id`) REFERENCES `canteens` (`canteen_id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `orders`
@@ -815,27 +770,6 @@ ALTER TABLE `programs`
 --
 ALTER TABLE `stocks`
   ADD CONSTRAINT `stocks_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE;
-
---
--- Constraints for table `students`
---
-ALTER TABLE `students`
-  ADD CONSTRAINT `students_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `students_ibfk_2` FOREIGN KEY (`program_id`) REFERENCES `programs` (`program_id`);
-
---
--- Constraints for table `users`
---
-ALTER TABLE `users`
-  ADD CONSTRAINT `users_ibfk_1` FOREIGN KEY (`program_id`) REFERENCES `programs` (`program_id`),
-  ADD CONSTRAINT `users_ibfk_2` FOREIGN KEY (`department_id`) REFERENCES `departments` (`department_id`),
-  ADD CONSTRAINT `users_ibfk_3` FOREIGN KEY (`canteen_id`) REFERENCES `canteens` (`canteen_id`);
-
---
--- Constraints for table `user_profiles`
---
-ALTER TABLE `user_profiles`
-  ADD CONSTRAINT `user_profiles_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

@@ -454,7 +454,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     if (response.success) {
                         showResponseModal('Order placed successfully!', true);
                         setTimeout(() => {
-                            window.location.href = 'orderStatus.php';
+                           loadCartSection();
                         }, 1500);
                     } else {
                         showResponseModal(response.message || 'Failed to place order', false);

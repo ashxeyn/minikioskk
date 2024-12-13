@@ -2,9 +2,9 @@
 session_start();
 require_once '../tools/functions.php';
 require_once '../classes/canteenClass.php';
-require_once '../classes/accountClass.php';
+require_once '../classes/registerClass.php';
 
-$accountObj = new Account();
+$registerObj = new RegisterAccount();
 $canteenObj = new Canteen();
 
 $last_name = $given_name = $middle_name = $email = $password = $username = '';
@@ -58,25 +58,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $canteenId = $canteenObj->registerCanteen();
 
         if ($canteenId) {
-            $accountObj->last_name = $last_name;
-            $accountObj->given_name = $given_name;
-            $accountObj->middle_name = $middle_name;
-            $accountObj->email = $email;
-            $accountObj->username = $username;
-            $accountObj->password = $password;
+            $registerObj->last_name = $last_name;
+            $registerObj->given_name = $given_name;
+            $registerObj->middle_name = $middle_name;
+            $registerObj->email = $email;
+            $registerObj->username = $username;
+            $registerObj->password = $password;
 
-            $isManagerAdded = $accountObj->addPendingManager($canteenId);
+            $userId = $registerObj->addUser();
 
-            if ($isManagerAdded) {
-                // Set session variables
-                $_SESSION['user_id'] = $accountObj->user_id;
-                $_SESSION['username'] = $username;
-                $_SESSION['role'] = 'manager';
-                $_SESSION['canteen_id'] = $canteenId;
-                
-                // Redirect to pending page
-                header('Location: pending.php');
-                exit;
+            if ($userId) {
+                $isManagerAdded = $registerObj->addPendingManager($canteenId);
+
+                if ($isManagerAdded) {
+                    $_SESSION['user_id'] = $userId;
+                    $_SESSION['username'] = $username;
+                    $_SESSION['role'] = 'manager';
+                    $_SESSION['canteen_id'] = $canteenId;
+                    
+                    header('Location: pending.php');
+                    exit;
+                } else {
+                    $response = 'failure';
+                }
             } else {
                 $response = 'failure';
             }
