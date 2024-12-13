@@ -222,9 +222,7 @@ body {
                  <button type="submit">Sign in</button>
             </div>
         </form>
-        <form action="guest.php" method="post">
-            <button type="submit">Continue as Guest</button>
-        </form>
+       
         <div class="links">
             <p>Don't have an account?</p>
             <a href="signup.php">Sign up here.</a>

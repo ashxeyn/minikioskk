@@ -13,7 +13,7 @@ require_once '../classes/accountClass.php';
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link align-middle px-0" id="orderButton" onclick="loadOrderSection()">
+                    <a href="adminDashboard.php?page=orders" class="nav-link align-middle px-0">
                         <i class="fs-5 bi-table"></i>
                         <span class="ms-1 d-none d-sm-inline">Orders</span>
                     </a>

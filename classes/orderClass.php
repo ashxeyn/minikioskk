@@ -86,33 +86,6 @@ class Order
         }
     }
 
-    private function generateQueueNumber() {
-        try {
-            $db = $this->db->connect();
-            
-            // Get today's date in Y-m-d format
-            $today = date('Y-m-d');
-            
-            // Get the current highest queue number for today
-            $sql = "SELECT MAX(CAST(SUBSTRING(queue_number, -3) AS UNSIGNED)) as max_num 
-                    FROM orders 
-                    WHERE DATE(created_at) = :today";
-            
-            $stmt = $db->prepare($sql);
-            $stmt->execute(['today' => $today]);
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            $nextNum = ($result['max_num'] ?? 0) + 1;
-            
-            // Format: YYYYMMDD-XXX (where XXX is a sequential number)
-            return date('Ymd') . '-' . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
-            
-        } catch (Exception $e) {
-            error_log("Error generating queue number: " . $e->getMessage());
-            throw $e;
-        }
-    }
-
     public function getOrdersByUser($user_id) {
         try {
             $sql = "SELECT o.*, 
@@ -149,25 +122,6 @@ class Order
         } catch (Exception $e) {
             error_log("Error getting order details: " . $e->getMessage());
             return [];
-        }
-    }
-
-    public function updateOrderStatus($order_id, $status) {
-        try {
-            $sql = "UPDATE orders 
-                    SET status = :status, 
-                        updated_at = NOW() 
-                    WHERE order_id = :order_id";
-            
-            $stmt = $this->db->connect()->prepare($sql);
-            return $stmt->execute([
-                'order_id' => $order_id,
-                'status' => $status
-            ]);
-            
-        } catch (Exception $e) {
-            error_log("Error updating order status: " . $e->getMessage());
-            return false;
         }
     }
 
@@ -277,6 +231,274 @@ class Order
             
         } catch (Exception $e) {
             error_log("Error getting unique products: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function getOrderById($orderId, $canteenId) {
+        try {
+            $sql = "SELECT o.*, u.username, u.name as customer_name 
+                    FROM orders o 
+                    JOIN users u ON o.user_id = u.user_id 
+                    WHERE o.order_id = :order_id AND o.canteen_id = :canteen_id";
+            
+            $stmt = $this->db->connect()->prepare($sql);
+            $stmt->execute([
+                ':order_id' => $orderId,
+                ':canteen_id' => $canteenId
+            ]);
+            
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$result) {
+                throw new Exception("Order not found");
+            }
+            
+            return $result;
+        } catch (Exception $e) {
+            error_log("Error getting order by ID: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    public function getOrderProducts($orderId) {
+        try {
+            $sql = "SELECT p.name, oi.quantity, oi.unit_price as price 
+                    FROM order_items oi 
+                    JOIN products p ON oi.product_id = p.product_id 
+                    WHERE oi.order_id = :order_id";
+            
+            $stmt = $this->db->connect()->prepare($sql);
+            $stmt->execute([':order_id' => $orderId]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            error_log("Error getting order products: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    public function updateOrderStatus($orderId, $newStatus, $canteenId = null) {
+        try {
+            $db = $this->db->connect();
+            
+            // If canteenId is provided, verify the order belongs to the canteen
+            $sql = "SELECT status FROM orders WHERE order_id = :order_id";
+            $params = [':order_id' => $orderId];
+            
+            if ($canteenId !== null) {
+                $sql .= " AND canteen_id = :canteen_id";
+                $params[':canteen_id'] = $canteenId;
+            }
+            
+            $stmt = $db->prepare($sql);
+            $stmt->execute($params);
+            
+            $order = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$order) {
+                throw new Exception("Order not found or does not belong to this canteen");
+            }
+            
+            // Validate status transition
+            $validTransitions = [
+                'placed' => ['accepted', 'cancelled'],
+                'accepted' => ['preparing'],
+                'preparing' => ['ready'],
+                'ready' => ['completed']
+            ];
+            
+            $currentStatus = $order['status'];
+            if (!isset($validTransitions[$currentStatus]) || 
+                !in_array($newStatus, $validTransitions[$currentStatus])) {
+                throw new Exception("Invalid status transition from {$currentStatus} to {$newStatus}");
+            }
+            
+            // Update the order status
+            $sql = "UPDATE orders SET 
+                    status = :status,
+                    updated_at = NOW()
+                    WHERE order_id = :order_id";
+            
+            $params = [
+                ':status' => $newStatus,
+                ':order_id' => $orderId
+            ];
+            
+            if ($canteenId !== null) {
+                $sql .= " AND canteen_id = :canteen_id";
+                $params[':canteen_id'] = $canteenId;
+            }
+                    
+            $stmt = $db->prepare($sql);
+            $result = $stmt->execute($params);
+            
+            if (!$result) {
+                throw new Exception("Failed to update order status");
+            }
+            
+            // If order is cancelled, restore stock
+            if ($newStatus === 'cancelled') {
+                $this->restoreStockForCancelledOrder($orderId);
+            }
+            
+            return true;
+        } catch (Exception $e) {
+            error_log("Error updating order status: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    private function restoreStockForCancelledOrder($orderId) {
+        try {
+            $db = $this->db->connect();
+            
+            // Get order items
+            $sql = "SELECT product_id, quantity FROM order_items WHERE order_id = :order_id";
+            $stmt = $db->prepare($sql);
+            $stmt->execute([':order_id' => $orderId]);
+            $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Restore stock for each item
+            foreach ($items as $item) {
+                $sql = "UPDATE stocks 
+                        SET quantity = quantity + :restore_quantity 
+                        WHERE product_id = :product_id";
+                $stmt = $db->prepare($sql);
+                $stmt->execute([
+                    ':restore_quantity' => $item['quantity'],
+                    ':product_id' => $item['product_id']
+                ]);
+            }
+            
+            return true;
+        } catch (Exception $e) {
+            error_log("Error restoring stock: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    public function generateQueueNumber($order_id) {
+        try {
+            $db = $this->db->connect();
+            
+            // Get the order date
+            $sql = "SELECT DATE(created_at) as order_date 
+                    FROM orders 
+                    WHERE order_id = :order_id";
+            $stmt = $db->prepare($sql);
+            $stmt->execute(['order_id' => $order_id]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$result) {
+                throw new Exception("Order not found");
+            }
+            
+            // Format: YYYYMMDD-XXX (where XXX is the order_id padded with zeros)
+            $queueNumber = date('Ymd', strtotime($result['order_date'])) . '-' . 
+                          str_pad($order_id, 3, '0', STR_PAD_LEFT);
+            
+            // Check if the orders table has the queue_number column
+            $checkColumnSql = "SHOW COLUMNS FROM orders LIKE 'queue_number'";
+            $checkStmt = $db->prepare($checkColumnSql);
+            $checkStmt->execute();
+            
+            if ($checkStmt->rowCount() > 0) {
+                // Update the order with the queue number
+                $sql = "UPDATE orders 
+                        SET queue_number = :queue_number 
+                        WHERE order_id = :order_id";
+                $stmt = $db->prepare($sql);
+                $stmt->execute([
+                    'queue_number' => $queueNumber,
+                    'order_id' => $order_id
+                ]);
+            } else {
+                // If column doesn't exist, log it but don't fail
+                error_log("Queue number column does not exist in orders table");
+            }
+            
+            return $queueNumber;
+            
+        } catch (Exception $e) {
+            error_log("Error generating queue number: " . $e->getMessage());
+            // Return a fallback queue number if there's an error
+            return date('Ymd') . '-' . str_pad($order_id, 3, '0', STR_PAD_LEFT);
+        }
+    }
+
+    public function getStatusBadgeClass($status) {
+        $badgeClasses = [
+            'placed' => 'badge-primary',
+            'accepted' => 'badge-info',
+            'preparing' => 'badge-warning',
+            'ready' => 'badge-success',
+            'completed' => 'badge-secondary',
+            'cancelled' => 'badge-danger'
+        ];
+        
+        return $badgeClasses[$status] ?? 'badge-secondary';
+    }
+
+    public function getAvailableActions($status) {
+        $actions = [];
+        
+        switch ($status) {
+            case 'placed':
+                $actions[] = ['action' => 'accept', 'label' => 'Accept', 'class' => 'btn-success'];
+                $actions[] = ['action' => 'cancel', 'label' => 'Cancel', 'class' => 'btn-danger'];
+                break;
+            case 'accepted':
+                $actions[] = ['action' => 'prepare', 'label' => 'Start Preparing', 'class' => 'btn-primary'];
+                break;
+            case 'preparing':
+                $actions[] = ['action' => 'ready', 'label' => 'Mark Ready', 'class' => 'btn-info'];
+                break;
+            case 'ready':
+                $actions[] = ['action' => 'complete', 'label' => 'Complete', 'class' => 'btn-success'];
+                break;
+        }
+        
+        return $actions;
+    }
+
+    public function fetchAllOrders() {
+        try {
+            $sql = "SELECT o.*, 
+                    GROUP_CONCAT(DISTINCT p.name SEPARATOR ', ') as product_names,
+                    SUM(oi.quantity) as total_quantity,
+                    o.total_amount as total_price,
+                    u.username,
+                    CONCAT(u.given_name, ' ', u.last_name) as customer_name,
+                    c.name as canteen_name
+                    FROM orders o
+                    LEFT JOIN order_items oi ON o.order_id = oi.order_id
+                    LEFT JOIN products p ON oi.product_id = p.product_id
+                    LEFT JOIN users u ON o.user_id = u.user_id
+                    LEFT JOIN canteens c ON o.canteen_id = c.canteen_id
+                    GROUP BY o.order_id
+                    ORDER BY o.created_at DESC";
+            
+            $stmt = $this->db->connect()->prepare($sql);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+        } catch (Exception $e) {
+            error_log("Error fetching all orders: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function getAllProducts() {
+        try {
+            $sql = "SELECT DISTINCT p.product_id, p.name 
+                    FROM products p 
+                    JOIN order_items oi ON p.product_id = oi.product_id
+                    ORDER BY p.name";
+            
+            $stmt = $this->db->connect()->prepare($sql);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+        } catch (Exception $e) {
+            error_log("Error getting all products: " . $e->getMessage());
             return [];
         }
     }

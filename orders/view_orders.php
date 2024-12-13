@@ -84,20 +84,25 @@ try {
                         <td><?= htmlspecialchars($order['total_quantity']) ?></td>
                         <td>₱<?= number_format($order['total_price'], 2) ?></td>
                         <td>
-                            <span class="badge bg-<?= getStatusBadgeClass($order['status']) ?>">
-                                <?= htmlspecialchars($order['status']) ?>
+                            <span class="badge <?php echo $orderObj->getStatusBadgeClass($order['status']); ?>">
+                                <?php echo ucfirst($order['status']); ?>
                             </span>
                         </td>
-                        <td><?= htmlspecialchars($order['queue_number']) ?></td>
                         <td>
-                            <?php if ($order['status'] === 'placed'): ?>
-                                <button class="btn btn-success btn-sm" onclick="updateOrderStatus(<?= $order['order_id'] ?>, 'accepted')">
-                                    Accept
-                                </button>
-                                <button class="btn btn-danger btn-sm" onclick="updateOrderStatus(<?= $order['order_id'] ?>, 'cancelled')">
-                                    Reject
-                                </button>
+                            <?php if ($order['queue_number']): ?>
+                                <span class="queue-number"><?php echo htmlspecialchars($order['queue_number']); ?></span>
                             <?php endif; ?>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <?php foreach ($orderObj->getAvailableActions($order['status']) as $action): ?>
+                                    <button 
+                                        onclick="handleOrderAction(<?php echo $order['order_id']; ?>, '<?php echo $action['action']; ?>')"
+                                        class="btn <?php echo $action['class']; ?> btn-sm">
+                                        <?php echo $action['label']; ?>
+                                    </button>
+                                <?php endforeach; ?>
+                            </div>
                         </td>
                     </tr>
                 <?php endforeach; ?>
@@ -107,6 +112,21 @@ try {
     <?php else: ?>
         <div class="alert alert-info">No orders found.</div>
     <?php endif; ?>
+</div>
+
+<!-- Order Details Modal -->
+<div class="modal fade" id="orderDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Order Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="orderDetailsContent"></div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <style>
@@ -122,41 +142,70 @@ try {
     padding: 0.25rem 0.5rem;
     font-size: 0.875rem;
 }
+
+.input-group {
+    margin-bottom: 0;
+}
+
+.form-select {
+    cursor: pointer;
+}
+
+.btn-secondary {
+    margin-bottom: 1rem;
+}
+
+/* Add loading indicator styles */
+.loading {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.loading::after {
+    content: "Loading...";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 255, 255, 0.8);
+    padding: 1rem;
+    border-radius: 4px;
+}
 </style>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const searchInput = document.getElementById('searchInput');
-    const statusFilter = document.getElementById('statusFilter');
-    const productFilter = document.getElementById('productFilter');
+// Define handleOrderAction in global scope
+function handleOrderAction(orderId, action) {
+    let newStatus;
+    let confirmMessage;
     
-    function filterTable() {
-        const searchTerm = searchInput.value.toLowerCase();
-        const statusTerm = statusFilter.value.toLowerCase();
-        const productTerm = productFilter.value.toLowerCase();
-        
-        const rows = document.querySelectorAll('tbody tr');
-        
-        rows.forEach(row => {
-            const text = row.textContent.toLowerCase();
-            const status = row.querySelector('.badge').textContent.toLowerCase();
-            const products = row.children[3].textContent.toLowerCase();
-            
-            const matchesSearch = text.includes(searchTerm);
-            const matchesStatus = !statusTerm || status === statusTerm;
-            const matchesProduct = !productTerm || products.includes(productTerm);
-            
-            row.style.display = (matchesSearch && matchesStatus && matchesProduct) ? '' : 'none';
-        });
+    switch(action) {
+        case 'accept':
+            newStatus = 'accepted';
+            confirmMessage = 'Are you sure you want to accept this order?';
+            break;
+        case 'prepare':
+            newStatus = 'preparing';
+            confirmMessage = 'Are you sure you want to start preparing this order?';
+            break;
+        case 'ready':
+            newStatus = 'ready';
+            confirmMessage = 'Are you sure you want to mark this order as ready?';
+            break;
+        case 'complete':
+            newStatus = 'completed';
+            confirmMessage = 'Are you sure you want to complete this order?';
+            break;
+        case 'cancel':
+            newStatus = 'cancelled';
+            confirmMessage = 'Are you sure you want to cancel this order?';
+            break;
+        default:
+            console.error('Invalid action:', action);
+            return;
     }
     
-    searchInput.addEventListener('input', filterTable);
-    statusFilter.addEventListener('change', filterTable);
-    productFilter.addEventListener('change', filterTable);
-});
-
-function updateOrderStatus(orderId, status) {
-    if (!confirm(`Are you sure you want to ${status} this order?`)) return;
+    if (!confirm(confirmMessage)) return;
     
     fetch('../ajax/updateOrderStatus.php', {
         method: 'POST',
@@ -165,13 +214,31 @@ function updateOrderStatus(orderId, status) {
         },
         body: JSON.stringify({
             order_id: orderId,
-            status: status
+            status: newStatus
         })
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            location.reload();
+            // Create and show success toast
+            const toastDiv = document.createElement('div');
+            toastDiv.className = 'toast position-fixed top-0 end-0 m-3';
+            toastDiv.innerHTML = `
+                <div class="toast-header bg-success text-white">
+                    <strong class="me-auto">Success</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                </div>
+                <div class="toast-body">
+                    Order status updated successfully!
+                </div>
+            `;
+            document.body.appendChild(toastDiv);
+            
+            const toast = new bootstrap.Toast(toastDiv);
+            toast.show();
+            
+            // Reload the page after a short delay
+            setTimeout(() => location.reload(), 1500);
         } else {
             alert(data.message || 'Failed to update order status');
         }
@@ -182,15 +249,78 @@ function updateOrderStatus(orderId, status) {
     });
 }
 
-function getStatusBadgeClass(status) {
-    switch(status.toLowerCase()) {
-        case 'placed': return 'warning';
-        case 'accepted': return 'info';
-        case 'preparing': return 'primary';
-        case 'ready': return 'success';
-        case 'completed': return 'success';
-        case 'cancelled': return 'danger';
-        default: return 'secondary';
+// Document ready event listener for other functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const statusFilter = document.getElementById('statusFilter');
+    const productFilter = document.getElementById('productFilter');
+    
+    function filterTable() {
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        const statusTerm = statusFilter.value.toLowerCase();
+        const productTerm = productFilter.value.toLowerCase();
+        
+        const rows = document.querySelectorAll('tbody tr');
+        
+        rows.forEach(row => {
+            let showRow = true;
+            
+            // Search filter
+            if (searchTerm) {
+                const orderId = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
+                const username = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+                const customerName = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+                
+                showRow = orderId.includes(searchTerm) || 
+                         username.includes(searchTerm) || 
+                         customerName.includes(searchTerm);
+            }
+            
+            // Status filter
+            if (showRow && statusTerm) {
+                const status = row.querySelector('.badge').textContent.toLowerCase();
+                showRow = status === statusTerm;
+            }
+            
+            // Product filter
+            if (showRow && productTerm) {
+                const products = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
+                showRow = products.includes(productTerm);
+            }
+            
+            // Show/hide row
+            row.style.display = showRow ? '' : 'none';
+        });
+        
+        // Show/hide "No orders found" message
+        const visibleRows = document.querySelectorAll('tbody tr[style=""]').length;
+        const noOrdersMessage = document.querySelector('.alert-info');
+        if (noOrdersMessage) {
+            noOrdersMessage.style.display = visibleRows === 0 ? '' : 'none';
+        }
     }
-}
+    
+    // Add event listeners
+    searchInput.addEventListener('input', filterTable);
+    statusFilter.addEventListener('change', filterTable);
+    productFilter.addEventListener('change', filterTable);
+    
+    // Add clear filters button
+    const clearFiltersBtn = document.createElement('button');
+    clearFiltersBtn.className = 'btn btn-secondary mt-2';
+    clearFiltersBtn.textContent = 'Clear Filters';
+    clearFiltersBtn.onclick = function() {
+        searchInput.value = '';
+        statusFilter.value = '';
+        productFilter.value = '';
+        filterTable();
+    };
+    
+    // Add the clear filters button after the filters row
+    const filtersRow = document.querySelector('.row.mb-3');
+    filtersRow.insertAdjacentElement('afterend', clearFiltersBtn);
+    
+    // Initialize filters
+    filterTable();
+});
 </script>

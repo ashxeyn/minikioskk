@@ -46,6 +46,9 @@ require_once '../includes/_head.php';
                             case 'accounts':
                                 require_once '../users/accountsSection.php';
                                 break;
+                            case 'orders':
+                                require_once 'view_orders.php';
+                                break;
                             default:
                                 require_once 'view_analytics.php';
                                 break;
