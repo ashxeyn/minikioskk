@@ -11,13 +11,10 @@
 
 <nav class="navbar navbar-dark">
     <div class="container-fluid d-flex justify-content-between align-items-center" style="padding-left: 25px;">
-        <!-- Welcome text -->
-        <a class="navbar-brand" href="customerDashboard.php">Minikiosk</a>
+        <a class="navbar-brand" href="customerDashboard.php">UniEats</a>
 
-        <!-- Right-aligned navigation options -->
         <div class="ms-auto d-flex align-items-center">
             <?php if (!isset($_SESSION['user_id'])): ?>
-                <!-- Show these buttons only for guests -->
                 <ul class="navbar-nav ms-3 d-flex flex-row">
                     <li class="nav-item me-3">
                         <a class="nav-link text-white" href="../accounts/login.php">Login</a>
@@ -25,31 +22,21 @@
                     <li class="nav-item me-3">
                         <a class="nav-link text-white" href="../accounts/signup.php">Sign Up</a>
                     </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link text-white" href="../accounts/register.php">Register your Canteen</a>
-                    </li>
                 </ul>
             <?php else: ?>
-                <!-- Show these options for logged-in users -->
                 <ul class="navbar-nav ms-3 d-flex flex-row align-items-center">
-                    <li class="nav-item me-3">
-                        <a class="nav-link text-white" href="myCart.php">
-                            <i class="bi bi-cart"></i>
-                            <span id="cartCount" class="badge bg-danger"></span>
-                        </a>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="../accounts/register.php">Register Canteen</a>
                     </li>
                     <li class="nav-item dropdown">
-                        <button class="btn btn-link nav-link dropdown-toggle text-white" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-person-circle"></i>
-                            <?php echo htmlspecialchars($userInfo['name'] ?? 'User'); ?>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                            <li><a class="dropdown-item" href="profile.php"><i class="bi bi-person"></i> Profile</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="../accounts/logout.php"><i class="bi bi-box-arrow-right"></i> Sign out</a></li>
+                    <div class="dropdown">
+                        <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+                            <img src="https://ashallendesign.co.uk/blog/13-placeholder-avatar-and-image-websites" alt="sheesh" width="30" height="30" class="rounded-circle">
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1">
+                            <li><a class="dropdown-item" href="../accounts/logout.php">Sign out</a></li>
                         </ul>
-                    </li>
+                    </div>
                 </ul>
             <?php endif; ?>
         </div>

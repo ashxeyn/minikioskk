@@ -1,8 +1,8 @@
 <?php
 session_start();
 require_once '../classes/accountClass.php';
+require_once '../tools/functions.php';
 
-// Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
     exit;
@@ -12,22 +12,18 @@ $account = new Account();
 $account->user_id = $_SESSION['user_id'];
 $userInfo = $account->UserInfo();
 
-// If UserInfo failed, show error message
 if (!$userInfo) {
     $statusMessage = 'Error retrieving account information. Please try again later.';
     $statusClass = 'error';
     $userInfo = ['status' => 'error', 'role' => ''];
 } else {
-    // Check both user status and manager status for managers
     if ($userInfo['role'] === 'manager') {
         if ($userInfo['status'] === 'approved' && $userInfo['manager_status'] === 'accepted') {
-            // Set canteen_id in session for manager
             $_SESSION['canteen_id'] = $userInfo['canteen_id'];
             header('Location: ../manager/managerDashboard.php');
             exit;
         }
         
-        // Show rejection message if either status is rejected
         if ($userInfo['status'] === 'rejected' || $userInfo['manager_status'] === 'rejected') {
             $statusMessage = 'Your account has been rejected. Please contact the administrator.';
             $statusClass = 'rejected';
@@ -127,7 +123,7 @@ if (!$userInfo) {
 </head>
 <body>
     <div class="pending-container">
-        <div class="<?= htmlspecialchars($statusClass) ?>">
+        <div class="<?= clean_input($statusClass) ?>">
             <div class="status-icon">
                 <?php if ($userInfo['status'] === 'rejected'): ?>
                     ❌
@@ -137,9 +133,9 @@ if (!$userInfo) {
                     ⏳
                 <?php endif; ?>
             </div>
-            <h1><?= htmlspecialchars(ucfirst($userInfo['status'])) ?></h1>
-            <p class="message"><?= htmlspecialchars($statusMessage) ?></p>
-            <a href="logout.php" class="logout-btn">Logout</a>
+            <h1><?= clean_input(ucfirst($userInfo['status'])) ?></h1>
+            <p class="message"><?= clean_input($statusMessage) ?></p>
+            <a href="../customers/customerDashboard.php" class="logout-btn">Okay</a>
         </div>
     </div>
 </body>

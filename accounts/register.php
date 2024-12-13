@@ -11,7 +11,7 @@ $last_name = $given_name = $middle_name = $email = $password = $username = '';
 $canteen_name = $campus_location = '';
 $response = '';
 
-$lastNameErr = $givenNameErr = $middleNameErr = $passwordErr = $emailErr = $usernameErr = $canteenNameErr = $campusLocationErr = '';
+$lastNameErr = $givenNameErr = $passwordErr = $emailErr = $usernameErr = $canteenNameErr = $campusLocationErr = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $last_name = clean_input($_POST['last_name']);
@@ -28,9 +28,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if (empty($given_name)) {
         $givenNameErr = "Given Name is required.";
-    }
-    if (empty($middle_name)) {
-        $middleNameErr = "Middle Name is required.";
     }
     if (empty($email)) {
         $emailErr = "Email is required.";
@@ -136,16 +133,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <span class="text-danger"><?= $givenNameErr ?></span>
                 </div>
                 <div class="input-group">
-                    <input type="text" id="middle_name" name="middle_name" placeholder="" value="<?= $middle_name ?>" required>
+                    <input type="text" id="middle_name" name="middle_name" placeholder="" value="<?= $middle_name ?>">
                     <label for="middle_name">Middle Name</label>
-                    <span class="text-danger"><?= $middleNameErr ?></span>
                 </div>
                 <div class="actions">
                     <button type="button" onclick="nextStep(2)">Next</button>
                 </div>
             </div>
 
-            <!-- Step 2: Account Details -->
             <div class="form-step" id="step2" style="display: none;">
                 <div class="input-group">
                     <input type="email" id="email" name="email" placeholder="" value="<?= $email ?>" required>
@@ -168,7 +163,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
             </div>
 
-            <!-- Step 3: Canteen Details -->
             <div class="form-step" id="step3" style="display: none;">
                 <div class="input-group">
                     <input type="text" id="canteen_name" name="canteen_name" placeholder="" value="<?= $canteen_name ?>" required>
@@ -348,11 +342,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <script>
         function nextStep(step) {
-            // Hide all steps
             document.querySelectorAll('.form-step').forEach(el => el.style.display = 'none');
-            // Show target step
             document.getElementById('step' + step).style.display = 'block';
-            // Update progress bar
             updateProgress(step);
         }
 
@@ -363,9 +354,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         function updateProgress(step) {
-            // Reset all steps
             document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
-            // Activate current and previous steps
             for (let i = 1; i <= step; i++) {
                 document.querySelector(`.step[data-step="${i}"]`).classList.add('active');
             }

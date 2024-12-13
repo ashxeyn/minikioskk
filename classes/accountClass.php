@@ -31,9 +31,8 @@ class Account
             $query->bindParam(':user_id', $this->user_id);
             
             if ($query->execute()) {
-                $result = $query->fetch(PDO::FETCH_ASSOC);
+                $result = $query->fetch();
                 if ($result) {
-                    // Set default manager_status to match user status if not a manager
                     if ($result['role'] !== 'manager') {
                         $result['manager_status'] = $result['status'];
                     }
@@ -235,67 +234,46 @@ class Account
             $conn = $this->db->connect();
             $conn->beginTransaction();
 
-            // Hash the password
-            $hashedPassword = password_hash($this->password, PASSWORD_DEFAULT);
-            
-            // Insert into users table
+            // First insert into users table
             $sql = "INSERT INTO users (last_name, given_name, middle_name, email, username, 
                     password, role, status) 
                     VALUES (:last_name, :given_name, :middle_name, :email, :username, 
-                    :password, 'manager', 'pending')";
+                    :password, 'manager', 'active')";
+            
+            $hashedPassword = password_hash($this->password, PASSWORD_DEFAULT);
             
             $stmt = $conn->prepare($sql);
-            $params = [
-                ':last_name' => $this->last_name,
-                ':given_name' => $this->given_name,
-                ':middle_name' => $this->middle_name,
-                ':email' => $this->email,
-                ':username' => $this->username,
-                ':password' => $hashedPassword
-            ];
+            $stmt->bindParam(':last_name', $this->last_name);
+            $stmt->bindParam(':given_name', $this->given_name);
+            $stmt->bindParam(':middle_name', $this->middle_name);
+            $stmt->bindParam(':email', $this->email);
+            $stmt->bindParam(':username', $this->username);
+            $stmt->bindParam(':password', $hashedPassword);
             
-            if ($stmt->execute($params)) {
-                $this->user_id = $conn->lastInsertId();
+            if ($stmt->execute()) {
+                $user_id = $conn->lastInsertId();
                 
-                // Insert into managers table
-                $sql2 = "INSERT INTO managers (user_id, canteen_id, status) 
-                         VALUES (:user_id, :canteen_id, 'pending')";
-                
+                // Then insert into canteen_managers table
+                $sql2 = "INSERT INTO canteen_managers (user_id, canteen_id, status) 
+                         VALUES (:user_id, :canteen_id, 'active')";
                 $stmt2 = $conn->prepare($sql2);
-                $params2 = [
-                    ':user_id' => $this->user_id,
-                    ':canteen_id' => $canteen_id
-                ];
+                $stmt2->bindParam(':user_id', $user_id);
+                $stmt2->bindParam(':canteen_id', $canteen_id);
                 
-                if ($stmt2->execute($params2)) {
-                    // Insert into user_profiles table
-                    $sql3 = "INSERT INTO user_profiles (user_id, last_name, given_name, middle_name) 
-                             VALUES (:user_id, :last_name, :given_name, :middle_name)";
-                    
-                    $stmt3 = $conn->prepare($sql3);
-                    $params3 = [
-                        ':user_id' => $this->user_id,
-                        ':last_name' => $this->last_name,
-                        ':given_name' => $this->given_name,
-                        ':middle_name' => $this->middle_name
-                    ];
-                    
-                    if ($stmt3->execute($params3)) {
-                        $conn->commit();
-                        return true;
-                    }
+                if ($stmt2->execute()) {
+                    $conn->commit();
+                    return true;
                 }
             }
             
             $conn->rollBack();
             return false;
-            
         } catch (PDOException $e) {
             if ($conn) {
                 $conn->rollBack();
             }
-            error_log("Error adding pending manager: " . $e->getMessage());
-            throw $e;
+            error_log("Error adding manager: " . $e->getMessage());
+            return false;
         }
     }
 
@@ -397,24 +375,19 @@ class Account
         }
     }
 
-    public function getPendingManagers() {
-        try {
-            $sql = "SELECT u.user_id, u.email, u.username, 
-                    u.last_name, u.given_name, u.middle_name,
-                    m.canteen_id, c.name as canteen_name
-                    FROM users u
-                    JOIN managers m ON u.user_id = m.user_id
-                    JOIN canteens c ON m.canteen_id = c.canteen_id
-                    WHERE u.role = 'manager' 
-                    AND m.status = 'pending'";
-
-            $query = $this->db->connect()->prepare($sql);
-            $query->execute();
-            return $query->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            error_log("Error in getPendingManagers: " . $e->getMessage());
-            return false;
-        }
+    public function getPendingManagers()
+    {
+        $sql = "SELECT u.user_id, up.last_name, up.given_name, up.middle_name, 
+                u.email, c.name AS canteen_name
+                FROM users u
+                JOIN managers m ON u.user_id = m.user_id
+                JOIN user_profiles up ON u.user_id = up.user_id
+                JOIN canteens c ON m.canteen_id = c.canteen_id
+                WHERE m.status = 'pending'";
+        
+        $query = $this->db->connect()->prepare($sql);
+        $query->execute();
+        return $query->fetchAll();
     }
 
     function approveManager($user_id)
@@ -499,9 +472,8 @@ class Account
             ];
             
             if ($stmt->execute($params)) {
-                $this->user_id = $conn->lastInsertId(); // Save the user_id
+                $this->user_id = $conn->lastInsertId(); 
                 
-                // Then insert into managers table
                 $sql2 = "INSERT INTO managers (user_id, canteen_id, status) 
                          VALUES (:user_id, :canteen_id, 'pending')";
                 
@@ -512,7 +484,6 @@ class Account
                 ];
                 
                 if ($stmt2->execute($params2)) {
-                    // Insert into user_profiles table
                     $sql3 = "INSERT INTO user_profiles (user_id, last_name, given_name, middle_name) 
                              VALUES (:user_id, :last_name, :given_name, :middle_name)";
                     

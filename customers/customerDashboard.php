@@ -6,26 +6,21 @@ require_once '../classes/productClass.php';
 require_once '../classes/canteenClass.php';
 require_once '../tools/functions.php';
 
-// Initialize objects
 $account = new Account();
 $orderObj = new Order();
 $productObj = new Product();
 $canteenObj = new Canteen();
 
-// Get user info
 $account->user_id = $_SESSION['user_id'] ?? null;
 $userInfo = $account->UserInfo();
 
-// Get user's orders
 $userOrders = [];
 if ($account->user_id) {
     $userOrders = $orderObj->getOrdersByUser($account->user_id);
 }
 
-// Get available canteens
 $canteens = $canteenObj->getAllCanteens();
 
-$topNavFile = '../includes/_topnav2.php';
 require_once '../includes/_head.php';
 ?>
 
@@ -47,7 +42,7 @@ require_once '../includes/_head.php';
 </head>
 <body>
 
-<?php require_once $topNavFile; ?>
+<?php require_once '../includes/_topnav2.php'; ?>
 
 <div class="container-fluid">
     <div class="row">
