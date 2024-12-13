@@ -220,11 +220,11 @@ class Order
     public function fetchOrders($canteen_id = null) {
         try {
             $sql = "SELECT o.*, 
-                    GROUP_CONCAT(p.name) as product_names,
+                    GROUP_CONCAT(DISTINCT p.name SEPARATOR ', ') as product_names,
                     SUM(oi.quantity) as total_quantity,
-                    SUM(oi.subtotal) as total_price,
+                    o.total_amount as total_price,
                     u.username,
-                    u.given_name as customer_name,
+                    CONCAT(u.given_name, ' ', u.last_name) as customer_name,
                     c.name as canteen_name,
                     CONCAT(DATE_FORMAT(o.created_at, '%Y%m%d'), '-', LPAD(o.order_id, 3, '0')) as queue_number
                     FROM orders o
@@ -240,7 +240,16 @@ class Order
                 $params[':canteen_id'] = $canteen_id;
             }
 
-            $sql .= " GROUP BY o.order_id ORDER BY o.created_at DESC";
+            $sql .= " GROUP BY o.order_id 
+                      ORDER BY CASE o.status
+                          WHEN 'placed' THEN 1
+                          WHEN 'accepted' THEN 2
+                          WHEN 'preparing' THEN 3
+                          WHEN 'ready' THEN 4
+                          WHEN 'completed' THEN 5
+                          WHEN 'cancelled' THEN 6
+                          ELSE 7
+                      END, o.created_at DESC";
             
             $stmt = $this->db->connect()->prepare($sql);
             $stmt->execute($params);
@@ -248,6 +257,26 @@ class Order
             
         } catch (Exception $e) {
             error_log("Error fetching orders: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function getUniqueProducts($canteen_id) {
+        try {
+            $sql = "SELECT DISTINCT p.product_id, 
+                    TRIM(p.name) as name 
+                    FROM products p 
+                    JOIN order_items oi ON p.product_id = oi.product_id
+                    JOIN orders o ON oi.order_id = o.order_id
+                    WHERE o.canteen_id = :canteen_id
+                    ORDER BY p.name";
+                    
+            $stmt = $this->db->connect()->prepare($sql);
+            $stmt->execute(['canteen_id' => $canteen_id]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+        } catch (Exception $e) {
+            error_log("Error getting unique products: " . $e->getMessage());
             return [];
         }
     }

@@ -21,15 +21,30 @@ class Account
     }
 
     function UserInfo() {
-        $sql = "SELECT * FROM Users WHERE user_id = :user_id";
-        $query = $this->db->connect()->prepare($sql);
-    
-        $query->bindParam(':user_id', $this->user_id);
-    
-        if ($query->execute()) {
-            return $query->fetch();
-        } else {
-            return null; 
+        try {
+            $sql = "SELECT u.*, m.status as manager_status, m.canteen_id 
+                    FROM users u 
+                    LEFT JOIN managers m ON u.user_id = m.user_id 
+                    WHERE u.user_id = :user_id";
+            
+            $query = $this->db->connect()->prepare($sql);
+            $query->bindParam(':user_id', $this->user_id);
+            
+            if ($query->execute()) {
+                $result = $query->fetch(PDO::FETCH_ASSOC);
+                if ($result) {
+                    // Set default manager_status to match user status if not a manager
+                    if ($result['role'] !== 'manager') {
+                        $result['manager_status'] = $result['status'];
+                    }
+                    return $result;
+                }
+            }
+            throw new Exception("User not found");
+            
+        } catch (Exception $e) {
+            error_log("Error in UserInfo: " . $e->getMessage());
+            return false;
         }
     }
     
@@ -379,24 +394,32 @@ class Account
     function approveManager($user_id)
     {
         try {
-            $this->db->connect()->beginTransaction();
+            $db = $this->db->connect();
+            $db->beginTransaction();
             
-            $sql = "UPDATE users SET status = 'approved' WHERE user_id = :user_id";
-            $query = $this->db->connect()->prepare($sql);
-            $query->bindParam(':user_id', $user_id);
-            $query->execute();
+            // Update users table status
+            $sql = "UPDATE users 
+                    SET status = 'approved' 
+                    WHERE user_id = :user_id";
+            $stmt = $db->prepare($sql);
+            $stmt->execute(['user_id' => $user_id]);
             
-            $sql = "UPDATE managers SET status = 'accepted' WHERE user_id = :user_id";
-            $query = $this->db->connect()->prepare($sql);
-            $query->bindParam(':user_id', $user_id);
-            $query->execute();
+            // Update managers table status
+            $sql2 = "UPDATE managers 
+                     SET status = 'accepted' 
+                     WHERE user_id = :user_id";
+            $stmt2 = $db->prepare($sql2);
+            $stmt2->execute(['user_id' => $user_id]);
             
-            $this->db->connect()->commit();
+            $db->commit();
             return true;
             
         } catch (Exception $e) {
-            $this->db->connect()->rollBack();
-            throw $e;
+            if ($db && $db->inTransaction()) {
+                $db->rollBack();
+            }
+            error_log("Error approving manager: " . $e->getMessage());
+            return false;
         }
     }
     
@@ -434,8 +457,9 @@ class Account
 
             $hashedPassword = password_hash($this->password, PASSWORD_DEFAULT);
             
-            $sql = "INSERT INTO users (last_name, given_name, middle_name, email, username, password, is_manager, role, status, canteen_id) 
-                    VALUES (:last_name, :given_name, :middle_name, :email, :username, :password, 0, 'pending_manager', 'pending', :canteen_id)";
+            // First, insert into users table with pending status
+            $sql = "INSERT INTO users (last_name, given_name, middle_name, email, username, password, role, status) 
+                    VALUES (:last_name, :given_name, :middle_name, :email, :username, :password, 'manager', 'pending')";
             
             $stmt = $conn->prepare($sql);
             
@@ -445,24 +469,50 @@ class Account
                 ':middle_name' => $this->middle_name,
                 ':email' => $this->email,
                 ':username' => $this->username,
-                ':password' => $hashedPassword,
-                ':canteen_id' => $canteen_id
+                ':password' => $hashedPassword
             ];
-
+            
             if ($stmt->execute($params)) {
-                $this->user_id = $conn->lastInsertId();
-                $conn->commit();
-                return true;
+                $this->user_id = $conn->lastInsertId(); // Save the user_id
+                
+                // Then insert into managers table
+                $sql2 = "INSERT INTO managers (user_id, canteen_id, status) 
+                         VALUES (:user_id, :canteen_id, 'pending')";
+                
+                $stmt2 = $conn->prepare($sql2);
+                $params2 = [
+                    ':user_id' => $this->user_id,
+                    ':canteen_id' => $canteen_id
+                ];
+                
+                if ($stmt2->execute($params2)) {
+                    // Insert into user_profiles table
+                    $sql3 = "INSERT INTO user_profiles (user_id, last_name, given_name, middle_name) 
+                             VALUES (:user_id, :last_name, :given_name, :middle_name)";
+                    
+                    $stmt3 = $conn->prepare($sql3);
+                    $params3 = [
+                        ':user_id' => $this->user_id,
+                        ':last_name' => $this->last_name,
+                        ':given_name' => $this->given_name,
+                        ':middle_name' => $this->middle_name
+                    ];
+                    
+                    if ($stmt3->execute($params3)) {
+                        $conn->commit();
+                        return true;
+                    }
+                }
             }
-
+            
             $conn->rollBack();
             return false;
-
-        } catch (Exception $e) {
-            if (isset($conn)) {
+            
+        } catch (PDOException $e) {
+            if ($conn) {
                 $conn->rollBack();
             }
-            error_log("Signup error: " . $e->getMessage());
+            error_log("Error adding pending manager: " . $e->getMessage());
             throw $e;
         }
     }

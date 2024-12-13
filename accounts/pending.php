@@ -12,21 +12,30 @@ $account = new Account();
 $account->user_id = $_SESSION['user_id'];
 $userInfo = $account->UserInfo();
 
-// If account is approved, redirect to manager dashboard
-if ($userInfo['role'] === 'manager') {
-    header('Location: ../manager/managerDashboard.php');
-    exit;
-}
-
-// If account is rejected, show appropriate message
-$statusMessage = '';
-$statusClass = '';
-if ($userInfo['status'] === 'rejected') {
-    $statusMessage = 'Your account has been rejected. Please contact the administrator.';
-    $statusClass = 'rejected';
+// If UserInfo failed, show error message
+if (!$userInfo) {
+    $statusMessage = 'Error retrieving account information. Please try again later.';
+    $statusClass = 'error';
+    $userInfo = ['status' => 'error', 'role' => ''];
 } else {
-    $statusMessage = 'Your account is pending approval from the administrator.';
-    $statusClass = 'pending';
+    // Check both user status and manager status for managers
+    if ($userInfo['role'] === 'manager') {
+        if ($userInfo['status'] === 'approved' && $userInfo['manager_status'] === 'accepted') {
+            // Set canteen_id in session for manager
+            $_SESSION['canteen_id'] = $userInfo['canteen_id'];
+            header('Location: ../manager/managerDashboard.php');
+            exit;
+        }
+        
+        // Show rejection message if either status is rejected
+        if ($userInfo['status'] === 'rejected' || $userInfo['manager_status'] === 'rejected') {
+            $statusMessage = 'Your account has been rejected. Please contact the administrator.';
+            $statusClass = 'rejected';
+        } else {
+            $statusMessage = 'Your account is pending approval from the administrator.';
+            $statusClass = 'pending';
+        }
+    }
 }
 ?>
 
@@ -35,7 +44,7 @@ if ($userInfo['status'] === 'rejected') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Account Pending</title>
+    <title>Account Status</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Amaranth">
     <style>
         * {
@@ -78,6 +87,10 @@ if ($userInfo['status'] === 'rejected') {
             color: #FF1B1C;
         }
 
+        .error .status-icon {
+            color: #dc3545;
+        }
+
         h1 {
             color: #33363F;
             margin-bottom: 20px;
@@ -114,16 +127,18 @@ if ($userInfo['status'] === 'rejected') {
 </head>
 <body>
     <div class="pending-container">
-        <div class="<?= $statusClass ?>">
+        <div class="<?= htmlspecialchars($statusClass) ?>">
             <div class="status-icon">
                 <?php if ($userInfo['status'] === 'rejected'): ?>
                     ❌
+                <?php elseif ($userInfo['status'] === 'error'): ?>
+                    ⚠️
                 <?php else: ?>
                     ⏳
                 <?php endif; ?>
             </div>
-            <h1><?= ucfirst($userInfo['status']) ?></h1>
-            <p class="message"><?= $statusMessage ?></p>
+            <h1><?= htmlspecialchars(ucfirst($userInfo['status'])) ?></h1>
+            <p class="message"><?= htmlspecialchars($statusMessage) ?></p>
             <a href="logout.php" class="logout-btn">Logout</a>
         </div>
     </div>
