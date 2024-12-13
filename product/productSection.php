@@ -1,16 +1,20 @@
 <div class="container">
-    <h3>Product Management</h3>
-
-
-    <!-- This div will be populated with the product table dynamically -->
-    <div id="productTable"></div>
+    <!-- Alert container -->
+    
+    
+    <!-- Load the product table content here -->
+    <div id="productTableContent">
+        <?php include 'view_products.php'; ?>
+    </div>
 </div>
 
 <!-- Include Modals -->
-<?php include 'addProductModal.html'; ?>
-<?php include 'editProductModal.html'; ?>
-<?php include 'deleteProductModal.html'; ?>
-<?php include 'stockModal.html'; ?>
+<?php 
+include 'addProductModal.html';
+include 'editProductModal.html';
+include 'deleteProductModal.html';
+include 'stockModal.html';
+?>
 
 <!-- Include JavaScript -->
 <script src="../js/admin.js"></script>

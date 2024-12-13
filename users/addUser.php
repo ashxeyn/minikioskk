@@ -1,65 +1,45 @@
 <?php
-require_once '../tools/functions.php';
 require_once '../classes/accountClass.php';
+require_once '../classes/canteenClass.php';
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    try {
-        $accountObj = new Account();
-        
-        // Debug log
-        error_log("POST data received: " . print_r($_POST, true));
-        
-        // Clean and set all fields
-        $accountObj->last_name = isset($_POST['last_name']) ? clean_input($_POST['last_name']) : '';
-        $accountObj->given_name = isset($_POST['given_name']) ? clean_input($_POST['given_name']) : '';
-        $accountObj->middle_name = isset($_POST['middle_name']) ? clean_input($_POST['middle_name']) : '';
-        $accountObj->email = isset($_POST['email']) ? clean_input($_POST['email']) : '';
-        $accountObj->username = isset($_POST['username']) ? clean_input($_POST['username']) : '';
-        $accountObj->password = isset($_POST['password']) ? clean_input($_POST['password']) : '';
-        $accountObj->role = isset($_POST['role']) ? clean_input($_POST['role']) : '';
-
-        // Validate required fields
-        if (empty($accountObj->last_name) || empty($accountObj->given_name) || 
-            empty($accountObj->email) || empty($accountObj->username) || 
-            empty($accountObj->password) || empty($accountObj->role)) {
-            throw new Exception('Missing required fields');
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $account = new Account();
+    
+    // Get form data
+    $account->last_name = $_POST['last_name'] ?? '';
+    $account->given_name = $_POST['given_name'] ?? '';
+    $account->middle_name = $_POST['middle_name'] ?? '';
+    $account->email = $_POST['email'] ?? '';
+    $account->username = $_POST['username'] ?? '';
+    $account->role = $_POST['role'] ?? '';
+    
+    // Handle role-specific fields
+    if ($account->role === 'manager') {
+        // Create new canteen first
+        $canteen = new Canteen();
+        $canteen_data = [
+            'name' => $_POST['canteen_name'] ?? '',
+            'campus_location' => $_POST['campus_location'] ?? ''
+        ];
+        $canteen_id = $canteen->addCanteen($canteen_data);
+        if ($canteen_id) {
+            $account->canteen_id = $canteen_id;
+        } else {
+            echo 'error_canteen';
+            exit;
         }
-
-        // Handle role-specific fields
-        $result = false;
-        switch($accountObj->role) {
-            case 'student':
-            case 'employee':
-                $program_id = isset($_POST['program_id']) ? clean_input($_POST['program_id']) : '';
-                if (empty($program_id)) {
-                    throw new Exception('Program ID is required for students and employees');
-                }
-                $result = $accountObj->addUser($program_id);
-                break;
-                
-            case 'manager':
-                $canteen_id = isset($_POST['canteen_id']) ? clean_input($_POST['canteen_id']) : '';
-                if (empty($canteen_id)) {
-                    throw new Exception('Canteen ID is required for managers');
-                }
-                $result = $accountObj->addManager($canteen_id);
-                break;
-                
-            case 'guest':
-                $result = $accountObj->addUser();
-                break;
-                
-            default:
-                throw new Exception('Invalid role specified');
-        }
-
-        echo $result ? 'success' : 'failure';
-        
-    } catch (Exception $e) {
-        error_log("Error in addUser.php: " . $e->getMessage());
-        echo $e->getMessage();
+    } else {
+        $account->program_id = $_POST['program_id'] ?? null;
+        $account->department_id = $_POST['department_id'] ?? null;
+    }
+    
+    if ($account->addUser()) {
+        echo 'success';
+    } else {
+        echo 'error';
     }
 } else {
-    echo 'Invalid request method';
+    http_response_code(405);
+    echo 'Method not allowed';
 }
 ?> 

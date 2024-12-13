@@ -2,7 +2,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="stockModalLabel">Manage Stock</h5>
+                <h5 class="modal-title" id="stockModalLabel">Stock In</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -12,21 +12,9 @@
                         <label for="stock_quantity" class="form-label">Quantity</label>
                         <input type="number" name="quantity" id="stock_quantity" class="form-control" required min="1">
                     </div>
-                    <div class="mb-3 stocks">
-                        <label class="form-label">Stock Status</label>
-                        <div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="status" id="stockIn" value="In Stock" checked>
-                                <label class="form-check-label" for="stockIn">Stock In</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="status" id="stockOut" value="Out of Stock">
-                                <label class="form-check-label" for="stockOut">Stock Out</label>
-                            </div>
-                        </div>
-                    </div>
+                    <input type="hidden" name="status" value="In Stock">
                     <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary">Update Stock</button>
+                        <button type="submit" class="btn btn-primary">Add Stock</button>
                     </div>
                 </form>
             </div>
@@ -35,21 +23,6 @@
 </div>
 
 <style>
-    .form-label-right {
-        display: flex;
-        justify-content: flex-end;
-        align-items: center;
-    }
-
-    .form-check {
-        display: flex;
-        align-items: center;
-    }
-
-    .form-check-input {
-        margin-right: 10px;
-    }
-    
     .quantity {
         display: flex;
         padding: 0px 50px 0px 50px;
@@ -61,13 +34,6 @@
         margin-right: 15px;
         width: 110px; 
         text-align: right; 
-    }
-    
-    .stocks {
-        display: flex;
-        padding: 0px 50px 0px 50px;
-        gap: 100px;
-        justify-content: flex-start;
     }
     
     .modal-footer {

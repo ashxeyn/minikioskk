@@ -6,10 +6,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     $program_id = $_POST['program_id'];
     $program_name = $_POST['program_name'];
-    $department = $_POST['department'];
-    $college = $_POST['college']; 
+    $department_id = $_POST['department_id'];
+    $description = $_POST['description'];
 
-    $result = $programObj->updateProgram($program_id, $program_name, $department, $college);
+    $result = $programObj->updateProgram($program_id, $program_name, $department_id, $description);
 
     echo $result ? 'success' : 'failure';
 }

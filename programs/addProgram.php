@@ -1,25 +1,22 @@
 <?php
-require_once '../tools/functions.php';
 require_once '../classes/programClass.php';
-
-$programObj = new Program();
+require_once '../tools/functions.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $program = new Program();
+    
     $program_name = clean_input($_POST['program_name']);
     $department = clean_input($_POST['department']);
     $college = clean_input($_POST['college']);
-
-    if (empty($program_name) || empty($department) || empty($college)) {
-        echo 'failure';  
-        exit;
+    $description = clean_input($_POST['description']);
+    
+    $department_id = $program->getOrCreateDepartment($department, $college);
+    
+    if ($department_id) {
+        $result = $program->addProgram($program_name, $department_id, $description);
+        echo $result ? 'success' : 'failure';
+    } else {
+        echo 'failure';
     }
-
-    $programObj->program_name = $program_name;
-    $programObj->department = $department;
-    $programObj->college = $college;
-
-    $result = $programObj->addProgram($program_name, $department, $college);
-
-    echo $result ? 'success' : 'failure';
 }
 ?>

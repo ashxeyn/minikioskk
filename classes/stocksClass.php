@@ -49,11 +49,8 @@ class Stocks
                 throw new Exception("Stock record not found");
             }
 
+            // Add to existing quantity (stock in only)
             $new_quantity = $current['quantity'] + $quantity_change;
-
-            if ($new_quantity < 0) {
-                throw new Exception("Cannot reduce stock below 0");
-            }
 
             // Update stock
             $sql = "UPDATE stocks 

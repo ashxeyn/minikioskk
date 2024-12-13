@@ -6,34 +6,34 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form id="addUserForm" method="post">
+                <form id="addNewUserForm" method="post">
                     <div class="mb-3">
-                        <label for="last_name" class="form-label">Last Name</label>
-                        <input type="text" class="form-control" id="last_name" required>
+                        <label for="add_last_name" class="form-label">Last Name</label>
+                        <input type="text" class="form-control" id="add_last_name" name="last_name" required>
                     </div>
                     <div class="mb-3">
-                        <label for="given_name" class="form-label">Given Name</label>
-                        <input type="text" class="form-control" id="given_name" required>
+                        <label for="add_given_name" class="form-label">Given Name</label>
+                        <input type="text" class="form-control" id="add_given_name" name="given_name" required>
                     </div>
                     <div class="mb-3">
-                        <label for="middle_name" class="form-label">Middle Name</label>
-                        <input type="text" class="form-control" id="middle_name">
+                        <label for="add_middle_name" class="form-label">Middle Name</label>
+                        <input type="text" class="form-control" id="add_middle_name" name="middle_name">
                     </div>
                     <div class="mb-3">
-                        <label for="email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="email" required>
+                        <label for="add_email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="add_email" name="email" required>
                     </div>
                     <div class="mb-3">
-                        <label for="username" class="form-label">Username</label>
-                        <input type="text" class="form-control" id="username" required>
+                        <label for="add_username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="add_username" name="username" required>
                     </div>
                     <div class="mb-3">
-                        <label for="password" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="password" required>
+                        <label for="add_password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="add_password" name="password" required>
                     </div>
                     <div class="mb-3">
-                        <label for="role" class="form-label">Role</label>
-                        <select class="form-select" id="role" name="role" required onchange="toggleAdditionalFields()">
+                        <label for="add_role" class="form-label">Role</label>
+                        <select class="form-select" id="add_role" name="role" required onchange="toggleAdditionalFields()">
                             <option value="">Select Role</option>
                             <option value="student">Student</option>
                             <option value="employee">Employee</option>
@@ -41,23 +41,33 @@
                             <option value="guest">Guest</option>
                         </select>
                     </div>
-                    <div id="programField" class="mb-3" style="display: none;">
-                        <label for="program_id" class="form-label">Program</label>
-                        <select class="form-select" id="program_id" name="program_id">
+                    <div id="add_programField" class="mb-3" style="display: none;">
+                        <label for="add_program_id" class="form-label">Program</label>
+                        <select class="form-select" id="add_program_id" name="program_id">
                             <option value="">Select Program</option>
                         </select>
                     </div>
-                    <div id="canteenField" class="mb-3" style="display: none;">
-                        <label for="canteen_id" class="form-label">Canteen</label>
-                        <select class="form-select" id="canteen_id" name="canteen_id">
-                            <option value="">Select Canteen</option>
+                    <div id="add_departmentField" class="mb-3" style="display: none;">
+                        <label for="add_department_id" class="form-label">Department</label>
+                        <select class="form-select" id="add_department_id" name="department_id">
+                            <option value="">Select Department</option>
                         </select>
+                    </div>
+                    <div id="add_canteenField" class="mb-3" style="display: none;">
+                        <div class="mb-3">
+                            <label for="add_canteen_name" class="form-label">Canteen Name</label>
+                            <input type="text" class="form-control" id="add_canteen_name" name="canteen_name">
+                        </div>
+                        <div class="mb-3">
+                            <label for="add_campus_location" class="form-label">Campus Location</label>
+                            <input type="text" class="form-control" id="add_campus_location" name="campus_location">
+                        </div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="submit" form="addUserForm" class="btn btn-primary">Save User</button>
+                <button type="submit" form="addNewUserForm" class="btn btn-primary">Save User</button>
             </div>
         </div>
     </div>

@@ -28,7 +28,7 @@ function loadUserTable() {
 
 function setupFormHandlers() {
     // Add User form submission
-    $(document).on('submit', '#addUserForm', function(e) {
+    $(document).on('submit', '#addNewUserForm', function(e) {
         e.preventDefault();
         saveUser();
     });
@@ -80,8 +80,11 @@ function openAddUserModal() {
     
     // Show loading state
     const programSelect = document.getElementById('program_id');
+    const departmentSelect = document.getElementById('department_id');
     const canteenSelect = document.getElementById('canteen_id');
+    
     programSelect.innerHTML = '<option value="">Loading programs...</option>';
+    departmentSelect.innerHTML = '<option value="">Loading departments...</option>';
     canteenSelect.innerHTML = '<option value="">Loading canteens...</option>';
     
     // Populate programs dropdown
@@ -102,6 +105,27 @@ function openAddUserModal() {
         error: function(xhr, status, error) {
             console.error('Error fetching programs:', error);
             programSelect.innerHTML = '<option value="">Error loading programs</option>';
+        }
+    });
+
+    // Populate departments dropdown
+    $.ajax({
+        url: '../departments/get_departments.php',
+        type: 'GET',
+        dataType: 'json',
+        success: function(departments) {
+            departmentSelect.innerHTML = '<option value="">Select Department</option>';
+            if (Array.isArray(departments)) {
+                departments.forEach(dept => {
+                    departmentSelect.innerHTML += `<option value="${escapeHtml(dept.department_id)}">${escapeHtml(dept.department_name)} (${escapeHtml(dept.college_name)})</option>`;
+                });
+            } else {
+                console.error('Departments data is not an array:', departments);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Error fetching departments:', error);
+            departmentSelect.innerHTML = '<option value="">Error loading departments</option>';
         }
     });
 
@@ -130,40 +154,55 @@ function openAddUserModal() {
 }
 
 function toggleAdditionalFields() {
-    const role = document.getElementById('role').value;
-    const programField = document.getElementById('programField');
-    const canteenField = document.getElementById('canteenField');
+    const role = document.getElementById('add_role').value;
+    const programField = document.getElementById('add_programField');
+    const departmentField = document.getElementById('add_departmentField');
+    const canteenField = document.getElementById('add_canteenField');
     
-    programField.style.display = (role === 'student' || role === 'employee') ? 'block' : 'none';
-    canteenField.style.display = (role === 'manager') ? 'block' : 'none';
+    // Hide all fields first
+    programField.style.display = 'none';
+    departmentField.style.display = 'none';
+    canteenField.style.display = 'none';
     
-    if (role === 'student' || role === 'employee') {
-        document.getElementById('program_id').required = true;
-    } else {
-        document.getElementById('program_id').required = false;
-    }
+    // Remove required attribute from all fields
+    document.getElementById('add_program_id').removeAttribute('required');
+    document.getElementById('add_department_id').removeAttribute('required');
+    document.getElementById('add_canteen_name').removeAttribute('required');
+    document.getElementById('add_campus_location').removeAttribute('required');
     
-    if (role === 'manager') {
-        document.getElementById('canteen_id').required = true;
-    } else {
-        document.getElementById('canteen_id').required = false;
+    // Show relevant fields based on role
+    switch(role) {
+        case 'student':
+            programField.style.display = 'block';
+            document.getElementById('add_program_id').setAttribute('required', '');
+            break;
+        case 'employee':
+            departmentField.style.display = 'block';
+            document.getElementById('add_department_id').setAttribute('required', '');
+            break;
+        case 'manager':
+            canteenField.style.display = 'block';
+            document.getElementById('add_canteen_name').setAttribute('required', '');
+            document.getElementById('add_campus_location').setAttribute('required', '');
+            break;
     }
 }
 
 function saveUser() {
-    const form = document.getElementById('addUserForm');
-    
-    // Use jQuery serialize to properly get all form data
+    const form = document.getElementById('addNewUserForm');
     const formData = new FormData(form);
     
+    const params = new URLSearchParams();
+    for (const [key, value] of formData.entries()) {
+        params.append(key, value);
+    }
+
     $.ajax({
         url: '../users/addUser.php',
         type: 'POST',
-        data: formData,
-        processData: false,
-        contentType: false,
+        data: params.toString(),
+        contentType: 'application/x-www-form-urlencoded',
         success: function(response) {
-            console.log('Server response:', response); // Debug log
             if (response === 'success') {
                 $('#addUserModal').modal('hide');
                 form.reset();
@@ -178,7 +217,7 @@ function saveUser() {
                 error: error,
                 response: xhr.responseText
             });
-            alert('Error occurred while adding the user.');
+            alert('Failed to add user. Please try again.');
         }
     });
 }

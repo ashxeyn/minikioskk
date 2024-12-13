@@ -4,127 +4,119 @@ require_once '../classes/productClass.php';
 require_once '../classes/stocksClass.php';
 require_once '../tools/functions.php';
 
-$productObj = new Product();
-$stockObj = new Stocks();
+try {
+    $productObj = new Product();
+    $stockObj = new Stocks();
 
-$keyword = isset($_GET['search']) ? $_GET['search'] : '';
-$category = isset($_GET['category']) ? $_GET['category'] : '';
+    // Debug output
+    error_log("Session role: " . ($_SESSION['role'] ?? 'not set'));
+    error_log("Session canteen_id: " . ($_SESSION['canteen_id'] ?? 'not set'));
 
-$products = [];
-$products = $productObj->searchProducts($keyword, $category);
+    $products = [];
+    if (isset($_SESSION['role']) && $_SESSION['role'] == 'manager') {
+        if (!isset($_SESSION['canteen_id'])) {
+            throw new Exception("Canteen ID not set for manager");
+        }
+        $canteen_id = $_SESSION['canteen_id'];
+        $products = $productObj->fetchProductsByCanteen($canteen_id);
+    } else {
+        $products = $productObj->searchProducts();
+    }
 
-if (isset($_SESSION['role']) && $_SESSION['role'] == 'manager') {
-    $canteen_id = $_SESSION['canteen_id'];
-    $products = $productObj->fetchProductsByCanteen($canteen_id); 
+    // Debug output
+    error_log("Products fetched: " . json_encode($products));
+
+    if (empty($products)) {
+        echo "<div class='alert alert-info'>No products found.</div>";
+    }
+    
+    // Continue with the rest of the table output...
+    include 'productTable.php'; // Move the table HTML to a separate file
+    
+} catch (Exception $e) {
+    error_log("Error in view_products.php: " . $e->getMessage());
+    echo "<div class='alert alert-danger'>Error loading products: " . htmlspecialchars($e->getMessage()) . "</div>";
 }
 ?>
-
-<head>
-    <link rel="stylesheet" href="../css/table.css">
-</head>
-
-<div class='center'>
-    <div class='table'>
-        <form autocomplete='off'>
-            <input type="search" id="searchProduct" placeholder="Search products..." 
-                   onkeyup="searchProducts(this.value, document.getElementById('category').value)">
-        </form>
-        
-        <div class="filter-group">
-            <label for="category">Category</label>
-            <select id="category" class="form-select w-auto" onchange="searchProducts(document.getElementById('searchProduct').value, this.value)">
-                <option value="">All Categories</option>
-                <option value="Snacks">Snacks</option>
-                <option value="Drinks and Beverages">Drinks and Beverages</option>
-                <option value="Meals">Meals</option>
-                <option value="Fruits">Fruits</option>
-            </select>
-        </div>
-
-        <div class="mb-3">
-            <button type="button" class="btn btn-primary" onclick="openAddProductModal()">Add Product</button>
-        </div>
-
-        <table class="table table-bordered" id="productTable">
-            <thead>
-                <tr>
-                    <?php if ($_SESSION['role'] != 'manager'): ?>
-                        <th>Canteen Name</th>
-                    <?php endif; ?>
-                    <th>Product ID</th>
-                    <th>Product Name</th>
-                    <th>Description</th>
-                    <th>Category</th>
-                    <th>Price</th>
-                    <th>Stock Quantity</th>
-                    <th>Stock Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody id="productTableBody">
-            </tbody>
-        </table>
+<div class="row mb-4">
+    <div class="col-md-4">
+        <input type="text" id="searchProduct" class="form-control" placeholder="Search products...">
+    </div>
+    <div class="col-md-4">
+        <select id="categoryFilter" class="form-select">
+            <option value="">All Categories</option>
+            <?php
+            try {
+                $categories = $productObj->getCategories();
+                foreach ($categories as $category) {
+                    echo "<option value='" . htmlspecialchars($category['type_id']) . "'>" . 
+                         htmlspecialchars($category['name']) . "</option>";
+                }
+            } catch (Exception $e) {
+                error_log("Error loading categories: " . $e->getMessage());
+            }
+            ?>
+        </select>
+    </div>
+    <div class="col-md-4">
+        <button type="button" class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#addProductModal">
+            <i class="bi bi-plus-circle"></i> Add Product
+        </button>
+        <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#categoryModal">
+            <i class="bi bi-tags"></i> Manage Categories
+        </button>
     </div>
 </div>
 
-<script>
-function searchProducts(keyword, category) {
-    let url = `../ajax/search_products.php?keyword=${encodeURIComponent(keyword)}`;
-    if (category) {
-        url += `&category=${encodeURIComponent(category)}`;
-    }
-    
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            const tbody = document.getElementById('productTableBody');
-            tbody.innerHTML = '';
-            
-            if (data.length === 0) {
-                const cols = <?php echo $_SESSION['role'] != 'manager' ? '9' : '8'; ?>;
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="${cols}" class="text-center">No products found.</td>
-                    </tr>`;
-                return;
-            }
-            
-            data.forEach(product => {
-                let row = '<tr>';
-                <?php if ($_SESSION['role'] != 'manager'): ?>
-                    row += `<td>${escapeHtml(product.canteen_name)}</td>`;
+<div class="table-responsive">
+    <table class="table table-striped table-hover" id="productTable">
+        <thead>
+            <tr>
+                <?php if (!isset($canteen_id)): ?>
+                    <th>Canteen</th>
                 <?php endif; ?>
-                row += `
-                    <td>${escapeHtml(product.product_id)}</td>
-                    <td>${escapeHtml(product.name)}</td>
-                    <td>${escapeHtml(product.description)}</td>
-                    <td>${escapeHtml(product.category)}</td>
-                    <td>${escapeHtml(product.price)}</td>
-                    <td>${escapeHtml(product.quantity || 0)}</td>
-                    <td>${product.quantity > 0 ? 'In Stock' : 'Out of Stock'}</td>
-                    <td>
-                        <button class="btn btn-warning btn-sm" onclick="openEditModal(${product.product_id})">Edit</button>
-                        <button class="btn btn-danger btn-sm" onclick="openDeleteModal(${product.product_id})">Delete</button>
-                        <button class="btn btn-info btn-sm" onclick="openStockModal(${product.product_id})">Stock In/Stock Out</button>
-                    </td>
-                </tr>`;
-                tbody.innerHTML += row;
-            });
-        })
-        .catch(error => console.error('Error:', error));
-}
-
-function escapeHtml(unsafe) {
-    return unsafe
-        ? unsafe.toString()
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;")
-        : '';
-}
-
-// Initial load
-searchProducts('', '');
-</script>
+                <th>Product Name</th>
+                <th>Category</th>
+                <th>Description</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Status</th>
+                <th>Last Updated</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php if (!empty($products)): ?>
+                <?php foreach ($products as $product): 
+                    $stock = $stockObj->fetchStockByProductId($product['product_id']);
+                    $stockQuantity = $stock ? $stock['quantity'] : 0;
+                    $status = $stockQuantity > 0 ? 'In Stock' : 'Out of Stock';
+                ?>
+                    <tr>
+                        <?php if (!isset($canteen_id)): ?>
+                            <td><?= htmlspecialchars($product['canteen_name'] ?? '') ?></td>
+                        <?php endif; ?>
+                        <td><?= htmlspecialchars($product['name']) ?></td>
+                        <td><?= htmlspecialchars($productObj->getCategoryName($product['type_id'])) ?></td>
+                        <td><?= htmlspecialchars($product['description']) ?></td>
+                        <td>₱<?= number_format($product['price'], 2) ?></td>
+                        <td><?= $stockQuantity ?></td>
+                        <td><?= $status ?></td>
+                        <td><?= $stock ? date('Y-m-d H:i', strtotime($stock['updated_at'])) : 'Never' ?></td>
+                        <td>
+                            <button class="btn btn-warning btn-sm" onclick="openEditModal(<?= $product['product_id'] ?>)">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="openDeleteModal(<?= $product['product_id'] ?>)">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                            <button class="btn btn-info btn-sm" onclick="openStockModal(<?= $product['product_id'] ?>)">
+                                <i class="bi bi-box-seam"></i>
+                            </button>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </tbody>
+    </table>
+</div> 

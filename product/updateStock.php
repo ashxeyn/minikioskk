@@ -7,26 +7,27 @@ $stockObj = new Stocks();
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $product_id = clean_input($_POST['product_id']);
     $quantity = clean_input($_POST['quantity']);
-    $status = clean_input($_POST['status']);
+    $status = 'In Stock'; // Always set to In Stock
+    
     $res = array("status" => "failure");
-    if (empty($product_id) || empty($quantity) || empty($status)) {
-        // echo 'failure';
+    
+    if (empty($product_id) || empty($quantity)) {
         echo json_encode($res);
         exit;
     }
 
     $stock = $stockObj->fetchStockByProductId($product_id);
     if ($stock) {
-        $updateStock = $stockObj->updateStock($product_id, $quantity, $status);
-        // echo $updateStock ? 'success' : 'failure';
+        // Add to existing stock
+        $updateStock = $stockObj->updateStock($product_id, $quantity);
         $res['status'] = $updateStock ? 'success' : 'failure';
     } else {
+        // Create new stock record
         $addStock = $stockObj->addStock($product_id, $quantity, $status);
-        // echo $addStock ? 'success' : 'failure';
         $res['status'] = $addStock ? 'success' : 'failure';
     }
     echo json_encode($res);
 } else {
-    echo 'failure';
+    echo json_encode(array("status" => "failure"));
 }
 ?>

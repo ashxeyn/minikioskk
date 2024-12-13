@@ -19,18 +19,40 @@ class Canteen
 
     function addCanteen()
     {
-        $sql = "INSERT INTO canteens (name, campus_location, description, opening_time, closing_time, status) 
-                VALUES (:name, :campus_location, :description, :opening_time, :closing_time, :status)";
-        $query = $this->db->connect()->prepare($sql);
+        try {
+            $conn = $this->db->connect();
+            
+            // Check if canteen name already exists
+            $checkSql = "SELECT canteen_id FROM canteens WHERE name = :name";
+            $checkStmt = $conn->prepare($checkSql);
+            $checkStmt->execute(['name' => $this->name]);
+            
+            if ($checkStmt->fetch()) {
+                return false; // Canteen name already exists
+            }
+            
+            // Insert new canteen
+            $sql = "INSERT INTO canteens (name, campus_location, description, opening_time, closing_time, status) 
+                    VALUES (:name, :campus_location, :description, :opening_time, :closing_time, :status)";
+            
+            $query = $conn->prepare($sql);
 
-        $query->bindParam(':name', $this->name);
-        $query->bindParam(':campus_location', $this->campus_location);
-        $query->bindParam(':description', $this->description);
-        $query->bindParam(':opening_time', $this->opening_time);
-        $query->bindParam(':closing_time', $this->closing_time);
-        $query->bindParam(':status', $this->status);
+            $query->bindParam(':name', $this->name);
+            $query->bindParam(':campus_location', $this->campus_location);
+            $query->bindParam(':description', $this->description);
+            $query->bindParam(':opening_time', $this->opening_time);
+            $query->bindParam(':closing_time', $this->closing_time);
+            $query->bindParam(':status', $this->status);
 
-        return $query->execute();
+            if ($query->execute()) {
+                return $conn->lastInsertId();
+            }
+            return false;
+            
+        } catch (PDOException $e) {
+            error_log("Error in addCanteen: " . $e->getMessage());
+            return false;
+        }
     }
 
     function fetchCanteens()
@@ -184,6 +206,25 @@ class Canteen
             return ($current_time >= $opening_time && $current_time <= $closing_time);
         } catch (Exception $e) {
             error_log("Error checking canteen status: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function getCanteens() {
+        try {
+            $sql = "SELECT canteen_id, name, campus_location FROM canteens";
+            $stmt = $this->db->connect()->prepare($sql);
+            $stmt->execute();
+            $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            if ($result === false) {
+                error_log("No results found in getCanteens()");
+                return [];
+            }
+            
+            return $result;
+        } catch (PDOException $e) {
+            error_log("Error in getCanteens(): " . $e->getMessage());
             return false;
         }
     }
