@@ -1,41 +1,54 @@
 <?php
 session_start();
 require_once '../classes/productClass.php';
+require_once '../classes/stocksClass.php';
 
 header('Content-Type: application/json');
 
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'manager') {
-    echo json_encode(['error' => 'Unauthorized access']);
+    echo json_encode(['success' => false, 'message' => 'Unauthorized access']);
     exit;
 }
 
 try {
-    $productObj = new Product();
-    
+    if (!isset($_POST['product_id'])) {
+        throw new Exception('Product ID is required');
+    }
 
-    $productId = $_POST['product_id'];
-    $name = $_POST['name'];
-    $description = $_POST['description'];
-    $typeId = $_POST['type_id'];
-    $price = $_POST['price'];
-    
-   
-    $result = $productObj->updateProduct($productId, $name, $description, $typeId, $price);
-    
-    if (isset($_POST['quantity']) && !empty($_POST['quantity'])) {
-        require_once '../classes/stocksClass.php';
-        $stocksObj = new Stocks();
-        $stocksObj->addStock($productId, $_POST['quantity']);
+    $productObj = new Product();
+    $stocksObj = new Stocks();
+
+    // Update product details
+    $updateData = [
+        'product_id' => $_POST['product_id'],
+        'name' => $_POST['name'],
+        'description' => $_POST['description'],
+        'type_id' => $_POST['type_id'],
+        'price' => $_POST['price'],
+        'canteen_id' => $_SESSION['canteen_id']
+    ];
+
+    $success = $productObj->updateProduct($updateData);
+
+    // Update stock if quantity is provided
+    if (isset($_POST['quantity']) && $_POST['quantity'] > 0) {
+        $stocksObj->addStock(
+            $_POST['product_id'],
+            $_POST['quantity'],
+            $_SESSION['user_id']
+        );
     }
-    
-    if ($result) {
-        echo json_encode(['success' => true, 'message' => 'Product updated successfully']);
-    } else {
-        echo json_encode(['success' => false, 'message' => 'Failed to update product']);
-    }
-    
+
+    echo json_encode([
+        'success' => $success,
+        'message' => $success ? 'Product updated successfully' : 'Failed to update product'
+    ]);
+
 } catch (Exception $e) {
     error_log("Error in updateProduct.php: " . $e->getMessage());
-    echo json_encode(['success' => false, 'message' => 'Error updating product: ' . $e->getMessage()]);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Error updating product: ' . $e->getMessage()
+    ]);
 }
 ?> 

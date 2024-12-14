@@ -111,29 +111,6 @@ class Product
         }
     }
 
-    function updateProduct($product_id, $name, $description, $type_id, $price) {
-        try {
-            $sql = "UPDATE products 
-                    SET name = :name, 
-                        description = :description, 
-                        type_id = :type_id, 
-                        price = :price
-                    WHERE product_id = :product_id";
-            
-            $query = $this->db->connect()->prepare($sql);
-            
-            return $query->execute([
-                'product_id' => $product_id,
-                'name' => $name,
-                'description' => $description,
-                'type_id' => $type_id,
-                'price' => $price
-            ]);
-        } catch (PDOException $e) {
-            error_log("Error in updateProduct: " . $e->getMessage());
-            throw new Exception("Failed to update product");
-        }
-    }
 
   
 
@@ -458,6 +435,32 @@ class Product
         } catch (PDOException $e) {
             error_log("Error in getProduct: " . $e->getMessage());
             throw new Exception("Failed to fetch product");
+        }
+    }
+
+    public function updateProduct($data) {
+        try {
+            $sql = "UPDATE products 
+                    SET name = :name,
+                        description = :description,
+                        type_id = :type_id,
+                        price = :price
+                    WHERE product_id = :product_id 
+                    AND canteen_id = :canteen_id";
+
+            $stmt = $this->db->connect()->prepare($sql);
+            
+            return $stmt->execute([
+                ':product_id' => $data['product_id'],
+                ':name' => $data['name'],
+                ':description' => $data['description'],
+                ':type_id' => $data['type_id'],
+                ':price' => $data['price'],
+                ':canteen_id' => $data['canteen_id']
+            ]);
+        } catch (PDOException $e) {
+            error_log("Error updating product: " . $e->getMessage());
+            throw $e;
         }
     }
 }

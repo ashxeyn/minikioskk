@@ -678,6 +678,50 @@ function showResponse(message, success = true) {
         }, { once: true });
     }
 }
+
+// Add this to your existing JavaScript
+$('#editProductForm').submit(function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    formData.append('canteen_id', '<?php echo $_SESSION['canteen_id']; ?>');
+    
+    $.ajax({
+        url: '../ajax/updateProduct.php',
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(response) {
+            try {
+                const result = typeof response === 'string' ? JSON.parse(response) : response;
+                
+                if (result.success) {
+                    // Close the modal
+                    $('#editProductModal').modal('hide');
+                    
+                    // Show success message
+                    showResponse('Product updated successfully', true);
+                    
+                    // Reset the form
+                    $('#editProductForm')[0].reset();
+                    
+                    // Reload the DataTable
+                    $('#productsTable').DataTable().ajax.reload();
+                } else {
+                    showResponse(result.message || 'Error updating product', false);
+                }
+            } catch (error) {
+                console.error('Error parsing response:', error);
+                showResponse('Error processing server response', false);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Ajax error:', error);
+            showResponse('Error submitting form: ' + error, false);
+        }
+    });
+});
 </script>
 
 <!-- Add this modal for showing responses -->
