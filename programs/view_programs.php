@@ -23,7 +23,6 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Programs</title>
     
-    <!-- Local vendor files -->
     <link href="../vendor/bootstrap-5.3.3/css/bootstrap.min.css" rel="stylesheet">
     <link href="../vendor/bootstrap-icons-1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link href="../vendor/datatables/dataTables.bootstrap5.min.css" rel="stylesheet">
@@ -92,7 +91,6 @@ try {
     </div>
 </div>
 
-<!-- Add Program Modal -->
 <div class="modal fade" id="addProgramModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -139,7 +137,6 @@ try {
     </div>
 </div>
 
-<!-- Edit Program Modal -->
 <div class="modal fade" id="editProgramModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -185,7 +182,6 @@ try {
     </div>
 </div>
 
-<!-- Scripts -->
 <script src="../vendor/jquery/jquery-3.6.0.min.js"></script>
 <script src="../vendor/bootstrap-5.3.3/js/bootstrap.bundle.min.js"></script>
 <script src="../vendor/datatables/jquery.dataTables.min.js"></script>
@@ -193,7 +189,6 @@ try {
 
 <script>
 $(document).ready(function() {
-    // Initialize DataTable with specific configuration
     $('#programsTable').DataTable({
         "responsive": true,
         "pageLength": 10,
@@ -214,7 +209,6 @@ $(document).ready(function() {
         }
     });
 
-    // Load departments when college is selected
     $('#college_id').change(function() {
         loadDepartments($(this).val(), '#department_id');
     });
