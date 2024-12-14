@@ -1,4 +1,4 @@
-<?php
+<?php  
 require_once '../classes/databaseClass.php';
 
 class Product
@@ -98,31 +98,41 @@ class Product
                 'status' => $data['status']
             ]);
             
-            return $this->db->connect()->lastInsertId();
+            $productId = $this->db->connect()->lastInsertId();
+            
+            if (!$productId) {
+                throw new Exception("Failed to get product ID after insertion");
+            }
+            
+            return $productId;
         } catch (PDOException $e) {
             error_log("Error in addProduct: " . $e->getMessage());
-            throw new Exception("Failed to add product");
+            throw new Exception("Failed to add product: " . $e->getMessage());
         }
     }
 
-    function updateProduct($product_id, $name, $description, $type_id, $price, $image_url = null) {
-        $sql = "UPDATE products 
-                SET name = :name, 
-                    description = :description, 
-                    type_id = :type_id, 
-                    price = :price,
-                    image_url = :image_url
-                WHERE product_id = :product_id";
-        $query = $this->db->connect()->prepare($sql);
-
-        $query->bindParam(':product_id', $product_id);
-        $query->bindParam(':name', $name);
-        $query->bindParam(':description', $description);
-        $query->bindParam(':type_id', $type_id);
-        $query->bindParam(':price', $price);
-        $query->bindParam(':image_url', $image_url);
-
-        return $query->execute();
+    function updateProduct($product_id, $name, $description, $type_id, $price) {
+        try {
+            $sql = "UPDATE products 
+                    SET name = :name, 
+                        description = :description, 
+                        type_id = :type_id, 
+                        price = :price
+                    WHERE product_id = :product_id";
+            
+            $query = $this->db->connect()->prepare($sql);
+            
+            return $query->execute([
+                'product_id' => $product_id,
+                'name' => $name,
+                'description' => $description,
+                'type_id' => $type_id,
+                'price' => $price
+            ]);
+        } catch (PDOException $e) {
+            error_log("Error in updateProduct: " . $e->getMessage());
+            throw new Exception("Failed to update product");
+        }
     }
 
   
@@ -426,6 +436,29 @@ class Product
         } catch (PDOException $e) {
             error_log("Database Error: " . $e->getMessage());
             throw new Exception("Database error occurred");
+        }
+    }
+
+    public function getProduct($productId) {
+        try {
+            $sql = "SELECT p.*, pt.name as type_name, pt.type,
+                    COALESCE(s.quantity, 0) as stock_quantity
+                    FROM products p
+                    LEFT JOIN product_types pt ON p.type_id = pt.type_id
+                    LEFT JOIN (
+                        SELECT product_id, quantity 
+                        FROM stocks 
+                        GROUP BY product_id
+                    ) s ON p.product_id = s.product_id
+                    WHERE p.product_id = :product_id";
+            
+            $stmt = $this->db->connect()->prepare($sql);
+            $stmt->execute(['product_id' => $productId]);
+            
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error in getProduct: " . $e->getMessage());
+            throw new Exception("Failed to fetch product");
         }
     }
 }

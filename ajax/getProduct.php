@@ -15,8 +15,8 @@ if (!isset($_GET['product_id'])) {
 }
 
 try {
-    $product = new Product();
-    $productData = $product->getProductById($_GET['product_id']);
+    $productObj = new Product();
+    $productData = $productObj->getProduct($_GET['product_id']);
     
     if ($productData) {
         echo json_encode($productData);
@@ -24,6 +24,7 @@ try {
         echo json_encode(['error' => 'Product not found']);
     }
 } catch (Exception $e) {
+    error_log("Error in getProduct.php: " . $e->getMessage());
     echo json_encode(['error' => 'Error fetching product: ' . $e->getMessage()]);
 }
 ?> 

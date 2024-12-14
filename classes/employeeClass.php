@@ -169,5 +169,113 @@ class Employee {
             throw new Exception("Error updating employee");
         }
     }
+
+    public function getTotalEmployeesCount($canteenId) {
+        try {
+            $sql = "SELECT COUNT(*) as count 
+                    FROM users u 
+                    JOIN managers m ON u.user_id = m.user_id 
+                    WHERE m.canteen_id = ? AND u.role = 'manager'
+                    AND u.user_id != ?";
+            
+            $stmt = $this->conn->prepare($sql);
+            $stmt->execute([$canteenId, $_SESSION['user_id']]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $result['count'];
+        } catch (PDOException $e) {
+            error_log("Error getting total employees count: " . $e->getMessage());
+            throw new Exception("Error getting total count");
+        }
+    }
+
+    public function getEmployeesForDataTable($canteenId, $search, $start, $length, $orderBy, $orderDir) {
+        try {
+            // Base query for total count
+            $countSql = "SELECT COUNT(*) as total
+                        FROM users u 
+                        JOIN managers m ON u.user_id = m.user_id 
+                        WHERE m.canteen_id = :canteen_id 
+                        AND u.role = 'manager'
+                        AND u.user_id != :current_user";
+            
+            $countStmt = $this->conn->prepare($countSql);
+            $countStmt->execute([
+                ':canteen_id' => $canteenId,
+                ':current_user' => $_SESSION['user_id']
+            ]);
+            $totalRecords = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
+            
+            // Base query for data
+            $sql = "SELECT u.user_id, u.username, u.email, u.last_name, u.given_name, 
+                           u.middle_name, u.status, m.status as manager_status
+                    FROM users u 
+                    JOIN managers m ON u.user_id = m.user_id 
+                    WHERE m.canteen_id = :canteen_id 
+                    AND u.role = 'manager'
+                    AND u.user_id != :current_user";
+            
+            $params = [
+                ':canteen_id' => $canteenId,
+                ':current_user' => $_SESSION['user_id']
+            ];
+            
+            // Add search condition if search term exists
+            if (!empty($search)) {
+                $sql .= " AND (u.username LIKE :search 
+                          OR u.email LIKE :search 
+                          OR u.last_name LIKE :search 
+                          OR u.given_name LIKE :search 
+                          OR u.middle_name LIKE :search)";
+                $params[':search'] = "%$search%";
+            }
+            
+            // Get filtered count
+            $filteredStmt = $this->conn->prepare($sql);
+            $filteredStmt->execute($params);
+            $filteredCount = $filteredStmt->rowCount();
+            
+            // Add ordering
+            $sql .= " ORDER BY " . $this->sanitizeOrderBy($orderBy) . " " . ($orderDir === 'asc' ? 'ASC' : 'DESC');
+            
+            // Add limit
+            $sql .= " LIMIT :start, :length";
+            $params[':start'] = (int)$start;
+            $params[':length'] = (int)$length;
+            
+            $stmt = $this->conn->prepare($sql);
+            
+            // Bind parameters
+            foreach ($params as $key => $value) {
+                if (in_array($key, [':start', ':length'])) {
+                    $stmt->bindValue($key, $value, PDO::PARAM_INT);
+                } else {
+                    $stmt->bindValue($key, $value);
+                }
+            }
+            
+            $stmt->execute();
+            $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            return [
+                'total_count' => $totalRecords,
+                'filtered_count' => $filteredCount,
+                'data' => $data
+            ];
+        } catch (PDOException $e) {
+            error_log("Error getting employees for DataTable: " . $e->getMessage());
+            throw new Exception("Error fetching employees: " . $e->getMessage());
+        }
+    }
+    
+    private function sanitizeOrderBy($column) {
+        $allowedColumns = [
+            'user_id' => 'u.user_id',
+            'name' => 'u.last_name',
+            'username' => 'u.username',
+            'email' => 'u.email',
+            'status' => 'm.status'
+        ];
+        return $allowedColumns[$column] ?? 'u.last_name';
+    }
 }
 ?> 

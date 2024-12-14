@@ -137,13 +137,13 @@ try {
         <table class="table table-hover" id="productsTable">
             <thead>
                 <tr>
-                    <th>Product ID</th>
+                    <th>#</th>
                     <th>Name</th>
-                    <th>Description</th>
                     <th>Type</th>
+                    <th>Description</th>
                     <th>Price</th>
-                    <th>Status</th>
                     <th>Stock</th>
+                    <th>Status</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -162,15 +162,14 @@ try {
                         </td>
                         <td><?= htmlspecialchars($product['stock_quantity']) ?></td>
                         <td>
-                            <button class="btn btn-warning btn-sm" onclick="openEditModal(<?= $product['product_id'] ?>)">
-                                <i class="bi bi-pencil"></i>
-                            </button>
-                            <button class="btn btn-danger btn-sm" onclick="deleteProduct(<?= $product['product_id'] ?>)">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                            <button class="btn btn-info btn-sm" onclick="openStockModal(<?= $product['product_id'] ?>)">
-                                <i class="bi bi-box-seam"></i>
-                            </button>
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-primary" onclick="editProduct(<?= $product['product_id'] ?>)">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteProduct(<?= $product['product_id'] ?>)">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 <?php endforeach; ?>
@@ -431,8 +430,44 @@ function openAddProductModal() {
 $(document).ready(function() {
     // Initialize DataTable
     $('#productsTable').DataTable({
+        "processing": true,
+        "serverSide": true,
+        "ajax": {
+            "url": "../ajax/getProducts.php",
+            "type": "POST"
+        },
         "pageLength": 10,
-        "responsive": true
+        "responsive": true,
+        "order": [[1, "asc"]], // Order by name column
+        "columns": [
+            { 
+                "data": null,
+                "render": function (data, type, row, meta) {
+                    return meta.row + meta.settings._iDisplayStart + 1;
+                }
+            },
+            { "data": "name" },
+            { "data": "type" },
+            { "data": "description" },
+            { "data": "price" },
+            { "data": "stock" },
+            { "data": "status" },
+            { "data": "actions" }
+        ],
+        "columnDefs": [
+            { "orderable": false, "targets": [7] }, // Actions column not sortable
+            { "orderable": false, "searchable": false, "targets": [0] } // Counter column not sortable or searchable
+        ],
+        "language": {
+            "processing": "Loading...",
+            "search": "Search:",
+            "lengthMenu": "Show _MENU_ entries",
+            "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+            "infoEmpty": "Showing 0 to 0 of 0 entries",
+            "infoFiltered": "(filtered from _MAX_ total entries)",
+            "emptyTable": "No products found",
+            "zeroRecords": "No matching products found"
+        }
     });
     
     // Rest of your document.ready code...
@@ -473,6 +508,75 @@ document.addEventListener('DOMContentLoaded', function() {
     statusFilter.addEventListener('change', filterTable);
 });
 
+function showConfirmation(message, callback) {
+    const responseMessage = document.getElementById('responseMessage');
+    responseMessage.textContent = message;
+    responseMessage.className = 'text-primary';
+    
+    const modalElement = document.getElementById('responseModal');
+    const modalFooter = modalElement.querySelector('.modal-footer');
+    modalFooter.innerHTML = `
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="confirmAction">Confirm</button>
+    `;
+    
+    document.getElementById('confirmAction').onclick = callback;
+    
+    const responseModal = new bootstrap.Modal(modalElement);
+    responseModal.show();
+}
+
+function showResponse(message, success = true) {
+    const responseMessage = document.getElementById('responseMessage');
+    responseMessage.textContent = message;
+    responseMessage.className = success ? 'text-success' : 'text-danger';
+    
+    const modalElement = document.getElementById('responseModal');
+    const modalFooter = modalElement.querySelector('.modal-footer');
+    modalFooter.innerHTML = `
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+    `;
+    
+    const responseModal = new bootstrap.Modal(modalElement);
+    responseModal.show();
+    
+    if (success) {
+        modalElement.addEventListener('hidden.bs.modal', function() {
+            $('#productsTable').DataTable().ajax.reload(null, false);
+        }, { once: true });
+    }
+}
+
+function deleteProduct(productId) {
+    showConfirmation('Are you sure you want to delete this product?', function() {
+        const responseModal = bootstrap.Modal.getInstance(document.getElementById('responseModal'));
+        responseModal.hide();
+        
+        const formData = new FormData();
+        formData.append('product_id', productId);
+        
+        fetch('../ajax/deleteProduct.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            showResponse(
+                data.success ? 'Product deleted successfully' : (data.message || 'Error deleting product'),
+                data.success
+            );
+            
+            if (data.success) {
+                $('#productsTable').DataTable().ajax.reload(null, false);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showResponse('Error deleting product', false);
+        });
+    });
+}
+
 function editProduct(productId) {
     fetch(`../ajax/getProduct.php?product_id=${productId}`)
         .then(response => response.json())
@@ -486,56 +590,23 @@ function editProduct(productId) {
             document.getElementById('editName').value = data.name;
             document.getElementById('editDescription').value = data.description;
             document.getElementById('editPrice').value = data.price;
-            document.getElementById('editCurrentStock').textContent = data.quantity || 0;
+            document.getElementById('editTypeId').value = data.type_id;
+            document.getElementById('editCurrentStock').textContent = data.stock_quantity || 0;
+            
             loadProductTypes(data.type_id);
             
-            new bootstrap.Modal(document.getElementById('editProductModal')).show();
-        })
-        .catch(error => showResponse('Error loading product details', false));
-}
-
-function deleteProduct(productId) {
-    // Show confirmation modal
-    const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
-    $('#confirmMessage').text('Are you sure you want to delete this product?');
-    $('#confirmAction').off('click').on('click', function() {
-        confirmModal.hide();
-        
-        fetch('../product/deleteProduct.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: `product_id=${productId}`
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showSuccessModal('Product deleted successfully');
-                setTimeout(() => {
-                    location.reload();
-                }, 1500);
-            } else {
-                showErrorModal(data.message || 'Failed to delete product');
-            }
+            const editModal = new bootstrap.Modal(document.getElementById('editProductModal'));
+            editModal.show();
         })
         .catch(error => {
             console.error('Error:', error);
-            showErrorModal('Error occurred while deleting product');
+            showResponse('Error loading product details', false);
         });
-    });
-    confirmModal.show();
 }
 
-function showSuccessModal(message) {
-    $('#successMessage').text(message);
-    const successModal = new bootstrap.Modal(document.getElementById('successModal'));
-    successModal.show();
-}
-
-function showErrorModal(message) {
-    $('#errorMessage').text(message);
-    const errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
-    errorModal.show();
+function deleteProduct(productId) {
+    if (confirm('Are you sure you want to delete this product?')) {
+        // Implement delete functionality
+    }
 }
 </script>

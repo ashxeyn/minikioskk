@@ -45,6 +45,50 @@ try {
             color: #fff !important;  /* Force active link color */
             background-color: rgba(255, 255, 255, 0.1) !important;  /* Force active background */
         }
+        
+        /* Enhanced Status Badge Styles */
+        .badge {
+            padding: 0.5em 0.8em;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: inline-block;
+            min-width: 90px;
+            text-align: center;
+        }
+        
+        /* Status-specific colors */
+        .badge-pending {
+            background-color: #ffc107 !important;
+            color: #000 !important;
+        }
+        
+        .badge-accepted {
+            background-color: #17a2b8 !important;
+            color: #fff !important;
+        }
+        
+        .badge-preparing {
+            background-color: #fd7e14 !important;
+            color: #fff !important;
+        }
+        
+        .badge-ready {
+            background-color: #20c997 !important;
+            color: #fff !important;
+        }
+        
+        .badge-completed {
+            background-color: #198754 !important;
+            color: #fff !important;
+        }
+        
+        .badge-cancelled {
+            background-color: #dc3545 !important;
+            color: #fff !important;
+        }
     </style>
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -63,7 +107,7 @@ try {
         <table class="table table-hover" id="ordersTable">
             <thead>
                 <tr>
-                    <th>Order ID</th>
+                    <th>#</th>
                     <th>Username</th>
                     <th>Customer Name</th>
                     <th>Products</th>
@@ -74,39 +118,6 @@ try {
                     <th>Actions</th>
                 </tr>
             </thead>
-            <tbody>
-                <?php foreach ($orders as $order): ?>
-                    <tr>
-                        <td><?= htmlspecialchars($order['order_id']) ?></td>
-                        <td><?= htmlspecialchars($order['username']) ?></td>
-                        <td><?= htmlspecialchars($order['customer_name']) ?></td>
-                        <td><?= htmlspecialchars($order['product_names']) ?></td>
-                        <td><?= htmlspecialchars($order['total_quantity']) ?></td>
-                        <td>₱<?= number_format($order['total_price'], 2) ?></td>
-                        <td>
-                            <span class="badge <?php echo $orderObj->getStatusBadgeClass($order['status']); ?>">
-                                <?php echo ucfirst($order['status']); ?>
-                            </span>
-                        </td>
-                        <td>
-                            <?php if ($order['queue_number']): ?>
-                                <span class="queue-number"><?php echo htmlspecialchars($order['queue_number']); ?></span>
-                            <?php endif; ?>
-                        </td>
-                        <td>
-                            <div class="action-buttons">
-                                <?php foreach ($orderObj->getAvailableActions($order['status']) as $action): ?>
-                                    <button 
-                                        onclick="handleOrderAction(<?php echo $order['order_id']; ?>, '<?php echo $action['action']; ?>')"
-                                        class="btn <?php echo $action['class']; ?> btn-sm">
-                                        <?php echo $action['label']; ?>
-                                    </button>
-                                <?php endforeach; ?>
-                            </div>
-                        </td>
-                    </tr>
-                <?php endforeach; ?>
-            </tbody>
         </table>
     </div>
     <?php else: ?>
@@ -126,6 +137,24 @@ try {
             </div>
             <div class="modal-body">
                 <div id="orderDetailsContent"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Response Modal -->
+<div class="modal fade" id="responseModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Action Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="responseMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
             </div>
         </div>
     </div>
@@ -229,14 +258,47 @@ try {
 
 <script>
 $(document).ready(function() {
-    // Initialize DataTable
+    // Initialize DataTable with AJAX
     $('#ordersTable').DataTable({
+        "processing": true,
+        "serverSide": true,
+        "ajax": {
+            "url": "../ajax/getOrders.php",
+            "type": "POST"
+        },
         "pageLength": 10,
         "responsive": true,
-        "order": [[0, "desc"]], // Sort by Order ID descending by default
+        "order": [[0, "desc"]],
+        "columns": [
+            { 
+                "data": null,
+                "render": function (data, type, row, meta) {
+                    return meta.row + meta.settings._iDisplayStart + 1;
+                }
+            },
+            { "data": "username" },
+            { "data": "customer_name" },
+            { "data": "product_names" },
+            { "data": "total_quantity" },
+            { "data": "total_price" },
+            { "data": "status" },
+            { "data": "queue_number" },
+            { "data": "actions" }
+        ],
         "columnDefs": [
-            { "orderable": false, "targets": -1 } // Disable sorting on Actions column
-        ]
+            { "orderable": false, "targets": [8] }, // Actions column not sortable
+            { "orderable": false, "searchable": false, "targets": [0] } // Counter column not sortable or searchable
+        ],
+        "language": {
+            "processing": "Loading...",
+            "search": "Search:",
+            "lengthMenu": "Show _MENU_ entries",
+            "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+            "infoEmpty": "Showing 0 to 0 of 0 entries",
+            "infoFiltered": "(filtered from _MAX_ total entries)",
+            "emptyTable": "No orders found",
+            "zeroRecords": "No matching orders found"
+        }
     });
 });
 
@@ -271,145 +333,75 @@ function handleOrderAction(orderId, action) {
             return;
     }
     
-    if (!confirm(confirmMessage)) return;
+    // Show confirmation in modal
+    const responseMessage = document.getElementById('responseMessage');
+    responseMessage.textContent = confirmMessage;
+    responseMessage.className = 'text-primary';
     
-    fetch('../ajax/updateOrderStatus.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            order_id: orderId,
-            status: newStatus
+    const responseModal = new bootstrap.Modal(document.getElementById('responseModal'));
+    const modalElement = document.getElementById('responseModal');
+    
+    // Change the modal footer to include Confirm and Cancel buttons
+    const modalFooter = modalElement.querySelector('.modal-footer');
+    modalFooter.innerHTML = `
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="confirmAction">Confirm</button>
+    `;
+    
+    // Add click handler for confirm button
+    document.getElementById('confirmAction').onclick = function() {
+        // Hide the confirmation modal
+        responseModal.hide();
+        
+        // Show loading message
+        responseMessage.textContent = 'Processing...';
+        responseMessage.className = 'text-info';
+        modalFooter.innerHTML = `
+            <button type="button" class="btn btn-primary" disabled>Please wait...</button>
+        `;
+        responseModal.show();
+        
+        // Make the API call
+        fetch('../ajax/updateOrderStatus.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                order_id: orderId,
+                status: newStatus
+            })
         })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Create and show success toast
-            const toastDiv = document.createElement('div');
-            toastDiv.className = 'toast position-fixed top-0 end-0 m-3';
-            toastDiv.innerHTML = `
-                <div class="toast-header bg-success text-white">
-                    <strong class="me-auto">Success</strong>
-                    <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
-                </div>
-                <div class="toast-body">
-                    Order status updated successfully!
-                </div>
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                responseMessage.textContent = 'Order status updated successfully!';
+                responseMessage.className = 'text-success';
+                modalFooter.innerHTML = `
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+                `;
+                
+                // Refresh the table without page reload
+                $('#ordersTable').DataTable().ajax.reload(null, false);
+                responseModal.hide();
+            } else {
+                responseMessage.textContent = data.message || 'Failed to update order status';
+                responseMessage.className = 'text-danger';
+                modalFooter.innerHTML = `
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            responseMessage.textContent = 'Error updating order status';
+            responseMessage.className = 'text-danger';
+            modalFooter.innerHTML = `
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
             `;
-            document.body.appendChild(toastDiv);
-            
-            const toast = new bootstrap.Toast(toastDiv);
-            toast.show();
-            
-            // Reload the page after a short delay
-            setTimeout(() => location.reload(), 1500);
-        } else {
-            alert(data.message || 'Failed to update order status');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Error updating order status');
-    });
+        });
+    };
+    
+    responseModal.show();
 }
-
-// Document ready event listener for other functionality
-document.addEventListener('DOMContentLoaded', function() {
-    const searchInput = document.getElementById('searchInput');
-    const statusFilter = document.getElementById('statusFilter');
-    const productFilter = document.getElementById('productFilter');
-    const entriesPerPage = document.getElementById('entriesPerPage');
-    const tableBody = document.querySelector('tbody');
-    const startEntry = document.getElementById('startEntry');
-    const endEntry = document.getElementById('endEntry');
-    const totalEntries = document.getElementById('totalEntries');
-    const prevPage = document.getElementById('prevPage');
-    const nextPage = document.getElementById('nextPage');
-    
-    let currentPage = 1;
-    let rows = Array.from(tableBody.querySelectorAll('tr'));
-    
-    function updateTableInfo() {
-        const total = rows.filter(row => row.style.display !== 'none').length;
-        const start = (currentPage - 1) * parseInt(entriesPerPage.value) + 1;
-        const end = Math.min(start + parseInt(entriesPerPage.value) - 1, total);
-        
-        startEntry.textContent = total === 0 ? 0 : start;
-        endEntry.textContent = end;
-        totalEntries.textContent = total;
-        
-        // Update pagination
-        const totalPages = Math.ceil(total / parseInt(entriesPerPage.value));
-        prevPage.classList.toggle('disabled', currentPage === 1);
-        nextPage.classList.toggle('disabled', currentPage === totalPages || total === 0);
-    }
-    
-    function filterAndPaginateTable() {
-        const searchTerm = searchInput.value.toLowerCase();
-        const statusTerm = statusFilter.value.toLowerCase();
-        const productTerm = productFilter.value.toLowerCase();
-        
-        rows.forEach(row => {
-            // Your existing filter logic here
-            let showRow = true;
-            // ... existing filter conditions ...
-            
-            row.style.display = showRow ? '' : 'none';
-        });
-        
-        // Apply pagination
-        const pageSize = parseInt(entriesPerPage.value);
-        const start = (currentPage - 1) * pageSize;
-        const visibleRows = rows.filter(row => row.style.display !== 'none');
-        
-        visibleRows.forEach((row, index) => {
-            row.style.display = (index >= start && index < start + pageSize) ? '' : 'none';
-        });
-        
-        updateTableInfo();
-    }
-    
-    // Event listeners
-    entriesPerPage.addEventListener('change', () => {
-        currentPage = 1;
-        filterAndPaginateTable();
-    });
-    
-    prevPage.addEventListener('click', (e) => {
-        e.preventDefault();
-        if (currentPage > 1) {
-            currentPage--;
-            filterAndPaginateTable();
-        }
-    });
-    
-    nextPage.addEventListener('click', (e) => {
-        e.preventDefault();
-        const visibleRows = rows.filter(row => row.style.display !== 'none');
-        const totalPages = Math.ceil(visibleRows.length / parseInt(entriesPerPage.value));
-        if (currentPage < totalPages) {
-            currentPage++;
-            filterAndPaginateTable();
-        }
-    });
-    
-    // Initialize table
-    filterAndPaginateTable();
-    
-    // Add to your existing filter event listeners
-    searchInput.addEventListener('input', () => {
-        currentPage = 1;
-        filterAndPaginateTable();
-    });
-    statusFilter.addEventListener('change', () => {
-        currentPage = 1;
-        filterAndPaginateTable();
-    });
-    productFilter.addEventListener('change', () => {
-        currentPage = 1;
-        filterAndPaginateTable();
-    });
-});
 </script>
