@@ -512,10 +512,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         
                         // Update cart count
                         updateCartCount();
-                        
+                        loadCartSection();
                         // Redirect to order status page after a short delay
                         setTimeout(function() {
-                           loadCartSection();
+                          
                         }, 2000);
                     } else {
                         showResponseModal(response.message || 'Failed to place order', false);

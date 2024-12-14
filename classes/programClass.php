@@ -83,20 +83,25 @@ class Program
     }
 
    
-    function fetchProgramById($program_id)
-    {
+    function fetchProgramById($programId) {
         try {
-            $sql = "SELECT p.*, d.department_name, d.department_id, c.college_name, c.college_id 
-                    FROM programs p
-                    JOIN departments d ON p.department_id = d.department_id
-                    JOIN colleges c ON d.college_id = c.college_id
+            $sql = "SELECT p.*, d.department_id, d.college_id, d.department_name, c.college_name 
+                    FROM programs p 
+                    JOIN departments d ON p.department_id = d.department_id 
+                    JOIN colleges c ON d.college_id = c.college_id 
                     WHERE p.program_id = :program_id";
-            $query = $this->db->connect()->prepare($sql);
-            $query->bindParam(':program_id', $program_id);
-            $query->execute();
-            return $query->fetch(PDO::FETCH_ASSOC);
+            
+            $stmt = $this->db->connect()->prepare($sql);
+            $stmt->execute(['program_id' => $programId]);
+            
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$result) {
+                throw new Exception("Program not found");
+            }
+            
+            return $result;
         } catch (PDOException $e) {
-            error_log("Error fetching program: " . $e->getMessage());
+            error_log("Error in fetchProgramById: " . $e->getMessage());
             return false;
         }
     }

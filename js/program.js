@@ -228,13 +228,78 @@ function loadColleges() {
     });
 }
 
+// Move all the functions from view_programs.php to here
+function editProgram(programId) {
+    $.ajax({
+        url: '../programs/fetchProgramDetails.php',
+        type: 'POST',
+        data: { program_id: programId },
+        success: function(response) {
+            try {
+                const program = JSON.parse(response);
+                $('#edit_program_id').val(program.program_id);
+                $('#edit_college_id').val(program.college_id);
+                loadDepartments(program.college_id, '#edit_department_id');
+                setTimeout(() => {
+                    $('#edit_department_id').val(program.department_id);
+                }, 500);
+                $('#edit_program_name').val(program.program_name);
+                $('#edit_description').val(program.description);
+                $('#editProgramModal').modal('show');
+            } catch (e) {
+                console.error('Error parsing program details:', e);
+                alert('Error loading program details');
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Error:', error);
+            alert('Error loading program details');
+        }
+    });
+}
+
+function deleteProgram(programId) {
+    if (confirm('Are you sure you want to delete this program?')) {
+        $.ajax({
+            url: '../ajax/deleteProgram.php',
+            type: 'POST',
+            data: { program_id: programId },
+            success: function(response) {
+                try {
+                    const result = JSON.parse(response);
+                    if (result.success) {
+                        location.reload();
+                    } else {
+                        alert(result.message || 'Error deleting program');
+                    }
+                } catch (e) {
+                    console.error('Error parsing response:', e);
+                    alert('Error deleting program');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error);
+                alert('Error deleting program');
+            }
+        });
+    }
+}
+
+// Initialize everything when the document is ready
 $(document).ready(function() {
+    // Wait for DataTables to load
     if (typeof $.fn.DataTable !== 'undefined') {
         initializeDataTable();
     } else {
         console.error('DataTables not loaded');
     }
     
-    loadProgramTable();
-    loadDepartments();
+    // Set up event handlers for college dropdowns
+    $('#college_id').change(function() {
+        loadDepartments($(this).val(), '#department_id');
+    });
+
+    $('#edit_college_id').change(function() {
+        loadDepartments($(this).val(), '#edit_department_id');
+    });
 });
