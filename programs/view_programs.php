@@ -43,41 +43,67 @@ $programs = $program->fetchPrograms();
             </tr>
         </thead>
         <tbody>
-            <?php foreach ($programs as $program): ?>
-            <tr>
-                <td><?= htmlspecialchars($program['program_name']) ?></td>
-                <td><?= htmlspecialchars($program['department_name']) ?></td>
-                <td><?= htmlspecialchars($program['college_name']) ?></td>
-                <td><?= htmlspecialchars($program['description']) ?></td>
-                <td>
-                    <button class="btn btn-warning btn-sm" onclick="openEditModal(<?= $program['program_id'] ?>)">
-                        <i class="bi bi-pencil"></i>
-                    </button>
-                    <button class="btn btn-danger btn-sm" onclick="deleteProgram(<?= $program['program_id'] ?>)">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </td>
-            </tr>
-            <?php endforeach; ?>
         </tbody>
     </table>
 </div>
 
 <script>
 $(document).ready(function() {
+    // Initialize DataTable with proper destroy and configuration
+    if ($.fn.DataTable.isDataTable('#programsTable')) {
+        $('#programsTable').DataTable().destroy();
+    }
+
     const table = $('#programsTable').DataTable({
+        processing: true,
+        serverSide: false,
+        data: <?php echo json_encode($programs); ?>,
+        columns: [
+            { data: 'program_name', render: function(data) { return escapeHtml(data); } },
+            { data: 'department_name', render: function(data) { return escapeHtml(data); } },
+            { data: 'college_name', render: function(data) { return escapeHtml(data); } },
+            { data: 'description', render: function(data) { return escapeHtml(data); } },
+            { 
+                data: 'program_id',
+                render: function(data) {
+                    return `
+                        <button class="btn btn-warning btn-sm" onclick="openEditModal(${data})">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteProgram(${data})">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    `;
+                }
+            }
+        ],
         dom: 'lrtip', // Removes default search box
-        pageLength: 10
+        pageLength: 10,
+        language: {
+            emptyTable: "No programs found"
+        }
     });
 
+    // Helper function to escape HTML
+    function escapeHtml(unsafe) {
+        return unsafe
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    // Custom search functionality
     $('#searchProgram').on('keyup', function() {
         table.search(this.value).draw();
     });
 
+    // College filter
     $('#collegeFilter').on('change', function() {
         const collegeId = $(this).val();
         if (collegeId) {
-            table.column(2) // College column
+            table.column(2)
                 .search($(this).find('option:selected').text())
                 .draw();
         } else {

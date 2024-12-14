@@ -12,6 +12,8 @@ class Account
     public $role = '';
     public $username = '';
     public $program_id = null;
+    public $department_id = null;
+    public $canteen_id = null;
 
     protected $db;
 
@@ -564,59 +566,70 @@ class Account
         return $query->fetchAll();
     }
 
-    function addUser() {
+    public function addUser() {
         try {
             $conn = $this->db->connect();
             $conn->beginTransaction();
 
-            $hashedPassword = password_hash($this->password, PASSWORD_DEFAULT);
-            
+            // First check if username already exists
+            $checkSql = "SELECT COUNT(*) FROM users WHERE username = :username";
+            $checkStmt = $conn->prepare($checkSql);
+            $checkStmt->execute([':username' => $this->username]);
+            if ($checkStmt->fetchColumn() > 0) {
+                throw new Exception("Username already exists");
+            }
+
             // Insert into users table
-            $sql = "INSERT INTO users (last_name, given_name, middle_name, email, username, 
-                    password, role, status) 
-                    VALUES (:last_name, :given_name, :middle_name, :email, :username, 
-                    :password, :role, 'active')";
+            $sql = "INSERT INTO users (last_name, given_name, middle_name, email, username, password, role, status) 
+                    VALUES (:last_name, :given_name, :middle_name, :email, :username, :password, :role, :status)";
             
             $stmt = $conn->prepare($sql);
-            $stmt->bindParam(':last_name', $this->last_name);
-            $stmt->bindParam(':given_name', $this->given_name);
-            $stmt->bindParam(':middle_name', $this->middle_name);
-            $stmt->bindParam(':email', $this->email);
-            $stmt->bindParam(':username', $this->username);
-            $stmt->bindParam(':password', $hashedPassword);
-            $stmt->bindParam(':role', $this->role);
+            $params = [
+                ':last_name' => $this->last_name,
+                ':given_name' => $this->given_name,
+                ':middle_name' => $this->middle_name,
+                ':email' => $this->email,
+                ':username' => $this->username,
+                ':password' => password_hash($this->password, PASSWORD_DEFAULT),
+                ':role' => $this->role,
+                ':status' => 'active'
+            ];
             
-            if ($stmt->execute()) {
+            if ($stmt->execute($params)) {
                 $user_id = $conn->lastInsertId();
                 
                 // Handle role-specific tables
-                switch($this->role) {
+                switch ($this->role) {
                     case 'student':
-                    case 'employee':
                         if ($this->program_id) {
-                            $sql2 = "INSERT INTO user_programs (user_id, program_id) 
-                                    VALUES (:user_id, :program_id)";
-                            $stmt2 = $conn->prepare($sql2);
-                            $stmt2->bindParam(':user_id', $user_id);
-                            $stmt2->bindParam(':program_id', $this->program_id);
-                            if (!$stmt2->execute()) {
-                                $conn->rollBack();
-                                return false;
-                            }
+                            $sql = "INSERT INTO students (user_id, program_id) VALUES (:user_id, :program_id)";
+                            $stmt = $conn->prepare($sql);
+                            $stmt->execute([
+                                ':user_id' => $user_id,
+                                ':program_id' => $this->program_id
+                            ]);
+                        }
+                        break;
+                        
+                    case 'employee':
+                        if ($this->department_id) {
+                            $sql = "INSERT INTO employees (user_id, department_id) VALUES (:user_id, :department_id)";
+                            $stmt = $conn->prepare($sql);
+                            $stmt->execute([
+                                ':user_id' => $user_id,
+                                ':department_id' => $this->department_id
+                            ]);
                         }
                         break;
                         
                     case 'manager':
                         if ($this->canteen_id) {
-                            $sql2 = "INSERT INTO canteen_managers (user_id, canteen_id, status) 
-                                    VALUES (:user_id, :canteen_id, 'active')";
-                            $stmt2 = $conn->prepare($sql2);
-                            $stmt2->bindParam(':user_id', $user_id);
-                            $stmt2->bindParam(':canteen_id', $this->canteen_id);
-                            if (!$stmt2->execute()) {
-                                $conn->rollBack();
-                                return false;
-                            }
+                            $sql = "INSERT INTO managers (user_id, canteen_id) VALUES (:user_id, :canteen_id)";
+                            $stmt = $conn->prepare($sql);
+                            $stmt->execute([
+                                ':user_id' => $user_id,
+                                ':canteen_id' => $this->canteen_id
+                            ]);
                         }
                         break;
                 }
@@ -627,12 +640,13 @@ class Account
             
             $conn->rollBack();
             return false;
+            
         } catch (PDOException $e) {
-            if ($conn) {
+            if (isset($conn) && $conn->inTransaction()) {
                 $conn->rollBack();
             }
-            error_log("Error adding user: " . $e->getMessage());
-            return false;
+            error_log("Error in addUser: " . $e->getMessage());
+            throw new Exception("Failed to add user: " . $e->getMessage());
         }
     }
 

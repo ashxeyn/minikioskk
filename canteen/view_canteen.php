@@ -30,14 +30,21 @@ $canteens = $canteenObj->searchCanteens($keyword);
                 </tr>
             </thead>
             <tbody id="canteenTableBody">
-                <?php foreach ($canteens as $canteen): ?>
+                <?php 
+                $counter = 1;
+                foreach ($canteens as $canteen): 
+                ?>
                     <tr>
-                        <td><?= htmlspecialchars($canteen['canteen_id']) ?></td>
+                        <td><?= $counter++ ?></td>
                         <td><?= htmlspecialchars($canteen['name']) ?></td>
                         <td><?= htmlspecialchars($canteen['campus_location']) ?></td>
                         <td>
-                            <button class="btn btn-warning btn-sm" onclick="openEditModal(<?= $canteen['canteen_id'] ?>)">Edit</button>
-                            <button class="btn btn-danger btn-sm" onclick="openDeleteModal(<?= $canteen['canteen_id'] ?>)">Delete</button>
+                            <button class="btn btn-warning btn-sm" onclick="openEditModal(<?= $canteen['canteen_id'] ?>)" title="Edit">
+                                <i class="bi bi-pencil-square"></i>
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="openDeleteModal(<?= $canteen['canteen_id'] ?>)" title="Delete">
+                                <i class="bi bi-trash"></i>
+                            </button>
                         </td>
                     </tr>
                 <?php endforeach; ?>
@@ -54,15 +61,19 @@ function searchCanteens(keyword) {
             const tbody = document.getElementById('canteenTableBody');
             tbody.innerHTML = '';
             
-            data.forEach(canteen => {
+            data.forEach((canteen, index) => {
                 tbody.innerHTML += `
                     <tr>
-                        <td>${escapeHtml(canteen.canteen_id)}</td>
+                        <td>${index + 1}</td>
                         <td>${escapeHtml(canteen.name)}</td>
                         <td>${escapeHtml(canteen.campus_location)}</td>
                         <td>
-                            <button class="btn btn-warning btn-sm" onclick="openEditModal(${canteen.canteen_id})">Edit</button>
-                            <button class="btn btn-danger btn-sm" onclick="openDeleteModal(${canteen.canteen_id})">Delete</button>
+                            <button class="btn btn-warning btn-sm" onclick="openEditModal(${canteen.canteen_id})" title="Edit">
+                                <i class="bi bi-pencil-square"></i>
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="openDeleteModal(${canteen.canteen_id})" title="Delete">
+                                <i class="bi bi-trash"></i>
+                            </button>
                         </td>
                     </tr>
                 `;

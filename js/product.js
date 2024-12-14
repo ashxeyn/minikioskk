@@ -28,9 +28,7 @@ function loadProductTable() {
         success: function(response) {
             $('#productTableContent').html(response);
             // Reinitialize DataTable if needed
-            if ($.fn.DataTable.isDataTable('#productTable')) {
-                $('#productTable').DataTable().destroy();
-            }
+            
             $('#productTable').DataTable({
                 dom: 'lrtip',
                 pageLength: 10,
@@ -184,36 +182,211 @@ $('#addProductForm').submit(function(e) {
     });
 });
 
-function openStockModal(product_id) {
-    $('#stockProductId').val(product_id);
-    $('#stockModal').modal('show');
+function openStockModal(productId) {
+    // Debug logging
+    console.log('Raw product ID:', productId);
+    
+    // Ensure productId is a valid integer
+    productId = parseInt(productId, 10);
+    
+    // Debug logging
+    console.log('Parsed product ID:', productId);
+    
+    if (!productId || isNaN(productId) || productId <= 0) {
+        console.error('Invalid product ID:', productId);
+        alert('Invalid product ID');
+        return;
+    }
+
+    // Set the product ID in the hidden input
+    $('#stockProductId').val(productId);
+
+    // Then fetch current stock
+    $.ajax({
+        url: '../product/fetchStockByProductId.php',
+        method: 'GET',
+        data: { product_id: productId },
+        dataType: 'json',
+        success: function(response) {
+            console.log('Stock fetch response:', response);
+            if (response.success) {
+                $('#currentStock').text(response.quantity || 0);
+            } else {
+                alert('Error: ' + (response.message || 'Failed to fetch stock'));
+                const stockModal = bootstrap.Modal.getInstance(document.getElementById('stockModal'));
+                if (stockModal) {
+                    stockModal.hide();
+                }
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Error fetching stock:', error);
+            console.error('Response:', xhr.responseText);
+            alert('Error fetching stock details');
+        }
+    });
 }
 
-$('#stockForm').submit(function (e) {
+// Stock form submission
+$('#stockForm').on('submit', function(e) {
     e.preventDefault();
-
-    const formData = new FormData(this);
+    
+    const productId = $('#stockProductId').val();
+    const quantity = $('#quantity').val();
+    
+    // Debug logging
+    console.log('Form submission data:', {
+        productId: productId,
+        quantity: quantity
+    });
 
     $.ajax({
         url: '../product/updateStock.php',
         method: 'POST',
-        data: formData,
-        processData: false, 
-        contentType: false, 
-        dataType: 'json', 
-        success: function (response) {
-            if (response.status === 'success') {
-                $('#stockForm')[0].reset();
-                $('#stockModal').modal('hide');
-                loadProductTable();
-            } else {
-                alert('Failed to update stock.');
-            }        
+        data: {
+            product_id: productId,
+            quantity: quantity
         },
-        error: function (xhr, status, error) {
-            console.error('AJAX Error:', status, error);
-            alert('An error occurred while updating the stock.');
+        dataType: 'json',
+        success: function(response) {
+            console.log('Stock update response:', response);
+            if (response.success) {
+                const stockModal = bootstrap.Modal.getInstance(document.getElementById('stockModal'));
+                if (stockModal) {
+                    stockModal.hide();
+                }
+                alert('Stock updated successfully!');
+                location.reload();
+            } else {
+                alert('Error: ' + (response.message || 'Failed to update stock'));
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Stock update error:', error);
+            console.error('Response:', xhr.responseText);
+            alert('Error updating stock');
         }
+    });
+});
+
+$(document).ready(function() {
+    // Initialize DataTable if it exists and DataTable function is available
+    if (typeof $.fn.DataTable !== 'undefined' && $('#productTable').length) {
+        try {
+            // Destroy existing DataTable if it exists
+            if ($.fn.DataTable.isDataTable('#productTable')) {
+                $('#productTable').DataTable().destroy();
+            }
+            
+            // Initialize new DataTable
+            const table = $('#productTable').DataTable({
+                responsive: true,
+                dom: 'lrtip',
+                pageLength: 10,
+                order: [[0, 'asc']],
+                language: {
+                    emptyTable: "No products found"
+                }
+            });
+
+            // Search functionality
+            $('#searchProduct').on('keyup', function() {
+                table.search(this.value).draw();
+            });
+
+            // Category filter
+            $('#categoryFilter').on('change', function() {
+                const categoryId = $(this).val();
+                if (categoryId) {
+                    table.column(1) // Category column
+                        .search($(this).find('option:selected').text())
+                        .draw();
+                } else {
+                    table.column(1).search('').draw();
+                }
+            });
+        } catch (error) {
+            console.error('Error initializing DataTable:', error);
+        }
+    } else {
+        console.warn('DataTable plugin not loaded or table not found');
+    }
+
+    // Stock form submission
+    $('#stockForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const productId = $('#stockProductId').val();
+        const quantity = $('#quantity').val();
+        
+        // Debug logging
+        console.log('Form submission data:', {
+            productId: productId,
+            quantity: quantity
+        });
+
+        // Validate inputs
+        if (!productId || isNaN(parseInt(productId)) || parseInt(productId) <= 0) {
+            alert('Invalid product ID');
+            return;
+        }
+
+        if (!quantity || isNaN(parseInt(quantity)) || parseInt(quantity) <= 0) {
+            alert('Please enter a valid quantity');
+            return;
+        }
+
+        $.ajax({
+            url: '../product/updateStock.php',
+            method: 'POST',
+            data: {
+                product_id: productId,
+                quantity: quantity
+            },
+            dataType: 'json',
+            success: function(response) {
+                console.log('Stock update response:', response);
+                if (response.success) {
+                    $('#stockModal').modal('hide');
+                    alert('Stock updated successfully!');
+                    location.reload();
+                } else {
+                    alert('Error: ' + (response.message || 'Failed to update stock'));
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Stock update error:', error);
+                console.error('Response:', xhr.responseText);
+                alert('Error updating stock');
+            }
+        });
+    });
+
+    // Edit Product Form Submission
+    $('#editProductForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        
+        $.ajax({
+            url: '../product/editProduct.php',
+            method: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                if (response.success) {
+                    $('#editProductModal').modal('hide');
+                    showSuccessModal('Product updated successfully');
+                    loadProductTable();
+                } else {
+                    showErrorModal(response.message || 'Failed to update product');
+                }
+            },
+            error: function() {
+                showErrorModal('Error updating product');
+            }
+        });
     });
 });
 

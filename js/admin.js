@@ -26,19 +26,7 @@ function loadAccountsSection() {
     });
 }
 
-function loadProductsSection() {
-    $.ajax({
-        url: "../product/productSection.php",
-        method: 'GET',
-        success: function (response) {
-            $('#contentArea').html(response);
-        },
-        error: function (xhr, status, error) {
-            console.error('Error loading products section:', error);
-            $('#contentArea').html('<p class="text-danger">Failed to load Products section. Please try again.</p>');
-        }
-    });
-}
+f
 
 function loadCanteenSection() {
     $.ajax({

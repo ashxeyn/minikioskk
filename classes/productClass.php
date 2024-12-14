@@ -364,5 +364,24 @@ class Product
     public function getConnection() {
         return $this->db->connect();
     }
+
+    public function getProducts() {
+        try {
+            $sql = "SELECT p.*, pt.name as type_name, c.name as canteen_name,
+                    s.quantity as stock_quantity, s.updated_at as last_stock_update 
+                    FROM products p 
+                    LEFT JOIN product_types pt ON p.type_id = pt.type_id 
+                    LEFT JOIN canteens c ON p.canteen_id = c.canteen_id
+                    LEFT JOIN stocks s ON p.product_id = s.product_id 
+                    ORDER BY c.name, p.name";
+                    
+            $stmt = $this->db->connect()->prepare($sql);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error in getProducts: " . $e->getMessage());
+            throw new Exception("Failed to fetch products");
+        }
+    }
 }
 ?>

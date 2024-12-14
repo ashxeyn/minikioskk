@@ -5,49 +5,51 @@ require_once '../tools/functions.php';
 header('Content-Type: application/json');
 
 try {
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        throw new Exception('Invalid request method');
+    // Debug logging
+    error_log("Raw POST data: " . file_get_contents('php://input'));
+    error_log("POST array: " . print_r($_POST, true));
+    
+    if (!isset($_POST['product_id']) || !isset($_POST['quantity'])) {
+        error_log("Missing parameters. POST data: " . print_r($_POST, true));
+        throw new Exception('Missing required parameters');
     }
-
-    if (empty($_POST['product_id']) || empty($_POST['quantity'])) {
-        throw new Exception('Missing required fields');
+    
+    // Validate product_id
+    $product_id = filter_var($_POST['product_id'], FILTER_VALIDATE_INT);
+    if ($product_id === false || $product_id <= 0) {
+        error_log("Invalid product ID received: " . $_POST['product_id']);
+        throw new Exception('Invalid product ID format');
     }
-
-    $product_id = clean_input($_POST['product_id']);
-    $quantity = clean_input($_POST['quantity']);
-
-    if (!is_numeric($quantity) || $quantity <= 0) {
-        throw new Exception('Invalid quantity value');
+    
+    // Validate quantity
+    $quantity = filter_var($_POST['quantity'], FILTER_VALIDATE_INT);
+    if ($quantity === false || $quantity <= 0) {
+        error_log("Invalid quantity received: " . $_POST['quantity']);
+        throw new Exception('Invalid quantity. Must be a positive number.');
     }
-
+    
     $stockObj = new Stocks();
-    $currentStock = $stockObj->fetchStockByProductId($product_id);
-
-    if ($currentStock) {
-        // Update existing stock
-        $result = $stockObj->updateStock($product_id, $quantity);
-    } else {
-        // Create new stock record
-        $stock_data = [
-            'product_id' => $product_id,
-            'quantity' => $quantity
-        ];
-        $result = $stockObj->addStock($stock_data);
+    
+    // Verify product exists
+    if (!$stockObj->productExists($product_id)) {
+        error_log("Product not found: " . $product_id);
+        throw new Exception('Product not found');
     }
-
-    if ($result) {
+    
+    // Update stock
+    if ($stockObj->updateStock($product_id, $quantity)) {
         echo json_encode([
-            'status' => 'success',
+            'success' => true,
             'message' => 'Stock updated successfully'
         ]);
     } else {
         throw new Exception('Failed to update stock');
     }
-
+    
 } catch (Exception $e) {
     error_log("Error in updateStock.php: " . $e->getMessage());
     echo json_encode([
-        'status' => 'error',
+        'success' => false,
         'message' => $e->getMessage()
     ]);
 }

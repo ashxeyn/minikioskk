@@ -55,7 +55,7 @@ $orders = $orderObj->fetchAllOrders();
             <table class="table table-hover">
                 <thead>
                     <tr>
-                        <th>Order ID</th>
+                        <th>#</th>
                         <th>Canteen</th>
                         <th>Username</th>
                         <th>Customer Name</th>
@@ -65,12 +65,16 @@ $orders = $orderObj->fetchAllOrders();
                         <th>Status</th>
                         <th>Queue Number</th>
                         <th>Order Date</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($orders as $order): ?>
+                    <?php 
+                    $counter = 1;
+                    foreach ($orders as $order): 
+                    ?>
                         <tr>
-                            <td><?= htmlspecialchars($order['order_id']) ?></td>
+                            <td><?= $counter++ ?></td>
                             <td><?= htmlspecialchars($order['canteen_name']) ?></td>
                             <td><?= htmlspecialchars($order['username']) ?></td>
                             <td><?= htmlspecialchars($order['customer_name']) ?></td>
@@ -83,11 +87,21 @@ $orders = $orderObj->fetchAllOrders();
                                 </span>
                             </td>
                             <td>
-                                <?php if ($order['queue_number']): ?>
-                                    <span class="queue-number"><?php echo htmlspecialchars($order['queue_number']); ?></span>
-                                <?php endif; ?>
+                                <?php 
+                                    $queueNumber = date('Ymd', strtotime($order['created_at'])) . 
+                                                 str_pad($order['order_id'], 4, '0', STR_PAD_LEFT);
+                                    echo htmlspecialchars($queueNumber);
+                                ?>
                             </td>
                             <td><?= date('Y-m-d H:i:s', strtotime($order['created_at'])) ?></td>
+                            <td>
+                                <button class="btn btn-warning btn-sm" onclick="openEditStatusModal(<?= $order['order_id'] ?>, '<?= $order['status'] ?>')" title="Edit Status">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+                                <button class="btn btn-danger btn-sm" onclick="openDeleteOrderModal(<?= $order['order_id'] ?>)" title="Delete Order">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -95,6 +109,58 @@ $orders = $orderObj->fetchAllOrders();
         <?php else: ?>
             <div class="alert alert-info">No orders found.</div>
         <?php endif; ?>
+    </div>
+</div>
+
+<!-- Edit Status Modal -->
+<div class="modal fade" id="editStatusModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Order Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editStatusForm">
+                    <input type="hidden" id="editOrderId" name="order_id">
+                    <div class="mb-3">
+                        <label for="orderStatus" class="form-label">Status</label>
+                        <select class="form-select" id="orderStatus" name="status" required>
+                            <option value="placed">Placed</option>
+                            <option value="accepted">Accepted</option>
+                            <option value="preparing">Preparing</option>
+                            <option value="ready">Ready</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="updateOrderStatus()">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Order Modal -->
+<div class="modal fade" id="deleteOrderModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Order</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this order? This action cannot be undone.</p>
+                <input type="hidden" id="deleteOrderId">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" onclick="deleteOrder()">Delete</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -135,6 +201,37 @@ $orders = $orderObj->fetchAllOrders();
     padding: 1rem;
     border-radius: 4px;
 }
+
+/* Add these styles for horizontal button alignment */
+td .btn-sm {
+    display: inline-flex;
+    margin: 0 2px;  /* Add some space between buttons */
+    vertical-align: middle;
+}
+
+/* Optional: Make the actions column width fixed to prevent wrapping */
+.table td:last-child {
+    white-space: nowrap;
+    width: 1%;  /* This makes the column as narrow as possible */
+}
+
+/* Center the buttons in the cell */
+.table td:last-child {
+    text-align: center;
+}
+
+/* Ensure consistent button sizing */
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    line-height: 1;
+}
+
+/* Ensure icons are centered in buttons */
+.btn-sm i {
+    font-size: 1rem;
+    display: inline-block;
+    vertical-align: middle;
+}
 </style>
 
 <script>
@@ -145,8 +242,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function filterTable() {
         const searchTerm = searchInput.value.toLowerCase().trim();
-        const statusTerm = statusFilter.value.toLowerCase();
-        const productTerm = productFilter.value.toLowerCase();
+        const statusTerm = statusFilter.value.toLowerCase().trim();
+        const productTerm = productFilter.value.toLowerCase().trim();
         
         const rows = document.querySelectorAll('tbody tr');
         
@@ -155,20 +252,18 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Search filter
             if (searchTerm) {
-                const orderId = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
                 const canteen = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
                 const username = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
                 const customerName = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
                 
-                showRow = orderId.includes(searchTerm) || 
-                         canteen.includes(searchTerm) ||
+                showRow = canteen.includes(searchTerm) ||
                          username.includes(searchTerm) || 
                          customerName.includes(searchTerm);
             }
             
             // Status filter
             if (showRow && statusTerm) {
-                const status = row.querySelector('.badge').textContent.toLowerCase();
+                const status = row.querySelector('.badge').textContent.toLowerCase().trim();
                 showRow = status === statusTerm;
             }
             
@@ -178,8 +273,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 showRow = products.includes(productTerm);
             }
             
-            // Show/hide row
-            row.style.display = showRow ? '' : 'none';
+            // Show/hide row and update counter
+            if (showRow) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
         });
         
         // Show/hide "No orders found" message
@@ -195,22 +294,72 @@ document.addEventListener('DOMContentLoaded', function() {
     statusFilter.addEventListener('change', filterTable);
     productFilter.addEventListener('change', filterTable);
     
-    // Add clear filters button
-    const clearFiltersBtn = document.createElement('button');
-    clearFiltersBtn.className = 'btn btn-secondary mt-2';
-    clearFiltersBtn.textContent = 'Clear Filters';
-    clearFiltersBtn.onclick = function() {
-        searchInput.value = '';
-        statusFilter.value = '';
-        productFilter.value = '';
-        filterTable();
-    };
-    
-    // Add the clear filters button after the filters row
-    const filtersRow = document.querySelector('.row.mb-3');
-    filtersRow.insertAdjacentElement('afterend', clearFiltersBtn);
-    
     // Initialize filters
     filterTable();
 });
+
+const editStatusModal = new bootstrap.Modal(document.getElementById('editStatusModal'));
+const deleteOrderModal = new bootstrap.Modal(document.getElementById('deleteOrderModal'));
+
+function openEditStatusModal(orderId, currentStatus) {
+    document.getElementById('editOrderId').value = orderId;
+    document.getElementById('orderStatus').value = currentStatus;
+    editStatusModal.show();
+}
+
+function openDeleteOrderModal(orderId) {
+    document.getElementById('deleteOrderId').value = orderId;
+    deleteOrderModal.show();
+}
+
+function updateOrderStatus() {
+    const orderId = document.getElementById('editOrderId').value;
+    const status = document.getElementById('orderStatus').value;
+    
+    fetch('../ajax/update_order_status.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ order_id: orderId, status: status })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            editStatusModal.hide();
+            location.reload();
+        } else {
+            alert(data.message || 'Error updating order status');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to update order status. Please try again.');
+    });
+}
+
+function deleteOrder() {
+    const orderId = document.getElementById('deleteOrderId').value;
+    
+    fetch('../ajax/delete_order.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ order_id: orderId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            deleteOrderModal.hide();
+            location.reload();
+        } else {
+            alert(data.message || 'Error deleting order');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to delete order. Please try again.');
+    });
+}
 </script> 

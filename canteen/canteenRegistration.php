@@ -12,8 +12,11 @@ $pendingManagers = $accountObj->getPendingManagers();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel - Approve Registrations</title>
-    <link rel="stylesheet" href="path/to/bootstrap.css">
-    <script> "../js/canteen.js" </script>
+    \
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </head>
 <body>
     <div class="container mt-5">
@@ -55,5 +58,92 @@ $pendingManagers = $accountObj->getPendingManagers();
         </table>
     </div>
 
+    <!-- Response Modal -->
+    <div class="modal fade" id="responseModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Status Update</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="responseMessage"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal fade" id="confirmModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Action</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="confirmMessage"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="confirmAction">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    function showResponseModal(message, success) {
+        const responseMessage = $('#responseMessage');
+        responseMessage.text(message);
+        
+        if (success) {
+            responseMessage.removeClass('text-danger').addClass('text-success');
+        } else {
+            responseMessage.removeClass('text-success').addClass('text-danger');
+        }
+        
+        const modal = new bootstrap.Modal(document.getElementById('responseModal'));
+        modal.show();
+        
+        // Auto reload after successful action
+        if (success) {
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        }
+    }
+
+    function approveManager(userId) {
+        $.post('../canteen/approveRegistration.php', { user_id: userId }, function(response) {
+            if (response === 'success') {
+                showResponseModal('Manager registration approved successfully!', true);
+            } else {
+                showResponseModal('Failed to approve manager registration.', false);
+            }
+        });
+    }
+
+    function rejectManager(userId) {
+        // Show confirmation modal
+        const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+        $('#confirmMessage').text('Are you sure you want to reject this registration?');
+        $('#confirmAction').off('click').on('click', function() {
+            confirmModal.hide();
+            
+            $.post('../canteen/rejectRegistration.php', { user_id: userId }, function(response) {
+                if (response === 'success') {
+                    showResponseModal('Manager registration rejected successfully!', true);
+                } else {
+                    showResponseModal('Failed to reject manager registration.', false);
+                }
+            });
+        });
+        confirmModal.show();
+    }
+    </script>
 </body>
 </html>

@@ -7,4 +7,5 @@
 
 <?php include 'addUserModal.html'; ?>
 <?php include 'editUserModal.html'; ?>
-<?php include 'deleteUserModal.html'; ?> 
+<?php include 'deleteUserModal.html'; ?>
+<?php include 'messageModals.html'; ?> 

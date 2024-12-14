@@ -276,73 +276,15 @@ class Order
         }
     }
 
-    public function updateOrderStatus($orderId, $newStatus, $canteenId = null) {
+    public function updateOrderStatus($orderId, $status) {
         try {
             $db = $this->db->connect();
-            
-            // If canteenId is provided, verify the order belongs to the canteen
-            $sql = "SELECT status FROM orders WHERE order_id = :order_id";
-            $params = [':order_id' => $orderId];
-            
-            if ($canteenId !== null) {
-                $sql .= " AND canteen_id = :canteen_id";
-                $params[':canteen_id'] = $canteenId;
-            }
-            
+            $sql = "UPDATE orders SET status = ?, updated_at = NOW() WHERE order_id = ?";
             $stmt = $db->prepare($sql);
-            $stmt->execute($params);
-            
-            $order = $stmt->fetch(PDO::FETCH_ASSOC);
-            if (!$order) {
-                throw new Exception("Order not found or does not belong to this canteen");
-            }
-            
-            // Validate status transition
-            $validTransitions = [
-                'placed' => ['accepted', 'cancelled'],
-                'accepted' => ['preparing'],
-                'preparing' => ['ready'],
-                'ready' => ['completed']
-            ];
-            
-            $currentStatus = $order['status'];
-            if (!isset($validTransitions[$currentStatus]) || 
-                !in_array($newStatus, $validTransitions[$currentStatus])) {
-                throw new Exception("Invalid status transition from {$currentStatus} to {$newStatus}");
-            }
-            
-            // Update the order status
-            $sql = "UPDATE orders SET 
-                    status = :status,
-                    updated_at = NOW()
-                    WHERE order_id = :order_id";
-            
-            $params = [
-                ':status' => $newStatus,
-                ':order_id' => $orderId
-            ];
-            
-            if ($canteenId !== null) {
-                $sql .= " AND canteen_id = :canteen_id";
-                $params[':canteen_id'] = $canteenId;
-            }
-                    
-            $stmt = $db->prepare($sql);
-            $result = $stmt->execute($params);
-            
-            if (!$result) {
-                throw new Exception("Failed to update order status");
-            }
-            
-            // If order is cancelled, restore stock
-            if ($newStatus === 'cancelled') {
-                $this->restoreStockForCancelledOrder($orderId);
-            }
-            
-            return true;
+            return $stmt->execute([$status, $orderId]);
         } catch (Exception $e) {
             error_log("Error updating order status: " . $e->getMessage());
-            throw $e;
+            return false;
         }
     }
 
@@ -516,6 +458,32 @@ class Order
         } catch (Exception $e) {
             error_log("Error getting order items: " . $e->getMessage());
             throw $e;
+        }
+    }
+
+    public function deleteOrder($orderId) {
+        try {
+            $db = $this->db->connect();
+            $db->beginTransaction();
+
+            // First delete related order_items due to foreign key constraint
+            $sql1 = "DELETE FROM order_items WHERE order_id = ?";
+            $stmt1 = $db->prepare($sql1);
+            $stmt1->execute([$orderId]);
+            
+            // Then delete the order
+            $sql2 = "DELETE FROM orders WHERE order_id = ?";
+            $stmt2 = $db->prepare($sql2);
+            $result = $stmt2->execute([$orderId]);
+
+            $db->commit();
+            return $result;
+        } catch (Exception $e) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+            error_log("Error deleting order: " . $e->getMessage());
+            return false;
         }
     }
 }

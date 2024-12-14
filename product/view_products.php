@@ -4,6 +4,45 @@ require_once '../classes/productClass.php';
 require_once '../classes/productTypeClass.php';
 
 $productObj = new Product();
+    
+    $productTypeObj = new ProductType();
+    $products = [];
+    $productTypes = [];
+    
+    
+    try {
+        if (isset($_SESSION['role']) && $_SESSION['role'] == 'manager') {
+            $canteenId = $_SESSION['canteen_id'] ?? null;
+            if (!$canteenId) {
+                throw new Exception("Canteen ID not found in session");
+            }
+            $products = $productObj->fetchProducts($canteenId);
+            $productTypes = $productTypeObj->getAllProductTypes();
+        }
+    } catch (Exception $e) {
+        error_log("Error fetching products: " . $e->getMessage());
+    }   
+
+    // Fetch all products with necessary information
+    $sql = "SELECT p.*, pt.name as type_name, c.name as canteen_name,
+            s.quantity as stock_quantity, s.updated_at as last_stock_update 
+            FROM products p 
+            LEFT JOIN product_types pt ON p.type_id = pt.type_id 
+            LEFT JOIN canteens c ON p.canteen_id = c.canteen_id
+            LEFT JOIN stocks s ON p.product_id = s.product_id 
+            ORDER BY c.name, p.name";
+            
+    $products = $productObj->getProducts(); 
+    
+   
+
+    if (empty($products)) {
+        echo "<div class='alert alert-info'>No products found.</div>";
+    }
+    
+    
+    
+$productObj = new Product();
 $productTypeObj = new ProductType();
 $products = [];
 $productTypes = [];
@@ -103,17 +142,15 @@ try {
                         </td>
                         <td><?= htmlspecialchars($product['quantity'] ?? 0) ?></td>
                         <td>
-                            <div class="btn-group">
-                                <button class="btn btn-sm btn-primary" onclick="editProduct(<?= $product['product_id'] ?>)">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="btn btn-sm btn-success" onclick="updateStock(<?= $product['product_id'] ?>)">
-                                    <i class="bi bi-box"></i>
-                                </button>
-                                <button class="btn btn-sm btn-danger" onclick="deleteProduct(<?= $product['product_id'] ?>)">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </div>
+                            <button class="btn btn-warning btn-sm" onclick="openEditModal(<?= $product['product_id'] ?>)">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="openDeleteModal(<?= $product['product_id'] ?>)">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                            <button class="btn btn-info btn-sm" onclick="openStockModal(<?= $product['product_id'] ?>)">
+                                <i class="bi bi-box-seam"></i>
+                            </button>
                         </td>
                     </tr>
                 <?php endforeach; ?>
