@@ -1,4 +1,4 @@
-z<?php
+<?php
 require_once '../classes/databaseClass.php';
 
 class Product
@@ -125,22 +125,19 @@ class Product
         return $query->execute();
     }
 
-    function deleteProduct($product_id)
-    {
-        $sql = "DELETE FROM products WHERE product_id = :product_id";
-        $query = $this->db->connect()->prepare($sql);
-
-        $query->bindParam(':product_id', $product_id);
-
-        return $query->execute();
-    }
+  
 
     public function fetchProducts($canteen_id) {
         try {
-            $sql = "SELECT p.*, pt.name as type_name, pt.type, s.quantity 
+            $sql = "SELECT p.*, pt.name as type, pt.type as type_category,
+                    COALESCE(s.quantity, 0) as stock_quantity
                     FROM products p 
                     LEFT JOIN product_types pt ON p.type_id = pt.type_id
-                    LEFT JOIN stocks s ON p.product_id = s.product_id
+                    LEFT JOIN (
+                        SELECT product_id, quantity 
+                        FROM stocks 
+                        GROUP BY product_id
+                    ) s ON p.product_id = s.product_id
                     WHERE p.canteen_id = :canteen_id";
             
             $stmt = $this->db->connect()->prepare($sql);
@@ -381,6 +378,54 @@ class Product
         } catch (PDOException $e) {
             error_log("Error in getProducts: " . $e->getMessage());
             throw new Exception("Failed to fetch products");
+        }
+    }
+
+    public function deleteProduct($productId) {
+        try {
+            // First check if the product exists
+            $checkSql = "SELECT product_id FROM products WHERE product_id = ?";
+            $checkStmt = $this->conn->prepare($checkSql);
+            $checkStmt->execute([$productId]);
+            
+            if ($checkStmt->rowCount() === 0) {
+                throw new Exception("Product not found");
+            }
+
+            // Delete related records first (due to foreign key constraints)
+            // Delete from stocks table
+            $deleteStocksSql = "DELETE FROM stocks WHERE product_id = ?";
+            $this->conn->prepare($deleteStocksSql)->execute([$productId]);
+            
+            // Delete from cart_items table
+            $deleteCartSql = "DELETE FROM cart_items WHERE product_id = ?";
+            $this->conn->prepare($deleteCartSql)->execute([$productId]);
+            
+            // Finally delete the product
+            $deleteProductSql = "DELETE FROM products WHERE product_id = ?";
+            $stmt = $this->conn->prepare($deleteProductSql);
+            $result = $stmt->execute([$productId]);
+            
+            if (!$result) {
+                throw new Exception("Failed to delete product");
+            }
+            
+            return true;
+        } catch (PDOException $e) {
+            error_log("Database Error: " . $e->getMessage());
+            throw new Exception("Database error occurred");
+        }
+    }
+
+    public function isProductOwnedByCanteen($productId, $canteenId) {
+        try {
+            $sql = "SELECT 1 FROM products WHERE product_id = ? AND canteen_id = ?";
+            $stmt = $this->conn->prepare($sql);
+            $stmt->execute([$productId, $canteenId]);
+            return $stmt->rowCount() > 0;
+        } catch (PDOException $e) {
+            error_log("Database Error: " . $e->getMessage());
+            throw new Exception("Database error occurred");
         }
     }
 }

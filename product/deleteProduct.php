@@ -1,34 +1,48 @@
 <?php
 require_once '../classes/productClass.php';
-require_once '../tools/functions.php';
+session_start();
 
 header('Content-Type: application/json');
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    try {
-        $product_id = clean_input($_POST['product_id']);
-        
-        if (empty($product_id)) {
-            throw new Exception('Product ID is required');
-        }
+// Check if user is authorized
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'manager') {
+    echo json_encode([
+        'success' => false,
+        'message' => 'Unauthorized access'
+    ]);
+    exit;
+}
 
-        $productObj = new Product();
-        $result = $productObj->deleteProductWithRelations($product_id);
-
-        if ($result) {
-            echo json_encode(['status' => 'success']);
-        } else {
-            throw new Exception('Failed to delete product');
-        }
-    } catch (Exception $e) {
-        error_log("Error in deleteProduct.php: " . $e->getMessage());
-        echo json_encode([
-            'status' => 'error',
-            'message' => $e->getMessage()
-        ]);
+try {
+    if (!isset($_POST['product_id'])) {
+        throw new Exception('Product ID is required');
     }
-} else {
-    http_response_code(405);
-    echo json_encode(['status' => 'error', 'message' => 'Method not allowed']);
+
+    $productId = filter_var($_POST['product_id'], FILTER_VALIDATE_INT);
+    if ($productId === false) {
+        throw new Exception('Invalid product ID');
+    }
+
+    $productObj = new Product();
+    
+    // Check if the product belongs to the manager's canteen
+    if (!$productObj->isProductOwnedByCanteen($productId, $_SESSION['canteen_id'])) {
+        throw new Exception('Unauthorized to delete this product');
+    }
+    
+    if ($productObj->deleteProduct($productId)) {
+        echo json_encode([
+            'success' => true,
+            'message' => 'Product deleted successfully'
+        ]);
+    } else {
+        throw new Exception('Failed to delete product');
+    }
+} catch (Exception $e) {
+    error_log("Error in deleteProduct.php: " . $e->getMessage());
+    echo json_encode([
+        'success' => false,
+        'message' => $e->getMessage()
+    ]);
 }
 ?>

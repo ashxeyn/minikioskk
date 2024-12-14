@@ -72,6 +72,26 @@ try {
             --dt-row-selected: none;  /* Prevent DataTables selection color */
         }
         
+        /* Remove table background */
+        .table {
+            background-color: transparent !important;
+        }
+        
+        /* Remove header background */
+        .table thead th {
+            background-color: transparent !important;
+        }
+        
+        /* Remove striping if any */
+        .table-striped tbody tr:nth-of-type(odd) {
+            background-color: transparent !important;
+        }
+        
+        /* Remove hover background if needed */
+        .table-hover tbody tr:hover {
+            background-color: rgba(0, 0, 0, 0.02) !important;
+        }
+        
         /* Ensure sidebar styles are preserved */
         .sidebar {
             background-color: #343a40 !important;  /* Force sidebar background */
@@ -133,19 +153,19 @@ try {
                         <td><?= htmlspecialchars($product['product_id']) ?></td>
                         <td><?= htmlspecialchars($product['name']) ?></td>
                         <td><?= htmlspecialchars($product['description']) ?></td>
-                        <td><?= htmlspecialchars($product['type']) ?></td>
+                        <td><?= htmlspecialchars($product['type']) ?> (<?= htmlspecialchars($product['type_category']) ?>)</td>
                         <td>₱<?= number_format($product['price'], 2) ?></td>
                         <td>
                             <span class="badge <?= $product['status'] === 'available' ? 'bg-success' : 'bg-danger' ?>">
                                 <?= ucfirst($product['status']) ?>
                             </span>
                         </td>
-                        <td><?= htmlspecialchars($product['quantity'] ?? 0) ?></td>
+                        <td><?= htmlspecialchars($product['stock_quantity']) ?></td>
                         <td>
                             <button class="btn btn-warning btn-sm" onclick="openEditModal(<?= $product['product_id'] ?>)">
                                 <i class="bi bi-pencil"></i>
                             </button>
-                            <button class="btn btn-danger btn-sm" onclick="openDeleteModal(<?= $product['product_id'] ?>)">
+                            <button class="btn btn-danger btn-sm" onclick="deleteProduct(<?= $product['product_id'] ?>)">
                                 <i class="bi bi-trash"></i>
                             </button>
                             <button class="btn btn-info btn-sm" onclick="openStockModal(<?= $product['product_id'] ?>)">
@@ -245,6 +265,13 @@ try {
                         <label for="editPrice" class="form-label">Price</label>
                         <input type="number" class="form-control" id="editPrice" name="price" step="0.01" required>
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label">Current Stock: <span id="editCurrentStock">0</span></label>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editQuantity" class="form-label">Add Stock</label>
+                        <input type="number" class="form-control" id="editQuantity" name="quantity" min="0">
+                    </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                         <button type="submit" class="btn btn-primary">Save Changes</button>
@@ -255,29 +282,74 @@ try {
     </div>
 </div>
 
-<!-- Stock Update Modal -->
-<div class="modal fade" id="stockModal" tabindex="-1">
+<!-- Response Modal -->
+<div class="modal fade" id="responseModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Update Stock</h5>
+                <h5 class="modal-title">Action Status</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form id="stockForm">
-                    <input type="hidden" id="stockProductId" name="product_id">
-                    <div class="mb-3">
-                        <label class="form-label">Current Stock: <span id="currentStock">0</span></label>
-                    </div>
-                    <div class="mb-3">
-                        <label for="quantity" class="form-label">Add Stock</label>
-                        <input type="number" class="form-control" id="quantity" name="quantity" required min="1">
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">Update Stock</button>
-                    </div>
-                </form>
+                <p id="responseMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmAction">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Success</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="successMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Error Modal -->
+<div class="modal fade" id="errorModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Error</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="errorMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -402,16 +474,68 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function editProduct(productId) {
-    // Implement edit functionality
-}
-
-function updateStock(productId) {
-    // Implement stock update functionality
+    fetch(`../ajax/getProduct.php?product_id=${productId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                showResponse(data.error, false);
+                return;
+            }
+            // Fill the edit modal with product data
+            document.getElementById('editProductId').value = data.product_id;
+            document.getElementById('editName').value = data.name;
+            document.getElementById('editDescription').value = data.description;
+            document.getElementById('editPrice').value = data.price;
+            document.getElementById('editCurrentStock').textContent = data.quantity || 0;
+            loadProductTypes(data.type_id);
+            
+            new bootstrap.Modal(document.getElementById('editProductModal')).show();
+        })
+        .catch(error => showResponse('Error loading product details', false));
 }
 
 function deleteProduct(productId) {
-    if (confirm('Are you sure you want to delete this product?')) {
-        // Implement delete functionality
-    }
+    // Show confirmation modal
+    const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+    $('#confirmMessage').text('Are you sure you want to delete this product?');
+    $('#confirmAction').off('click').on('click', function() {
+        confirmModal.hide();
+        
+        fetch('../product/deleteProduct.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `product_id=${productId}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showSuccessModal('Product deleted successfully');
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
+            } else {
+                showErrorModal(data.message || 'Failed to delete product');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showErrorModal('Error occurred while deleting product');
+        });
+    });
+    confirmModal.show();
+}
+
+function showSuccessModal(message) {
+    $('#successMessage').text(message);
+    const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+    successModal.show();
+}
+
+function showErrorModal(message) {
+    $('#errorMessage').text(message);
+    const errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+    errorModal.show();
 }
 </script>
