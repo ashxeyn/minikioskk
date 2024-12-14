@@ -5,31 +5,28 @@ require_once '../classes/cartClass.php';
 header('Content-Type: application/json');
 
 if (!isset($_SESSION['user_id'])) {
-    echo json_encode(['success' => false, 'message' => 'Please login first']);
-    exit;
-}
-
-if (!isset($_POST['product_id'])) {
-    echo json_encode(['success' => false, 'message' => 'Invalid request: Missing product_id']);
+    echo json_encode(['success' => false, 'message' => 'Please login to remove items from cart']);
     exit;
 }
 
 try {
-    $cartObj = new Cart();
+    $cart = new Cart();
     $user_id = $_SESSION['user_id'];
-    $product_id = (int)$_POST['product_id'];
-    
-    $result = $cartObj->removeFromCart($user_id, $product_id);
+    $product_id = $_POST['product_id'] ?? null;
+
+    if (!$product_id) {
+        throw new Exception("Invalid product");
+    }
+
+    $result = $cart->removeFromCart($user_id, $product_id);
     
     if ($result) {
-        echo json_encode(['success' => true]);
+        echo json_encode(['success' => true, 'message' => 'Item removed from cart successfully']);
     } else {
-        throw new Exception('Failed to remove item from cart');
+        echo json_encode(['success' => false, 'message' => 'Failed to remove item from cart']);
     }
+
 } catch (Exception $e) {
-    error_log('Cart Remove Error: ' . $e->getMessage());
-    echo json_encode([
-        'success' => false, 
-        'message' => 'Error occurred: ' . $e->getMessage()
-    ]);
+    error_log("Error in removeFromCart.php: " . $e->getMessage());
+    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 } 

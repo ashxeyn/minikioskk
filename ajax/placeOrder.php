@@ -2,54 +2,43 @@
 session_start();
 require_once '../classes/orderClass.php';
 require_once '../classes/cartClass.php';
-require_once '../classes/stocksClass.php';
 
 header('Content-Type: application/json');
 
 if (!isset($_SESSION['user_id'])) {
-    echo json_encode(['success' => false, 'message' => 'User not logged in']);
+    echo json_encode(['success' => false, 'message' => 'Please login to place an order']);
     exit;
 }
 
 try {
-    $orderObj = new Order();
-    $cartObj = new Cart();
-    
+    $cart = new Cart();
+    $order = new Order();
     $user_id = $_SESSION['user_id'];
-    $cartItems = $cartObj->getCartItems($user_id);
-    $total = $cartObj->getCartTotal($user_id);
     
+    // Get cart items
+    $cartItems = $cart->getCartItems($user_id);
     if (empty($cartItems)) {
-        echo json_encode(['success' => false, 'message' => 'Cart is empty']);
-        exit;
+        throw new Exception("Your cart is empty");
+    }
+    
+    // Get cart total
+    $total = $cart->getCartTotal($user_id);
+    
+    // Place the order
+    $result = $order->placeOrder($user_id, $cartItems, $total);
+    
+    if ($result['success']) {
+        // Clear the cart after successful order
+        $cart->clearCart($user_id);
+        echo json_encode([
+            'success' => true, 
+            'message' => 'Order placed successfully',
+            'order_id' => $result['order_id']
+        ]);
+    } else {
+        throw new Exception($result['message'] ?? 'Failed to place order');
     }
 
-   
-    $orderResult = $orderObj->placeOrder($user_id, $cartItems, $total);
-    
-    if (!$orderResult['success']) {
-        throw new Exception($orderResult['message'] ?? "Failed to place order");
-    }
-   
-    $cartObj->clearCart($user_id);
-    
-    
-    $_SESSION['last_order'] = [
-        'order_id' => $orderResult['order_id'],
-        'total_amount' => $total,
-        'status' => 'placed',
-        'payment_status' => 'unpaid'
-    ];
-    
-    echo json_encode([
-        'success' => true,
-        'order_id' => $orderResult['order_id']
-    ]);
-    
 } catch (Exception $e) {
-    error_log("Order placement error: " . $e->getMessage());
-    echo json_encode([
-        'success' => false,
-        'message' => $e->getMessage()
-    ]);
+    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 } 

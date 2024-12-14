@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once '../classes/orderClass.php';
+require_once '../classes/cartClass.php';
 
 header('Content-Type: application/json');
 
@@ -10,8 +10,9 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 try {
-    $orderObj = new Order();
-    $count = $orderObj->getCartItemCount($_SESSION['user_id']);
+    $cart = new Cart();
+    $items = $cart->getCartItems($_SESSION['user_id']);
+    $count = count($items);
     echo json_encode(['count' => $count]);
 } catch (Exception $e) {
     echo json_encode(['count' => 0]);

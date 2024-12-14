@@ -3,15 +3,28 @@ session_start();
 require_once '../classes/cartClass.php';
 require_once '../classes/accountClass.php';
 require_once '../classes/stocksClass.php';
+require_once '../classes/orderClass.php';
+require_once '../classes/databaseClass.php';
+
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
 $cartObj = new Cart();
 $account = new Account();
 $stocksObj = new Stocks();
+$orderObj = new Order();
 
 $user_id = $_SESSION['user_id'] ?? null;
 $userInfo = $account->UserInfo($user_id);
 
+// Debug log
+error_log("User ID: " . print_r($user_id, true));
+
 $cartItems = $cartObj->getCartItems($user_id);
+// Debug log cart items
+error_log("Cart Items: " . print_r($cartItems, true));
+
 $canCheckout = true;
 $errorMessages = [];
 $total = $cartObj->getCartTotal($user_id);
@@ -19,38 +32,87 @@ $total = $cartObj->getCartTotal($user_id);
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     try {
         if (isset($_POST['checkout']) && $canCheckout) {
-            // Start transaction
-            $db = $orderObj->db->connect();
-            $db->beginTransaction();
+            error_log("Checkout process started");
+            
+            // Debug log
+            error_log("Total amount: " . $total);
+            error_log("Cart items before checkout: " . print_r($cartItems, true));
+            
+            $db = new Database();
+            $conn = $db->connect();
+            $conn->beginTransaction();
             
             try {
-              
-                $orderResult = $orderObj->placeOrder($user_id, $cartItems, $total);
-                
-                if (!$orderResult['success']) {
-                    throw new Exception("Failed to place order");
+                // Verify stock availability before placing order
+                foreach ($cartItems as $item) {
+                    $stock = $stocksObj->fetchStockByProductId($item['product_id']);
+                    error_log("Checking stock for product {$item['product_id']}: " . print_r($stock, true));
+                    
+                    if (!$stock || $stock['quantity'] < $item['quantity']) {
+                        throw new Exception("Insufficient stock for {$item['name']} (Available: {$stock['quantity']}, Requested: {$item['quantity']})");
+                    }
                 }
                 
-         
+                // Place the order
+                $orderData = [
+                    'user_id' => $user_id,
+                    'total_amount' => $total,
+                    'status' => 'pending',
+                    'payment_status' => 'unpaid',
+                    'canteen_id' => $cartItems[0]['canteen_id'] ?? null
+                ];
+                
+                error_log("Order data before creation: " . print_r($orderData, true));
+                
+                $order_id = $orderObj->createOrder($orderData);
+                error_log("Created order ID: " . $order_id);
+                
+                if (!$order_id) {
+                    throw new Exception("Failed to create order");
+                }
+                
+                // Add order items and update stock
                 foreach ($cartItems as $item) {
+                    $orderItemData = [
+                        'order_id' => $order_id,
+                        'product_id' => $item['product_id'],
+                        'quantity' => $item['quantity'],
+                        'unit_price' => $item['unit_price']
+                    ];
+                    error_log("Adding order item: " . print_r($orderItemData, true));
+                    
+                    // Add order item
+                    $orderObj->addOrderItem($orderItemData);
+                    
+                    // Update stock
+                    error_log("Updating stock for product {$item['product_id']}, reducing by {$item['quantity']}");
                     if (!$stocksObj->updateStock($item['product_id'], -$item['quantity'])) {
                         throw new Exception("Failed to update stock for {$item['name']}");
                     }
                 }
-   
+                
+                // Clear the cart
+                error_log("Clearing cart for user: " . $user_id);
+                $cartObj->clearCart($user_id);
+                
+                // Set session data for order status
                 $_SESSION['last_order'] = [
-                    'order_id' => $orderResult['order_id'],
+                    'order_id' => $order_id,
                     'total_amount' => $total,
                     'status' => 'pending',
                     'payment_status' => 'unpaid'
                 ];
+                error_log("Set session last_order: " . print_r($_SESSION['last_order'], true));
                 
-                $db->commit();
+                $conn->commit();
+                error_log("Transaction committed successfully");
                 header('Location: orderStatus.php');
                 exit;
                 
             } catch (Exception $e) {
-                $db->rollBack();
+                $conn->rollBack();
+                error_log("Error during checkout process: " . $e->getMessage());
+                error_log("Stack trace: " . $e->getTraceAsString());
                 $errorMessages[] = $e->getMessage();
             }
         }
@@ -322,18 +384,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     </div>
 
     <!-- Response Modal -->
-    <div class="modal fade" id="responseModal" tabindex="-1" role="dialog" aria-labelledby="responseModalLabel">
-        <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal fade" id="responseModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="responseModalLabel">Status</h5>
+                    <h5 class="modal-title">Status</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <div id="responseMessage"></div>
+                    <p id="responseMessage"></p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
@@ -438,25 +500,30 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $.ajax({
                 url: '../ajax/placeOrder.php',
                 type: 'POST',
-                data: {
-                    checkout: true
-                },
                 dataType: 'json',
                 success: function(response) {
-                    const checkoutModal = bootstrap.Modal.getInstance(document.getElementById('checkoutModal'));
-                    checkoutModal.hide();
-                    
                     if (response.success) {
-                        showResponseModal('Order placed successfully!', true);
-                        setTimeout(() => {
+                        // Show success message
+                        showResponseModal('Order placed successfully! Order ID: ' + response.order_id, true);
+                        
+                        // Clear the cart display
+                        $('.cart-items').empty();
+                        $('.cart-total').text('₱0.00');
+                        
+                        // Update cart count
+                        updateCartCount();
+                        
+                        // Redirect to order status page after a short delay
+                        setTimeout(function() {
                            loadCartSection();
-                        }, 1500);
+                        }, 2000);
                     } else {
                         showResponseModal(response.message || 'Failed to place order', false);
                     }
                 },
                 error: function(xhr, status, error) {
                     console.error('Order Error:', error);
+                    console.error('Response:', xhr.responseText);
                     showResponseModal('Error occurred while placing order. Please try again.', false);
                 }
             });
@@ -464,9 +531,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         function showResponseModal(message, success) {
             $('#responseMessage').text(message);
-            const responseModal = $('#responseModal');
-            responseModal.removeClass('success error').addClass(success ? 'success' : 'error');
-            new bootstrap.Modal(document.getElementById('responseModal')).show();
+            if (success) {
+                $('#responseMessage').removeClass('text-danger').addClass('text-success');
+            } else {
+                $('#responseMessage').removeClass('text-success').addClass('text-danger');
+            }
+            
+            const responseModal = new bootstrap.Modal(document.getElementById('responseModal'));
+            responseModal.show();
         }
 
         function updateQuantity(productId, action) {
@@ -550,19 +622,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     success: function(response) {
                         removeItemModal.hide();
                         if (response.success) {
-                            // Remove the item's card from the DOM
                             const itemCard = $(`button[onclick="removeFromCart(${productId})"]`).closest('.card');
                             itemCard.fadeOut(300, function() {
                                 $(this).remove();
-                                // Update cart total
                                 updateCartTotal();
-                                // Update cart count in header
                                 updateCartCount();
                                 
-                                // Check if cart is empty after removal
                                 if ($('.card-body .card').length === 0) {
-                                    $('.card-body').html('<div class="alert-info">Your cart is empty</div>');
-                                    // Hide the checkout section
+                                    $('.card-body').html('<div class="alert alert-info">Your cart is empty</div>');
                                     $('.checkout-section').hide();
                                 }
                             });
@@ -574,6 +641,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     error: function(xhr, status, error) {
                         removeItemModal.hide();
                         console.error('Remove from cart error:', error);
+                        console.error('Response:', xhr.responseText);
                         showResponseModal('Error occurred while removing item from cart. Please try again.', false);
                     }
                 });

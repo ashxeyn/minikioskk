@@ -16,68 +16,101 @@ class Order
     }
 
     public function placeOrder($user_id, $cartItems, $total) {
+        $db = null;
         try {
             $db = $this->db->connect();
-            
-            if (!$db->inTransaction()) {
-                $db->beginTransaction();
+            $db->beginTransaction();
+
+            error_log("Starting placeOrder process for user: $user_id");
+            error_log("Cart items: " . print_r($cartItems, true));
+
+            // Get canteen_id from the first cart item
+            $canteen_id = $cartItems[0]['canteen_id'] ?? null;
+            if (!$canteen_id) {
+                throw new Exception("Invalid canteen information");
             }
 
-            $stocksObj = new Stocks();
-            foreach ($cartItems as $item) {
-                $stock = $stocksObj->fetchStockByProductId($item['product_id']);
-                if (!$stock || $stock['quantity'] < $item['quantity']) {
-                    throw new Exception("Insufficient stock for {$item['name']}");
-                }
-            }
-
-            $canteen_id = $cartItems[0]['canteen_id'] ?? 1;
-
+            // Create the order
             $sql = "INSERT INTO orders (user_id, canteen_id, total_amount, status, payment_status, created_at) 
                     VALUES (:user_id, :canteen_id, :total_amount, 'placed', 'unpaid', NOW())";
             
             $stmt = $db->prepare($sql);
-            $stmt->execute([
+            $result = $stmt->execute([
                 'user_id' => $user_id,
                 'canteen_id' => $canteen_id,
                 'total_amount' => $total
             ]);
-            
+
+            if (!$result) {
+                throw new Exception("Failed to create order");
+            }
+
             $order_id = $db->lastInsertId();
-            $sql = "INSERT INTO order_items (order_id, product_id, quantity, unit_price, subtotal) 
-                    VALUES (:order_id, :product_id, :quantity, :unit_price, :subtotal)";
-            
-            $stmt = $db->prepare($sql);
-            
+            error_log("Created order with ID: $order_id");
+
+            // Insert order items and update stock
             foreach ($cartItems as $item) {
-                $subtotal = $item['quantity'] * $item['unit_price'];
+                // Verify stock availability
+                $stockSql = "SELECT quantity FROM stocks WHERE product_id = :product_id FOR UPDATE";
+                $stockStmt = $db->prepare($stockSql);
+                $stockStmt->execute(['product_id' => $item['product_id']]);
+                $stock = $stockStmt->fetch(PDO::FETCH_ASSOC);
+
+                if (!$stock || $stock['quantity'] < $item['quantity']) {
+                    throw new Exception("Insufficient stock for product: {$item['name']}");
+                }
+
+                // Add order item
+                $itemSql = "INSERT INTO order_items (order_id, product_id, quantity, unit_price, subtotal) 
+                           VALUES (:order_id, :product_id, :quantity, :unit_price, :subtotal)";
                 
-                $stmt->execute([
+                $itemStmt = $db->prepare($itemSql);
+                $itemResult = $itemStmt->execute([
                     'order_id' => $order_id,
                     'product_id' => $item['product_id'],
                     'quantity' => $item['quantity'],
                     'unit_price' => $item['unit_price'],
-                    'subtotal' => $subtotal
+                    'subtotal' => $item['quantity'] * $item['unit_price']
                 ]);
 
-                // Reduce stock
-                if (!$stocksObj->updateStock($item['product_id'], -$item['quantity'])) {
-                    throw new Exception("Failed to update stock for {$item['name']}");
+                if (!$itemResult) {
+                    throw new Exception("Failed to add order item");
+                }
+
+                // Update stock
+                $updateStockSql = "UPDATE stocks 
+                                  SET quantity = quantity - :quantity 
+                                  WHERE product_id = :product_id";
+                
+                $updateStockStmt = $db->prepare($updateStockSql);
+                $stockResult = $updateStockStmt->execute([
+                    'quantity' => $item['quantity'],
+                    'product_id' => $item['product_id']
+                ]);
+
+                if (!$stockResult) {
+                    throw new Exception("Failed to update stock");
                 }
             }
 
             $db->commit();
+            error_log("Order placed successfully");
+            
             return [
                 'success' => true,
-                'order_id' => $order_id
+                'order_id' => $order_id,
+                'message' => 'Order placed successfully'
             ];
 
         } catch (Exception $e) {
-            if (isset($db) && $db->inTransaction()) {
+            error_log("Error in placeOrder: " . $e->getMessage());
+            if ($db && $db->inTransaction()) {
                 $db->rollBack();
             }
-            error_log("Error placing order: " . $e->getMessage());
-            return ['success' => false, 'message' => $e->getMessage()];
+            return [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
         }
     }
 
@@ -478,6 +511,45 @@ class Order
             }
             error_log("Error deleting order: " . $e->getMessage());
             return false;
+        }
+    }
+
+    public function createOrder($orderData) {
+        try {
+            $sql = "INSERT INTO orders (user_id, total_amount, status, payment_status, canteen_id, created_at) 
+                    VALUES (:user_id, :total_amount, :status, :payment_status, :canteen_id, NOW())";
+            
+            $stmt = $this->db->connect()->prepare($sql);
+            $stmt->execute([
+                ':user_id' => $orderData['user_id'],
+                ':total_amount' => $orderData['total_amount'],
+                ':status' => $orderData['status'],
+                ':payment_status' => $orderData['payment_status'],
+                ':canteen_id' => $orderData['canteen_id']
+            ]);
+            
+            return $this->db->connect()->lastInsertId();
+        } catch (PDOException $e) {
+            error_log("Error creating order: " . $e->getMessage());
+            throw new Exception("Failed to create order");
+        }
+    }
+
+    public function addOrderItem($itemData) {
+        try {
+            $sql = "INSERT INTO order_items (order_id, product_id, quantity, unit_price) 
+                    VALUES (:order_id, :product_id, :quantity, :unit_price)";
+            
+            $stmt = $this->db->connect()->prepare($sql);
+            return $stmt->execute([
+                ':order_id' => $itemData['order_id'],
+                ':product_id' => $itemData['product_id'],
+                ':quantity' => $itemData['quantity'],
+                ':unit_price' => $itemData['unit_price']
+            ]);
+        } catch (PDOException $e) {
+            error_log("Error adding order item: " . $e->getMessage());
+            throw new Exception("Failed to add order item");
         }
     }
 }

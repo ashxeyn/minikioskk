@@ -30,6 +30,7 @@ $products = $productObj->fetchProductsByCanteen($canteen_id);
     <title>View Canteen</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
 
@@ -53,54 +54,36 @@ $products = $productObj->fetchProductsByCanteen($canteen_id);
     </div>
 </div>
 
-<div class="modal fade" id="orderModal" tabindex="-1" role="dialog" aria-labelledby="orderModalLabel">
-    <div class="modal-dialog modal-dialog-centered" role="document">
+<div class="modal fade" id="orderModal" tabindex="-1" aria-labelledby="orderModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="orderModalLabel">Place Your Order</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body p-0">
+            <div class="modal-body">
                 <form id="orderForm">
                     <input type="hidden" id="product_id" name="product_id">
-                    <div class="order-details">
-                        <div class="detail-row">
-                            <div class="label-group">
-                                <span class="detail-label">Item Name</span>
-                                <span id="modal_product_name" class="detail-value"></span>
-                            </div>
+                    <div class="mb-3">
+                        <label class="form-label">Item Name</label>
+                        <span id="modal_product_name" class="form-control-plaintext"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label for="quantity" class="form-label">Quantity</label>
+                        <div class="input-group">
+                            <button type="button" class="btn btn-outline-secondary" onclick="decrementQuantity()">-</button>
+                            <input type="number" class="form-control text-center" id="quantity" name="quantity" value="1" min="1">
+                            <button type="button" class="btn btn-outline-secondary" onclick="incrementQuantity()">+</button>
                         </div>
-                        <div class="detail-row">
-                            <div class="label-group">
-                                <span class="detail-label">Unit Price</span>
-                                <span id="modal_product_price" class="detail-value"></span>
-                            </div>
-                        </div>
-                        <div class="detail-row">
-                            <div class="label-group">
-                                <span class="detail-label">Quantity</span>
-                                <div class="quantity-controls">
-                                    <button type="button" class="btn btn-quantity" onclick="decrementQuantity()">
-                                        <i class="bi bi-dash"></i>
-                                    </button>
-                                    <input type="number" id="quantity" name="quantity" min="1" value="1">
-                                    <button type="button" class="btn btn-quantity" onclick="incrementQuantity()">
-                                        <i class="bi bi-plus"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="detail-row total-row">
-                            <div class="label-group">
-                                <span class="detail-label">Total Amount</span>
-                                <span id="modal_total_price" class="detail-value total-price"></span>
-                            </div>
-                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Total Price</label>
+                        <span id="modal_total_price" class="form-control-plaintext">₱0.00</span>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-primary" onclick="addToCart()">Add to Cart</button>
             </div>
         </div>
@@ -309,20 +292,23 @@ $products = $productObj->fetchProductsByCanteen($canteen_id);
 let currentPrice = 0;
 
 function openOrderModal(productId, productName, price) {
+    const orderModal = new bootstrap.Modal(document.getElementById('orderModal'));
+    
+    document.getElementById('product_id').value = productId;
+    document.getElementById('modal_product_name').textContent = productName;
+    
     currentPrice = price;
-    $('#product_id').val(productId);
-    $('#modal_product_name').text(productName);
-    $('#modal_product_price').text('₱' + price.toFixed(2));
+    document.getElementById('quantity').value = 1;
+    
     updateTotalPrice();
     
-    const orderModal = new bootstrap.Modal(document.getElementById('orderModal'));
     orderModal.show();
 }
 
 function updateTotalPrice() {
-    const quantity = $('#quantity').val();
-    const totalPrice = currentPrice * quantity;
-    $('#modal_total_price').text('₱' + totalPrice.toFixed(2));
+    const quantity = parseInt(document.getElementById('quantity').value) || 1;
+    const total = (currentPrice * quantity).toFixed(2);
+    document.getElementById('modal_total_price').textContent = '₱' + total;
 }
 
 function showResponseModal(message, success = true) {
@@ -345,8 +331,19 @@ function showResponseModal(message, success = true) {
 function addToCart() {
     const productId = $('#product_id').val();
     const quantity = $('#quantity').val();
+    console.log('Adding to cart:', {
+        productId,
+        quantity,
+        type: typeof quantity,
+        parsed: parseInt(quantity)
+    });
     const productName = $('#modal_product_name').text();
     const unitPrice = currentPrice;
+
+    if (!quantity || quantity < 1) {
+        showResponseModal('Please enter a valid quantity', false);
+        return;
+    }
 
     $.ajax({
         url: '../ajax/addToCart.php',
@@ -354,7 +351,7 @@ function addToCart() {
         dataType: 'json',
         data: {
             product_id: productId,
-            quantity: quantity,
+            quantity: parseInt(quantity),
             product_name: productName,
             unit_price: unitPrice
         },
@@ -362,14 +359,8 @@ function addToCart() {
             if (response.success) {
                 const orderModal = bootstrap.Modal.getInstance(document.getElementById('orderModal'));
                 orderModal.hide();
-                
                 showResponseModal('Product added to cart successfully!', true);
-                setTimeout(() => {
-                    const responseModal = bootstrap.Modal.getInstance(document.getElementById('responseModal'));
-                    if (responseModal) {
-                        responseModal.hide();
-                    }
-                }, 1500);
+                updateCartCount();
             } else {
                 showResponseModal(response.message || 'Failed to add product to cart.', false);
             }
@@ -411,6 +402,8 @@ function decrementQuantity() {
 // Update total price when quantity changes
 $('#quantity').on('input', updateTotalPrice);
 </script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>
