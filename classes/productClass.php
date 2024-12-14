@@ -137,10 +137,15 @@ class Product
 
     public function fetchProducts($canteen_id) {
         try {
-            $sql = "SELECT p.*, pt.name as type_name, pt.type, s.quantity 
+            $sql = "SELECT p.*, pt.name as type, pt.type as type_category,
+                    COALESCE(s.quantity, 0) as stock_quantity
                     FROM products p 
                     LEFT JOIN product_types pt ON p.type_id = pt.type_id
-                    LEFT JOIN stocks s ON p.product_id = s.product_id
+                    LEFT JOIN (
+                        SELECT product_id, quantity 
+                        FROM stocks 
+                        GROUP BY product_id
+                    ) s ON p.product_id = s.product_id
                     WHERE p.canteen_id = :canteen_id";
             
             $stmt = $this->db->connect()->prepare($sql);

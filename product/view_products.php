@@ -33,6 +33,26 @@ try {
             --dt-row-selected: none;  /* Prevent DataTables selection color */
         }
         
+        /* Remove table background */
+        .table {
+            background-color: transparent !important;
+        }
+        
+        /* Remove header background */
+        .table thead th {
+            background-color: transparent !important;
+        }
+        
+        /* Remove striping if any */
+        .table-striped tbody tr:nth-of-type(odd) {
+            background-color: transparent !important;
+        }
+        
+        /* Remove hover background if needed */
+        .table-hover tbody tr:hover {
+            background-color: rgba(0, 0, 0, 0.02) !important;
+        }
+        
         /* Ensure sidebar styles are preserved */
         .sidebar {
             background-color: #343a40 !important;  /* Force sidebar background */
@@ -94,21 +114,18 @@ try {
                         <td><?= htmlspecialchars($product['product_id']) ?></td>
                         <td><?= htmlspecialchars($product['name']) ?></td>
                         <td><?= htmlspecialchars($product['description']) ?></td>
-                        <td><?= htmlspecialchars($product['type']) ?></td>
+                        <td><?= htmlspecialchars($product['type']) ?> (<?= htmlspecialchars($product['type_category']) ?>)</td>
                         <td>₱<?= number_format($product['price'], 2) ?></td>
                         <td>
                             <span class="badge <?= $product['status'] === 'available' ? 'bg-success' : 'bg-danger' ?>">
                                 <?= ucfirst($product['status']) ?>
                             </span>
                         </td>
-                        <td><?= htmlspecialchars($product['quantity'] ?? 0) ?></td>
+                        <td><?= htmlspecialchars($product['stock_quantity']) ?></td>
                         <td>
                             <div class="btn-group">
                                 <button class="btn btn-sm btn-primary" onclick="editProduct(<?= $product['product_id'] ?>)">
                                     <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="btn btn-sm btn-success" onclick="updateStock(<?= $product['product_id'] ?>)">
-                                    <i class="bi bi-box"></i>
                                 </button>
                                 <button class="btn btn-sm btn-danger" onclick="deleteProduct(<?= $product['product_id'] ?>)">
                                     <i class="bi bi-trash"></i>
@@ -208,6 +225,13 @@ try {
                         <label for="editPrice" class="form-label">Price</label>
                         <input type="number" class="form-control" id="editPrice" name="price" step="0.01" required>
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label">Current Stock: <span id="editCurrentStock">0</span></label>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editQuantity" class="form-label">Add Stock</label>
+                        <input type="number" class="form-control" id="editQuantity" name="quantity" min="0">
+                    </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                         <button type="submit" class="btn btn-primary">Save Changes</button>
@@ -218,29 +242,19 @@ try {
     </div>
 </div>
 
-<!-- Stock Update Modal -->
-<div class="modal fade" id="stockModal" tabindex="-1">
+<!-- Response Modal -->
+<div class="modal fade" id="responseModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Update Stock</h5>
+                <h5 class="modal-title">Action Status</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form id="stockForm">
-                    <input type="hidden" id="stockProductId" name="product_id">
-                    <div class="mb-3">
-                        <label class="form-label">Current Stock: <span id="currentStock">0</span></label>
-                    </div>
-                    <div class="mb-3">
-                        <label for="quantity" class="form-label">Add Stock</label>
-                        <input type="number" class="form-control" id="quantity" name="quantity" required min="1">
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">Update Stock</button>
-                    </div>
-                </form>
+                <p id="responseMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
             </div>
         </div>
     </div>
@@ -365,11 +379,24 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function editProduct(productId) {
-    // Implement edit functionality
-}
-
-function updateStock(productId) {
-    // Implement stock update functionality
+    fetch(`../ajax/getProduct.php?product_id=${productId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                showResponse(data.error, false);
+                return;
+            }
+            // Fill the edit modal with product data
+            document.getElementById('editProductId').value = data.product_id;
+            document.getElementById('editName').value = data.name;
+            document.getElementById('editDescription').value = data.description;
+            document.getElementById('editPrice').value = data.price;
+            document.getElementById('editCurrentStock').textContent = data.quantity || 0;
+            loadProductTypes(data.type_id);
+            
+            new bootstrap.Modal(document.getElementById('editProductModal')).show();
+        })
+        .catch(error => showResponse('Error loading product details', false));
 }
 
 function deleteProduct(productId) {

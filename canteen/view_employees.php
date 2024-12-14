@@ -27,6 +27,7 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Co-Employees</title>
+    
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <!-- DataTables CSS -->
@@ -100,6 +101,14 @@ try {
     <?php include 'addEmployeeModal.html'; ?>
     <?php include 'editEmployeeModal.html'; ?>
 
+    <style>
+    .badge {
+        padding: 0.5em 0.8em;
+    }
+    .btn-group {
+        gap: 0.25rem;
+    }
+    </style>
 
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

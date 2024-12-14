@@ -1,51 +1,42 @@
 <?php
+session_start();
 require_once '../classes/productClass.php';
-require_once '../classes/stocksClass.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    try {
-        // Validate required fields
-        $required = ['name', 'type_id', 'price', 'canteen_id', 'initial_stock'];
-        foreach ($required as $field) {
-            if (!isset($_POST[$field]) || empty($_POST[$field])) {
-                throw new Exception("Missing required field: $field");
-            }
-        }
+header('Content-Type: application/json');
 
-        $productObj = new Product();
-        $stockObj = new Stocks();
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'manager') {
+    echo json_encode([
+        'success' => false,
+        'message' => 'Unauthorized access'
+    ]);
+    exit;
+}
 
-        // Prepare product data
-        $productData = [
-            'name' => $_POST['name'],
-            'type_id' => $_POST['type_id'],
-            'description' => $_POST['description'] ?? '',
-            'price' => $_POST['price'],
-            'canteen_id' => $_POST['canteen_id'],
-            'status' => 'available'
-        ];
-
-        // Start transaction
-        $db = $productObj->getConnection();
-        $db->beginTransaction();
-
-        // Add product
-        $productId = $productObj->addProduct($productData);
-
-        // Add initial stock
-        if ($productId && $_POST['initial_stock'] > 0) {
-            $stockObj->addStock($productId, $_POST['initial_stock']);
-        }
-
-        $db->commit();
-        echo json_encode(['success' => true]);
-
-    } catch (Exception $e) {
-        if (isset($db) && $db->inTransaction()) {
-            $db->rollBack();
-        }
-        error_log("Error adding product: " . $e->getMessage());
-        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+// Validate required fields
+$requiredFields = ['name', 'type_id', 'price', 'initial_stock', 'canteen_id'];
+foreach ($requiredFields as $field) {
+    if (!isset($_POST[$field]) || empty($_POST[$field])) {
+        echo json_encode([
+            'success' => false,
+            'message' => "Missing required field: $field"
+        ]);
+        exit;
     }
+}
+
+try {
+    $product = new Product();
+    $result = $product->addProduct($_POST);
+    
+    echo json_encode([
+        'success' => true,
+        'message' => 'Product added successfully',
+        'product_id' => $result
+    ]);
+} catch (Exception $e) {
+    echo json_encode([
+        'success' => false,
+        'message' => 'Error adding product: ' . $e->getMessage()
+    ]);
 }
 ?> 
