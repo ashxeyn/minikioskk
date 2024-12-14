@@ -686,6 +686,12 @@ $('#editProductForm').submit(function(e) {
     const formData = new FormData(this);
     formData.append('canteen_id', '<?php echo $_SESSION['canteen_id']; ?>');
     
+    // Get the quantity value
+    const quantity = $('#editQuantity').val();
+    if (quantity && quantity > 0) {
+        formData.append('quantity', quantity);
+    }
+    
     $.ajax({
         url: '../ajax/updateProduct.php',
         type: 'POST',

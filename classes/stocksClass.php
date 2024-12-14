@@ -10,23 +10,56 @@ class Stocks
         $this->db = new Database();
     }
 
-    function addStock($productId, $quantity) {
+    public function addStock($product_id, $quantity) {
         try {
-            $sql = "INSERT INTO stocks (product_id, quantity, last_restock) 
-                    VALUES (:product_id, :quantity, NOW())
-                    ON DUPLICATE KEY UPDATE 
-                    quantity = quantity + :new_quantity,
-                    last_restock = NOW()";
-            
-            $query = $this->db->connect()->prepare($sql);
-            $query->bindValue(':product_id', $productId);
-            $query->bindValue(':quantity', $quantity);
-            $query->bindValue(':new_quantity', $quantity);
-            
-            return $query->execute();
-        } catch (PDOException $e) {
-            error_log("Error in addStock: " . $e->getMessage());
+            $conn = $this->db->connect();
+            $conn->beginTransaction();
+
+            // Check if stock record exists
+            $sql = "SELECT stock_id, quantity FROM stocks WHERE product_id = :product_id";
+            $stmt = $conn->prepare($sql);
+            $stmt->execute(['product_id' => $product_id]);
+            $existingStock = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($existingStock) {
+                // Update existing stock
+                $newQuantity = $existingStock['quantity'] + $quantity;
+                $sql = "UPDATE stocks 
+                        SET quantity = :quantity, 
+                            last_restock = CURRENT_TIMESTAMP 
+                        WHERE product_id = :product_id";
+                
+                $stmt = $conn->prepare($sql);
+                $result = $stmt->execute([
+                    'quantity' => $newQuantity,
+                    'product_id' => $product_id
+                ]);
+            } else {
+                // Insert new stock record
+                $sql = "INSERT INTO stocks (product_id, quantity, last_restock) 
+                        VALUES (:product_id, :quantity, CURRENT_TIMESTAMP)";
+                
+                $stmt = $conn->prepare($sql);
+                $result = $stmt->execute([
+                    'product_id' => $product_id,
+                    'quantity' => $quantity
+                ]);
+            }
+
+            if ($result) {
+                $conn->commit();
+                return true;
+            }
+
+            $conn->rollBack();
             return false;
+
+        } catch (PDOException $e) {
+            if ($conn->inTransaction()) {
+                $conn->rollBack();
+            }
+            error_log("Error in addStock: " . $e->getMessage());
+            throw new Exception("Failed to update stock");
         }
     }
 

@@ -30,18 +30,21 @@ try {
 
     $success = $productObj->updateProduct($updateData);
 
-    // Update stock if quantity is provided
+    // Handle stock update
     if (isset($_POST['quantity']) && $_POST['quantity'] > 0) {
-        $stocksObj->addStock(
+        error_log("Adding stock: " . $_POST['quantity'] . " for product: " . $_POST['product_id']);
+        $stockResult = $stocksObj->addStock(
             $_POST['product_id'],
-            $_POST['quantity'],
-            $_SESSION['user_id']
+            $_POST['quantity']
         );
+        if (!$stockResult) {
+            throw new Exception('Failed to update stock');
+        }
     }
 
     echo json_encode([
-        'success' => $success,
-        'message' => $success ? 'Product updated successfully' : 'Failed to update product'
+        'success' => true,
+        'message' => 'Product and stock updated successfully'
     ]);
 
 } catch (Exception $e) {
