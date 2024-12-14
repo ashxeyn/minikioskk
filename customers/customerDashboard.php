@@ -56,7 +56,6 @@ require_once '../includes/_head.php';
                 <form autocomplete="off" class="search-form" id="searchForm">
                     <div class="search-container">
                         <input type="search" id="search" name="search" placeholder="Search canteens or menu items...">
-                        <button type="submit" class="search-btn">Search</button>
                     </div>
                     <div class="search-options">
                         <label><input type="radio" name="search_type" value="all" checked> All</label>
@@ -75,6 +74,6 @@ require_once '../includes/_head.php';
     </div>
 </div>
 
-<script src="dashboard_content.js"></script>
+<script src="../js/dashboard_content.js"></script>
 </body>
 </html>

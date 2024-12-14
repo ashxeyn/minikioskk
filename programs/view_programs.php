@@ -34,7 +34,7 @@ try {
                 <table class="table table-striped table-hover" id="programsTable" width="100%">
                     <thead>
                         <tr>
-                            <th>Program ID</th>
+                            <th>ID</th>
                             <th>Program Name</th>
                             <th>Department</th>
                             <th>College</th>
@@ -43,10 +43,11 @@ try {
                         </tr>
                     </thead>
                     <tbody>
-                        <?php if (!empty($programs)): ?>
+                        <?php if (!empty($programs)): 
+                            $counter = 1; ?>
                             <?php foreach ($programs as $prog): ?>
                                 <tr>
-                                    <td><?= htmlspecialchars($prog['program_id']) ?></td>
+                                    <td><?= $counter++ ?></td>
                                     <td><?= htmlspecialchars($prog['program_name']) ?></td>
                                     <td><?= htmlspecialchars($prog['department_name']) ?></td>
                                     <td><?= htmlspecialchars($prog['college_name']) ?></td>

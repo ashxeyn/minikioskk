@@ -3,7 +3,6 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 session_start();
 
-// Add session validation
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'manager') {
     header('Location: /minikioskk/accounts/login.php');
     exit();
@@ -34,7 +33,7 @@ require_once '../includes/_head.php';
             <?php require_once '../includes/_sidebar2.php'; ?>
             <div class="col py-3">
                 <div id="contentArea" class="container mt-4">
-                    <h3><?php echo "Welcome, {$_SESSION['username']}!"; ?></h3><br>
+                    <!-- <h3><?php echo "Welcome, {$_SESSION['username']}!"; ?></h3><br> -->
                     <?php require_once 'view_manager_analytics.php'; ?>
                 </div>
             </div>

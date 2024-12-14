@@ -41,6 +41,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($password)) {
         $passwordErr = "Please enter your password.";
     }
+    if (strlen($password) < 8) {
+        $passwordErr = "Password must be at least 8 characters long.";
+    }
     if (empty($canteen_name)) {
         $canteenNameErr = "Canteen Name is required.";
     }

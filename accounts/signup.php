@@ -51,12 +51,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 
     try {
-        // Email validation for wmsu.edu.ph domain (except for guests)
-        if ($role !== 'guest') {
-            if (!preg_match('/@wmsu\.edu\.ph$/', $email)) {
-                $emailErr = "Please use your WMSU email (@wmsu.edu.ph)";
-                throw new Exception($emailErr);
-            }
+        if (strlen($password) < 8) {
+            $passwordErr = "Password must be at least 8 characters long.";
+            throw new Exception($passwordErr);
+        }
+
+        if ($role !== 'guest' && !preg_match('/@wmsu\.edu\.ph$/', $email)) {
+            $emailErr = "Please use your WMSU email (@wmsu.edu.ph)";
+            throw new Exception($emailErr);
         }
 
         if ($accountObj->signup(

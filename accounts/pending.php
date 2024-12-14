@@ -134,7 +134,7 @@ if (!$userInfo) {
             </div>
             <h1><?= htmlspecialchars(ucfirst($userInfo['status'])) ?></h1>
             <p class="message"><?= htmlspecialchars($statusMessage) ?></p>
-            <a href="logout.php" class="logout-btn">Logout</a>
+            <a href="logout.php" class="logout-btn">Omkie po</a>
         </div>
     </div>
 </body>

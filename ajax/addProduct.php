@@ -26,7 +26,7 @@ foreach ($requiredFields as $field) {
 }
 
 try {
-    $db = new PDO("mysql:host=localhost;dbname=minikiosk1", "root", "");
+    $db = new PDO("mysql:host=localhost;dbname=minikiosk", "root", "");
     $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $db->beginTransaction();
 

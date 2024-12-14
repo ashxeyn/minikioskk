@@ -122,7 +122,6 @@ function openAddUserModal() {
         }
     });
 
-    // Populate canteens dropdown
     $.ajax({
         url: '../canteens/get_canteens.php',
         type: 'GET',
@@ -152,18 +151,15 @@ function toggleAdditionalFields() {
     const departmentField = document.getElementById('add_departmentField');
     const canteenField = document.getElementById('add_canteenField');
     
-    // Hide all fields first
     programField.style.display = 'none';
     departmentField.style.display = 'none';
     canteenField.style.display = 'none';
     
-    // Remove required attribute from all fields
     document.getElementById('add_program_id').removeAttribute('required');
     document.getElementById('add_department_id').removeAttribute('required');
     document.getElementById('add_canteen_name').removeAttribute('required');
     document.getElementById('add_campus_location').removeAttribute('required');
     
-    // Show relevant fields based on role
     switch(role) {
         case 'student':
             programField.style.display = 'block';

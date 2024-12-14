@@ -31,10 +31,11 @@ $pendingManagers = $accountObj->getPendingManagers();
                 </tr>
             </thead>
             <tbody>
-                <?php if ($pendingManagers): ?>
+                <?php if ($pendingManagers): 
+                    $counter = 1 ?>
                     <?php foreach ($pendingManagers as $manager): ?>
                         <tr>
-                            <td><?= clean_input($manager['user_id']) ?></td>
+                            <td><?= $counter++?></td>
                             <td><?= clean_input($manager['last_name']) ?></td>
                             <td><?= clean_input($manager['given_name']) ?></td>
                             <td><?= clean_input($manager['middle_name']) ?></td>

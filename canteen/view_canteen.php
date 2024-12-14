@@ -17,9 +17,9 @@ $canteens = $canteenObj->searchCanteens($keyword);
             <input type="search" name="search" id="searchCanteen" placeholder="Search canteens..." 
                    onkeyup="searchCanteens(this.value)">
         </form>
-        <div class="mb-3">
+        <!-- <div class="mb-3">
             <button type="button" class="btn btn-primary" onclick="openAddCanteenModal()">Add Canteen</button>
-        </div>
+        </div> -->
         <table id="canteenTable">
             <thead>
                 <tr>
