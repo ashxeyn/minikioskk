@@ -32,7 +32,7 @@ require_once '../classes/accountClass.php';
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link align-middle px-0" id="productButton" onclick="loadProductsSection()">
+                    <a href="#" class="nav-link align-middle px-0" id="productButton">
                         <i class="fs-5 bi-box-seam"></i>
                         <span class="ms-1 d-none d-sm-inline">Products</span>
                     </a>

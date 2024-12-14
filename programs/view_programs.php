@@ -23,9 +23,9 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Programs</title>
     
-    <link href="../vendor/bootstrap-5.3.3/css/bootstrap.min.css" rel="stylesheet">
-    <link href="../vendor/bootstrap-icons-1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="../vendor/datatables/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <style>
         .dataTables_wrapper .dataTables_length, 
         .dataTables_wrapper .dataTables_filter {
@@ -182,13 +182,19 @@ try {
     </div>
 </div>
 
-<script src="../vendor/jquery/jquery-3.6.0.min.js"></script>
-<script src="../vendor/bootstrap-5.3.3/js/bootstrap.bundle.min.js"></script>
-<script src="../vendor/datatables/jquery.dataTables.min.js"></script>
-<script src="../vendor/datatables/dataTables.bootstrap5.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
 
 <script>
 $(document).ready(function() {
+    // First destroy any existing DataTable instance
+    if ($.fn.DataTable.isDataTable('#programsTable')) {
+        $('#programsTable').DataTable().destroy();
+    }
+    
+    // Then initialize the new DataTable
     $('#programsTable').DataTable({
         "responsive": true,
         "pageLength": 10,

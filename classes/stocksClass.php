@@ -26,7 +26,8 @@ class Stocks
                 $newQuantity = $existingStock['quantity'] + $quantity;
                 $sql = "UPDATE stocks 
                         SET quantity = :quantity, 
-                            last_restock = CURRENT_TIMESTAMP 
+                            last_restock = CURRENT_TIMESTAMP,
+                            updated_at = CURRENT_TIMESTAMP
                         WHERE product_id = :product_id";
                 
                 $stmt = $conn->prepare($sql);
@@ -36,8 +37,8 @@ class Stocks
                 ]);
             } else {
                 // Insert new stock record
-                $sql = "INSERT INTO stocks (product_id, quantity, last_restock) 
-                        VALUES (:product_id, :quantity, CURRENT_TIMESTAMP)";
+                $sql = "INSERT INTO stocks (product_id, quantity, last_restock, updated_at) 
+                        VALUES (:product_id, :quantity, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
                 
                 $stmt = $conn->prepare($sql);
                 $result = $stmt->execute([
@@ -59,7 +60,7 @@ class Stocks
                 $conn->rollBack();
             }
             error_log("Error in addStock: " . $e->getMessage());
-            throw new Exception("Failed to update stock");
+            throw new Exception("Failed to update stock: " . $e->getMessage());
         }
     }
 

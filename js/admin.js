@@ -11,6 +11,19 @@ function loadOrderSection() {
         }
     });
 }
+function loadProductsSection() {
+    $.ajax({
+        url: "../product/productSection.php",
+        method: 'GET',
+        success: function (response) {
+            $('#contentArea').html(response);
+        },
+        error: function (xhr, status, error) {
+            console.error('Error loading products section:', error);
+            $('#contentArea').html('<p class="text-danger">Failed to load Products section. Please try again.</p>');
+        }
+    });
+}
 
 function loadAccountsSection() {
     $.ajax({
@@ -26,7 +39,19 @@ function loadAccountsSection() {
     });
 }
 
-f
+function loadProductsSection() {
+    $.ajax({
+        url: "../product/productSection.php",
+        method: 'GET',
+        success: function (response) {
+            $('#contentArea').html(response);
+        },
+        error: function (xhr, status, error) {
+            console.error('Error loading products section:', error);
+            $('#contentArea').html('<p class="text-danger">Failed to load Products section. Please try again.</p>');
+        }
+    });
+}
 
 function loadCanteenSection() {
     $.ajax({
@@ -156,4 +181,26 @@ document.addEventListener("DOMContentLoaded", function () {
     };
 
     new Chart(ctx, config);
+});
+
+$(document).ready(function() {
+    $('#productButton').on('click', function(e) {
+        e.preventDefault();
+        loadProductsSection();
+    });
+    
+    $('#canteenButton').on('click', function(e) {
+        e.preventDefault();
+        loadCanteenSection();
+    });
+    
+    $('#accountsButton').on('click', function(e) {
+        e.preventDefault();
+        loadAccountsSection();
+    });
+    
+    $('#programButton').on('click', function(e) {
+        e.preventDefault();
+        loadProgramSection();
+    });
 });

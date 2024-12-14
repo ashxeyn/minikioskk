@@ -60,15 +60,28 @@ function openEditModal(programId) {
 }
 
 function initializeDataTable() {
-    $('#programTable table').DataTable({
+    if ($.fn.DataTable.isDataTable('#programsTable')) {
+        $('#programsTable').DataTable().destroy();
+    }
+    
+    $('#programsTable').DataTable({
         responsive: true,
-        columns: [
-            { data: 'program_name' },
-            { data: 'department_name' },
-            { data: 'college_name' },
-            { data: 'description' },
-            { data: 'actions', orderable: false }
-        ]
+        pageLength: 10,
+        order: [[1, "asc"]],
+        columnDefs: [
+            {
+                targets: -1,
+                orderable: false,
+                searchable: false
+            }
+        ],
+        language: {
+            search: "Search:",
+            lengthMenu: "Show _MENU_ entries",
+            info: "Showing _START_ to _END_ of _TOTAL_ entries",
+            infoEmpty: "Showing 0 to 0 of 0 entries",
+            infoFiltered: "(filtered from _MAX_ total entries)"
+        }
     });
 }
 
@@ -216,6 +229,12 @@ function loadColleges() {
 }
 
 $(document).ready(function() {
+    if (typeof $.fn.DataTable !== 'undefined') {
+        initializeDataTable();
+    } else {
+        console.error('DataTables not loaded');
+    }
+    
     loadProgramTable();
     loadDepartments();
 });
