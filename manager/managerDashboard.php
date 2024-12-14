@@ -1,5 +1,13 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 session_start();
+
+// Add session validation
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'manager') {
+    header('Location: /minikioskk/accounts/login.php');
+    exit();
+}
 
 require_once '../classes/accountClass.php';
 

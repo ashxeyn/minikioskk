@@ -9,6 +9,9 @@ $username = $password = '';
 $accountObj = new Account();
 $loginErr = '';
 
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = clean_input($_POST['username']);
     $password = clean_input($_POST['password']);
@@ -33,37 +36,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             case 'admin':
                 $_SESSION['role'] = 'admin';
                 header('Location: ../admin/adminDashboard.php');
+                exit();
                 break;
             case 'manager':
-                $status = strtolower($user['status'] ?? 'pending');
+                $status = strtolower($user['manager_status'] ?? $user['status'] ?? 'pending');
+                error_log("DEBUG: Manager login attempt - Username: $username, Status: $status, User data: " . print_r($user, true));
+                
                 if ($status === 'pending') {
                     $_SESSION['role'] = 'pending_manager';
                     $_SESSION['canteen_id'] = $accountObj->getManagerCanteen($username);
+                    error_log("DEBUG: Redirecting pending manager to pending.php");
                     header('Location: pending.php');
-                } else {
+                    exit();
+                } elseif ($status === 'accepted') {
                     $_SESSION['role'] = 'manager';
                     $canteen_id = $accountObj->getManagerCanteen($username);
+                    error_log("DEBUG: Manager canteen_id: " . print_r($canteen_id, true));
+                    
                     if ($canteen_id) {
                         $_SESSION['canteen_id'] = $canteen_id;
+                        error_log("DEBUG: About to redirect to managerDashboard.php");
                         header('Location: ../manager/managerDashboard.php');
+                        exit();
                     } else {
                         $loginErr = 'No active canteen assignment found.';
+                        error_log("DEBUG: No canteen assignment found for manager");
                         session_destroy();
                     }
+                } else {
+                    $loginErr = 'Account is not approved yet.';
+                    error_log("DEBUG: Manager account not approved. Status: " . $status);
+                    session_destroy();
                 }
                 break;
             case 'employee':
                 $_SESSION['role'] = 'employee';
                 header('Location: ../customers/customerDashboard.php');
+                exit();
                 break;
             case 'student':
                 $_SESSION['role'] = 'student';
                 header('Location: ../customers/customerDashboard.php');
+                exit();
                 break;
             default:
-                // Default case for guests
                 $_SESSION['role'] = 'guest';
                 header('Location: ../customers/customerDashboard.php');
+                exit();
         }
         exit();
     } else {

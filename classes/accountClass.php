@@ -213,19 +213,21 @@ class Account
 
     public function fetch($username) {
         try {
-            $sql = "SELECT * FROM users WHERE username = :username";
+            $sql = "SELECT u.*, m.status as manager_status, m.canteen_id 
+                    FROM users u 
+                    LEFT JOIN managers m ON u.user_id = m.user_id 
+                    WHERE u.username = :username";
+            
             $stmt = $this->db->connect()->prepare($sql);
             $stmt->execute(['username' => $username]);
-            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
             
-            if ($user) {
-                return $user;
-            }
+            error_log("DEBUG: fetch result for $username: " . print_r($result, true));
             
-            return false;
+            return $result;
         } catch (PDOException $e) {
-            error_log("Error fetching user: " . $e->getMessage());
-            return false;
+            error_log("Error in fetch: " . $e->getMessage());
+            return null;
         }
     }
 
@@ -381,18 +383,22 @@ class Account
     function getManagerCanteen($username)
     {
         try {
-            $sql = "SELECT cm.canteen_id 
-                    FROM users u
-                    JOIN canteen_managers cm ON u.user_id = cm.user_id
+            $sql = "SELECT m.canteen_id 
+                    FROM managers m 
+                    JOIN users u ON m.user_id = u.user_id 
                     WHERE u.username = :username 
-                    AND u.role_id = 2
-                    AND u.status = 'active'";
+                    AND m.status = 'accepted'";
+                
             $stmt = $this->db->connect()->prepare($sql);
             $stmt->execute(['username' => $username]);
-            return $stmt->fetchColumn();
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            error_log("DEBUG: getManagerCanteen result for $username: " . print_r($result, true));
+            
+            return $result ? $result['canteen_id'] : null;
         } catch (PDOException $e) {
-            error_log("Error getting manager canteen: " . $e->getMessage());
-            return false;
+            error_log("Error in getManagerCanteen: " . $e->getMessage());
+            return null;
         }
     }
 
