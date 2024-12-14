@@ -20,4 +20,5 @@ class Programs extends Database {
 
 $programs = new Programs();
 $result = $programs->getPrograms();
-echo json_encode($result); 
+echo json_encode($result);
+?> 

@@ -15,7 +15,6 @@
                     <div class="mb-3">
                         <label for="department_id" class="form-label">Department</label>
                         <select class="form-select" id="department_id" required>
-                            <!-- Populated dynamically -->
                         </select>
                     </div>
                     <div class="mb-3">
@@ -50,7 +49,6 @@
                     <div class="mb-3">
                         <label for="edit_department_id" class="form-label">Department</label>
                         <select class="form-select" id="edit_department_id" required>
-                            <!-- Populated dynamically -->
                         </select>
                     </div>
                     <div class="mb-3">

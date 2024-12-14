@@ -1,19 +1,17 @@
 <?php
 require_once '../classes/programClass.php';
-require_once '../classes/orderClass.php';  // Assuming this is the file for the Order class
+require_once '../classes/orderClass.php';
 
-$programNames = [];  // Array to hold program names
-$orderCounts = [];   // Array to hold corresponding order counts
+$programNames = [];
+$orderCounts = [];
 
 $programObj = new Program();
-$orderDataObj = new Order();  // Assuming OrderData is the class that handles orders
+$orderDataObj = new Order();
 
-$programs = $programObj->fetchPrograms();  // Fetch all programs
+$programs = $programObj->fetchPrograms();
 foreach ($programs as $program) {
-    $programNames[] = $program['program_name'];  // Get program names
-    
-    // Now, we need to get the order count for this program
-    $orderCount = $programObj->getOrderCountByProgram($program['program_id']);  // Get order count for the program
-    $orderCounts[] = $orderCount;  // Add the order count to the array
+    $programNames[] = $program['program_name'];
+    $orderCount = $programObj->getOrderCountByProgram($program['program_id']);
+    $orderCounts[] = $orderCount;
 }
 ?>
