@@ -42,8 +42,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     header('Location: pending.php');
                 } else {
                     $_SESSION['role'] = 'manager';
-                    $_SESSION['canteen_id'] = $accountObj->getManagerCanteen($username);
-                    header('Location: ../manager/managerDashboard.php');
+                    $canteen_id = $accountObj->getManagerCanteen($username);
+                    if ($canteen_id) {
+                        $_SESSION['canteen_id'] = $canteen_id;
+                        header('Location: ../manager/managerDashboard.php');
+                    } else {
+                        $loginErr = 'No active canteen assignment found.';
+                        session_destroy();
+                    }
                 }
                 break;
             case 'employee':

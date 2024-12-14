@@ -176,11 +176,11 @@ try {
 </div>
 
 <!-- Add Product Modal -->
-<div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true">
+<div class="modal fade" id="addProductModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="addProductModalLabel">Add New Product</h5>
+                <h5 class="modal-title">Add New Product</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -193,34 +193,34 @@ try {
                     </div>
 
                     <div class="mb-3">
-                        <label for="type_id" class="form-label">Category</label>
-                        <select class="form-control" id="type_id" name="type_id" required>
-                            <option value="">Select Category</option>
-                            <?php foreach ($productTypes as $type): ?>
-                                <option value="<?= htmlspecialchars($type['type_id']) ?>">
-                                    <?= htmlspecialchars($type['name']) ?> (<?= htmlspecialchars($type['type']) ?>)
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
                         <label for="description" class="form-label">Description</label>
                         <textarea class="form-control" id="description" name="description"></textarea>
                     </div>
 
                     <div class="mb-3">
                         <label for="price" class="form-label">Price</label>
-                        <input type="number" class="form-control" id="price" name="price" step="0.01" required>
+                        <input type="number" class="form-control" id="price" name="price" step="0.01" min="0" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="type_id" class="form-label">Product Type</label>
+                        <select class="form-control" id="type_id" name="type_id" required>
+                            <option value="">Select Type</option>
+                            <?php foreach ($productTypes as $type): ?>
+                                <option value="<?php echo htmlspecialchars($type['type_id']); ?>">
+                                    <?php echo htmlspecialchars($type['name']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
 
                     <div class="mb-3">
                         <label for="initial_stock" class="form-label">Initial Stock</label>
-                        <input type="number" class="form-control" id="initial_stock" name="initial_stock" required>
+                        <input type="number" class="form-control" id="initial_stock" name="initial_stock" min="0" required>
                     </div>
 
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-primary">Add Product</button>
                     </div>
                 </form>
@@ -603,4 +603,97 @@ function deleteProduct(productId) {
         // Implement delete functionality
     }
 }
+
+$(document).ready(function() {
+    // Initialize DataTable code here...
+
+    // Add Product Form Submission
+    $('#addProductForm').submit(function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        
+        // Add the canteen_id from session
+        formData.append('canteen_id', '<?php echo $_SESSION['canteen_id']; ?>');
+        
+        $.ajax({
+            url: '../ajax/addProduct.php',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                try {
+                    if (response.success) {
+                        // Close the modal
+                        $('#addProductModal').modal('hide');
+                        
+                        // Show success message
+                        showResponse('Product added successfully', true);
+                        
+                        // Reset the form
+                        $('#addProductForm')[0].reset();
+                        
+                        // Reload the DataTable
+                        $('#productsTable').DataTable().ajax.reload();
+                    } else {
+                        showResponse(response.message || 'Error adding product', false);
+                    }
+                } catch (error) {
+                    console.error('Error parsing response:', error);
+                    showResponse('Error processing server response', false);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Ajax error:', error);
+                showResponse('Error submitting form: ' + error, false);
+            }
+        });
+    });
+
+    // Add validation for price and stock inputs
+    $('#price, #initial_stock').on('input', function() {
+        this.value = this.value.replace(/[^0-9.]/g, '');
+    });
+});
+
+// Make sure the showResponse function is defined
+function showResponse(message, success = true) {
+    const responseMessage = document.getElementById('responseMessage');
+    responseMessage.textContent = message;
+    responseMessage.className = success ? 'text-success' : 'text-danger';
+    
+    const modalElement = document.getElementById('responseModal');
+    const modalFooter = modalElement.querySelector('.modal-footer');
+    modalFooter.innerHTML = `
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+    `;
+    
+    const responseModal = new bootstrap.Modal(modalElement);
+    responseModal.show();
+    
+    if (success) {
+        modalElement.addEventListener('hidden.bs.modal', function() {
+            $('#productsTable').DataTable().ajax.reload(null, false);
+        }, { once: true });
+    }
+}
 </script>
+
+<!-- Add this modal for showing responses -->
+<div class="modal fade" id="responseModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Message</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="responseMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>

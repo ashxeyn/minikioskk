@@ -11,13 +11,29 @@ if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || $_SESSION['role
 
 try {
     $employee = new Employee();
-    $canteenId = $_SESSION['canteen_id'] ?? null;
-    if (!$canteenId) {
-        throw new Exception("Canteen ID not found in session");
+    
+    // Check if canteen_id is not set in session
+    if (!isset($_SESSION['canteen_id'])) {
+        // Try to fetch canteen_id from managers table
+        $db = new Database();
+        $conn = $db->connect();
+        $sql = "SELECT canteen_id FROM managers WHERE user_id = :user_id AND status = 'accepted'";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute(['user_id' => $_SESSION['user_id']]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($result && isset($result['canteen_id'])) {
+            $_SESSION['canteen_id'] = $result['canteen_id'];
+        } else {
+            throw new Exception("No active canteen assignment found for this manager");
+        }
     }
-    $employees = $employee->fetchCanteenEmployees($canteenId);
+
+    $employees = $employee->fetchCanteenEmployees($_SESSION['canteen_id']);
 } catch (Exception $e) {
     error_log("Error in view_employees: " . $e->getMessage());
+    echo "<div class='alert alert-danger'>Error: " . htmlspecialchars($e->getMessage()) . "</div>";
+    exit;
 }
 ?>
 
@@ -234,6 +250,26 @@ try {
         });
 
         $(document).ready(function() {
+            // Check session before initializing DataTable
+            $.ajax({
+                url: '../ajax/checkSession.php',
+                method: 'GET',
+                success: function(response) {
+                    if (response.success) {
+                        initializeDataTable();
+                    } else {
+                        console.error('Session error:', response.error);
+                        showResponse('Error: ' + response.error, false);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Ajax error:', error);
+                    showResponse('Error checking session', false);
+                }
+            });
+        });
+
+        function initializeDataTable() {
             try {
                 $('#employeesTable').DataTable({
                     "processing": true,
@@ -243,6 +279,9 @@ try {
                         "type": "POST",
                         "error": function(xhr, error, thrown) {
                             console.error('DataTables error:', error, thrown);
+                            if (error === "Canteen ID not found in session") {
+                                location.reload(); // Reload to re-check session
+                            }
                         }
                     },
                     "columns": [
@@ -278,8 +317,9 @@ try {
                 });
             } catch (error) {
                 console.error('DataTables initialization error:', error);
+                showResponse('Error initializing table', false);
             }
-        });
+        }
     </script>
 </body>
 </html>
