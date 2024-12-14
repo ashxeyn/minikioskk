@@ -4,14 +4,12 @@ require_once '../classes/productClass.php';
 require_once '../classes/stocksClass.php';
 require_once '../tools/functions.php';
 
-// Check if user is admin
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     header('Location: ../accounts/login.php');
     exit;
 }
 
 try {
-    // Fetch all products with necessary information
     $db = new Database();
     $conn = $db->connect();
     
@@ -119,7 +117,6 @@ try {
 
     <script>
     $(document).ready(function() {
-        // Initialize DataTable
         let table = $('.table').DataTable({
             "responsive": true,
             "pageLength": 10,
@@ -129,7 +126,6 @@ try {
             }
         });
 
-        // Stock Form Submission
         $('#stockForm').submit(function(e) {
             e.preventDefault();
             const formData = new FormData(this);

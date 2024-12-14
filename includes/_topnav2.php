@@ -25,8 +25,6 @@
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="authDropdown">
                             <li><a class="dropdown-item" href="../accounts/login.php"><i class="bi bi-box-arrow-in-right"></i> Login</a></li>
                             <li><a class="dropdown-item" href="../accounts/signup.php"><i class="bi bi-person-plus"></i> Sign Up</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="../accounts/register.php"><i class="bi bi-shop"></i> Register your Canteen</a></li>
                         </ul>
                     </li>
                 </ul>
@@ -39,9 +37,9 @@
                             <?php echo htmlspecialchars($userInfo['username'] ?? 'User'); ?>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                            
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="../accounts/logout.php"><i class="bi bi-box-arrow-right"></i> Sign out</a></li>
+                            <li><a class="dropdown-item" href="../accounts/register.php"><i class="bi bi-shop"></i> Register your Canteen</a></li>
                         </ul>
                     </li>
                 </ul>

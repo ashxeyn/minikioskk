@@ -1,35 +1,17 @@
 <?php 
 class Database{
 
-    private $host = "localhost";
-    private $username = "root";
-    private $password = "";
-    private $database = "minikiosk1";
-    private $conn = null;
+    protected $connection;
 
-    public function connect() {
+    function connect(){
         try {
-            if ($this->conn === null) {
-                $this->conn = new PDO(
-                    "mysql:host=" . $this->host . ";dbname=" . $this->database,
-                    $this->username,
-                    $this->password
-                );
-                $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            }
-            return $this->conn;
-        } catch(PDOException $e) {
-            error_log("Connection error: " . $e->getMessage());
-            throw new Exception("Database connection failed");
+            $this->connection = new PDO("mysql:host=localhost;dbname=minikiosk","root","");
+            //echo "Connection success!";
+        } catch (PDOException $e) {
+            echo "ERROR MESSAGE: " . $e->getMessage();
         }
-    }
-
-    public function prepare($sql) {
-        return $this->connect()->prepare($sql);
-    }
-
-    public function getConnection() {
-        return $this->connect();
+        
+        return $this->connection;
     }
 }
 //$objdb = new Database;

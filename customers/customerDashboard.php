@@ -6,17 +6,14 @@ require_once '../classes/orderClass.php';
 require_once '../classes/productClass.php';
 require_once '../classes/canteenClass.php';
 
-// Initialize objects
 $account = new Account();
 $orderObj = new Order();
 $productObj = new Product();
 $canteenObj = new Canteen();
 
-// Get user info
 $account->user_id = $_SESSION['user_id'] ?? null;
 $userInfo = $account->UserInfo();
 
-// Get user's orders
 $userOrders = [];
 if ($account->user_id) {
     $userOrders = $orderObj->getOrdersByUser($account->user_id);
@@ -56,7 +53,6 @@ require_once '../includes/_head.php';
                 <form autocomplete="off" class="search-form" id="searchForm">
                     <div class="search-container">
                         <input type="search" id="search" name="search" placeholder="Search canteens or menu items...">
-                        <button type="submit" class="search-btn">Search</button>
                     </div>
                     <div class="search-options">
                         <label><input type="radio" name="search_type" value="all" checked> All</label>
@@ -75,6 +71,6 @@ require_once '../includes/_head.php';
     </div>
 </div>
 
-<script src="dashboard_content.js"></script>
+<script src="../js/dashboard_content.js"></script>
 </body>
 </html>

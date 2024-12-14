@@ -26,13 +26,11 @@
                             <li><a class="dropdown-item" href="../accounts/login.php"><i class="bi bi-box-arrow-in-right"></i> Login</a></li>
                             <li><a class="dropdown-item" href="../accounts/signup.php"><i class="bi bi-person-plus"></i> Sign Up</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="../accounts/register.php"><i class="bi bi-shop"></i> Register your Canteen</a></li>
                         </ul>
                     </li>
                 </ul>
             <?php else: ?>
                 <ul class="navbar-nav ms-3 d-flex flex-row align-items-center">
-                    
                     <li class="nav-item dropdown">
                         <button class="btn btn-link nav-link dropdown-toggle text-white" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-person-circle"></i>
@@ -42,6 +40,7 @@
                             
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="../accounts/logout.php"><i class="bi bi-box-arrow-right"></i> Sign out</a></li>
+                            <li><a class="dropdown-item" href="../accounts/register.php"><i class="bi bi-shop"></i> Register your Canteen</a></li>
                         </ul>
                     </li>
                 </ul>
