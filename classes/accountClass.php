@@ -35,7 +35,6 @@ class Account
             if ($query->execute()) {
                 $result = $query->fetch(PDO::FETCH_ASSOC);
                 if ($result) {
-                    // Set default manager_status to match user status if not a manager
                     if ($result['role'] !== 'manager') {
                         $result['manager_status'] = $result['status'];
                     }
@@ -56,8 +55,6 @@ class Account
         try {
             $conn = $this->db->connect();
             $conn->beginTransaction();
-
-            // Validate program_id if student
             if ($is_student && $program_id) {
                 $checkProgram = $conn->prepare("SELECT program_id FROM programs WHERE program_id = ?");
                 $checkProgram->execute([$program_id]);
@@ -66,7 +63,7 @@ class Account
                 }
             }
 
-            // Validate department_id if employee
+          
             if ($is_employee && $department_id) {
                 $checkDept = $conn->prepare("SELECT department_id FROM departments WHERE department_id = ?");
                 $checkDept->execute([$department_id]);
@@ -77,7 +74,7 @@ class Account
 
             $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
             
-            // Insert into users table with all fields
+          
             $sql = "INSERT INTO users (
                         last_name, given_name, middle_name, email, username, password, 
                         role, status, program_id, department_id
@@ -98,7 +95,7 @@ class Account
             
             $query = $conn->prepare($sql);
             
-            // Bind all parameters
+          
             $params = [
                 ':last_name' => $last_name,
                 ':given_name' => $given_name,
@@ -237,10 +234,10 @@ class Account
             $conn = $this->db->connect();
             $conn->beginTransaction();
 
-            // Hash the password
+           
             $hashedPassword = password_hash($this->password, PASSWORD_DEFAULT);
             
-            // Insert into users table
+           
             $sql = "INSERT INTO users (last_name, given_name, middle_name, email, username, 
                     password, role, status) 
                     VALUES (:last_name, :given_name, :middle_name, :email, :username, 
@@ -259,7 +256,7 @@ class Account
             if ($stmt->execute($params)) {
                 $this->user_id = $conn->lastInsertId();
                 
-                // Insert into managers table
+              
                 $sql2 = "INSERT INTO managers (user_id, canteen_id, status) 
                          VALUES (:user_id, :canteen_id, 'pending')";
                 
@@ -270,7 +267,7 @@ class Account
                 ];
                 
                 if ($stmt2->execute($params2)) {
-                    // Insert into user_profiles table
+                   
                     $sql3 = "INSERT INTO user_profiles (user_id, last_name, given_name, middle_name) 
                              VALUES (:user_id, :last_name, :given_name, :middle_name)";
                     
@@ -342,7 +339,7 @@ class Account
     function fetchUsers() {
         $sql = "SELECT * FROM Users";
         $query = $this->db->connect()->query($sql);
-        return $query->fetchAll(PDO::FETCH_ASSOC); // Return all users as an associative array
+        return $query->fetchAll(PDO::FETCH_ASSOC); 
     }
     
     function searchUsers($keyword = '', $role = '') {
@@ -425,14 +422,12 @@ class Account
             $db = $this->db->connect();
             $db->beginTransaction();
             
-            // Update users table status
             $sql = "UPDATE users 
                     SET status = 'approved' 
                     WHERE user_id = :user_id";
             $stmt = $db->prepare($sql);
             $stmt->execute(['user_id' => $user_id]);
             
-            // Update managers table status
             $sql2 = "UPDATE managers 
                      SET status = 'accepted' 
                      WHERE user_id = :user_id";

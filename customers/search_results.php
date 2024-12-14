@@ -12,7 +12,7 @@ $canteens = ($search_type === 'menu') ? [] : $searchResults['canteens'];
 $menuItems = ($search_type === 'canteens') ? [] : $searchResults['products'];
 ?>
 
-<!-- Only return the results section -->
+
 <div id="searchResultsContent">
     <!-- Canteens Section -->
     <h3>Canteens</h3>

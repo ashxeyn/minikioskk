@@ -8,11 +8,9 @@ $cartObj = new Cart();
 $account = new Account();
 $stocksObj = new Stocks();
 
-// Fetch user ID and user-related data
 $user_id = $_SESSION['user_id'] ?? null;
 $userInfo = $account->UserInfo($user_id);
 
-// Fetch cart items
 $cartItems = $cartObj->getCartItems($user_id);
 $canCheckout = true;
 $errorMessages = [];
@@ -26,21 +24,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $db->beginTransaction();
             
             try {
-                // Place the order with total amount
+              
                 $orderResult = $orderObj->placeOrder($user_id, $cartItems, $total);
                 
                 if (!$orderResult['success']) {
                     throw new Exception("Failed to place order");
                 }
                 
-                // Update stock quantities
+         
                 foreach ($cartItems as $item) {
                     if (!$stocksObj->updateStock($item['product_id'], -$item['quantity'])) {
                         throw new Exception("Failed to update stock for {$item['name']}");
                     }
                 }
-                
-                // Store only the necessary order info in session
+   
                 $_SESSION['last_order'] = [
                     'order_id' => $orderResult['order_id'],
                     'total_amount' => $total,
@@ -69,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $product_id = $_POST['product_id'];
             $new_quantity = $_POST['new_quantity'];
             
-            // Validate stock before updating
+
             $stock = $stocksObj->fetchStockByProductId($product_id);
             if ($stock && $stock['quantity'] >= $new_quantity) {
                 $orderObj->updateCartQuantity($user_id, $product_id, $new_quantity);
@@ -96,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../css/customer-cart.css">
     
-    <!-- Add these modal styles -->
+
     <style>
         .modal {
             display: none;
@@ -121,7 +118,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
         
-        /* Optional: Add some animation */
         .modal.fade .modal-dialog {
             transform: translate(-50%, -70%) !important;
             transition: transform 0.3s ease-out;
@@ -131,20 +127,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             transform: translate(-50%, -50%) !important;
         }
         
-        /* Make modal backdrop darker */
+  
         .modal-backdrop.show {
             opacity: 0.7;
         }
         
-        /* Responsive adjustments */
+
         @media (max-width: 576px) {
             .modal-dialog {
                 width: 95%;
                 margin: 0;
             }
         }
-        
-        /* Response Modal Styles */
+   
         #responseModal .modal-content {
             background-color: white;
             color: #333;

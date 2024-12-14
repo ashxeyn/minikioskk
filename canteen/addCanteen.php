@@ -10,7 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $campus_location = clean_input($_POST['campus_location']);
 
     if (empty($canteen_name) || empty($campus_location)) {
-        echo 'failure';  // Return failure if fields are empty
+        echo 'failure';  
         exit;
     }
 

@@ -1,8 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Load initial user table
     loadUserTable();
 
-    // Setup form submission handlers
     setupFormHandlers();
 });
 
@@ -12,7 +10,6 @@ function loadUserTable() {
         type: 'GET',
         success: function(response) {
             $('#accountTable').html(response);
-            // Initialize search after loading table
             searchUsers('', '');
         },
         error: function(xhr, status, error) {
@@ -27,13 +24,11 @@ function loadUserTable() {
 }
 
 function setupFormHandlers() {
-    // Add User form submission
     $(document).on('submit', '#addNewUserForm', function(e) {
         e.preventDefault();
         saveUser();
     });
 
-    // Edit User form submission
     $(document).on('submit', '#editForm', function(e) {
         e.preventDefault();
         const formData = $(this).serialize();
@@ -52,8 +47,6 @@ function setupFormHandlers() {
             }
         });
     });
-
-    // Delete User form submission
     $(document).on('submit', '#deleteForm', function(e) {
         e.preventDefault();
         const userId = $('#deleteUserId').val();
@@ -75,10 +68,10 @@ function setupFormHandlers() {
 }
 
 function openAddUserModal() {
-    // Reset form
+
     document.getElementById('addUserForm').reset();
     
-    // Show loading state
+  
     const programSelect = document.getElementById('program_id');
     const departmentSelect = document.getElementById('department_id');
     const canteenSelect = document.getElementById('canteen_id');
@@ -87,7 +80,7 @@ function openAddUserModal() {
     departmentSelect.innerHTML = '<option value="">Loading departments...</option>';
     canteenSelect.innerHTML = '<option value="">Loading canteens...</option>';
     
-    // Populate programs dropdown
+
     $.ajax({
         url: '../programs/get_programs.php',
         type: 'GET',
@@ -108,7 +101,7 @@ function openAddUserModal() {
         }
     });
 
-    // Populate departments dropdown
+
     $.ajax({
         url: '../departments/get_departments.php',
         type: 'GET',

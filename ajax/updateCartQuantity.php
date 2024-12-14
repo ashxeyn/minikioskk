@@ -29,7 +29,7 @@ try {
         exit;
     }
     
-    // Update the quantity
+    // Update the quantitiez
     $cartObj->updateCartQuantity($_SESSION['user_id'], $product_id, $new_quantity);
     
     echo json_encode(['success' => true]);

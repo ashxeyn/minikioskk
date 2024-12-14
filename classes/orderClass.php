@@ -23,7 +23,6 @@ class Order
                 $db->beginTransaction();
             }
 
-            // First verify stock availability for all items
             $stocksObj = new Stocks();
             foreach ($cartItems as $item) {
                 $stock = $stocksObj->fetchStockByProductId($item['product_id']);
@@ -34,7 +33,6 @@ class Order
 
             $canteen_id = $cartItems[0]['canteen_id'] ?? 1;
 
-            // Create the order
             $sql = "INSERT INTO orders (user_id, canteen_id, total_amount, status, payment_status, created_at) 
                     VALUES (:user_id, :canteen_id, :total_amount, 'placed', 'unpaid', NOW())";
             
@@ -46,8 +44,6 @@ class Order
             ]);
             
             $order_id = $db->lastInsertId();
-
-            // Insert order items and update stock
             $sql = "INSERT INTO order_items (order_id, product_id, quantity, unit_price, subtotal) 
                     VALUES (:order_id, :product_id, :quantity, :unit_price, :subtotal)";
             
@@ -56,7 +52,6 @@ class Order
             foreach ($cartItems as $item) {
                 $subtotal = $item['quantity'] * $item['unit_price'];
                 
-                // Insert order item
                 $stmt->execute([
                     'order_id' => $order_id,
                     'product_id' => $item['product_id'],
@@ -131,13 +126,13 @@ class Order
             $db = $this->db->connect();
             $db->beginTransaction();
 
-            // Get order items to restore stock
+           
             $sql = "SELECT product_id, quantity FROM order_items WHERE order_id = :order_id";
             $stmt = $db->prepare($sql);
             $stmt->execute(['order_id' => $order_id]);
             $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            // Update order status
+            
             $sql = "UPDATE orders 
                     SET status = 'cancelled', 
                         updated_at = NOW() 
@@ -146,7 +141,6 @@ class Order
             $stmt = $db->prepare($sql);
             $stmt->execute(['order_id' => $order_id]);
 
-            // Restore stock quantities
             $stocksObj = new Stocks();
             foreach ($items as $item) {
                 $stocksObj->updateStock(
@@ -292,13 +286,13 @@ class Order
         try {
             $db = $this->db->connect();
             
-            // Get order items
+           
             $sql = "SELECT product_id, quantity FROM order_items WHERE order_id = :order_id";
             $stmt = $db->prepare($sql);
             $stmt->execute([':order_id' => $orderId]);
             $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-            // Restore stock for each item
+          
             foreach ($items as $item) {
                 $sql = "UPDATE stocks 
                         SET quantity = quantity + :restore_quantity 
@@ -321,7 +315,7 @@ class Order
         try {
             $db = $this->db->connect();
             
-            // Get the order date
+           
             $sql = "SELECT DATE(created_at) as order_date 
                     FROM orders 
                     WHERE order_id = :order_id";
@@ -333,17 +327,17 @@ class Order
                 throw new Exception("Order not found");
             }
             
-            // Format: YYYYMMDD-XXX (where XXX is the order_id padded with zeros)
+       
             $queueNumber = date('Ymd', strtotime($result['order_date'])) . '-' . 
                           str_pad($order_id, 3, '0', STR_PAD_LEFT);
             
-            // Check if the orders table has the queue_number column
+          
             $checkColumnSql = "SHOW COLUMNS FROM orders LIKE 'queue_number'";
             $checkStmt = $db->prepare($checkColumnSql);
             $checkStmt->execute();
             
             if ($checkStmt->rowCount() > 0) {
-                // Update the order with the queue number
+               
                 $sql = "UPDATE orders 
                         SET queue_number = :queue_number 
                         WHERE order_id = :order_id";
@@ -353,7 +347,7 @@ class Order
                     'order_id' => $order_id
                 ]);
             } else {
-                // If column doesn't exist, log it but don't fail
+               
                 error_log("Queue number column does not exist in orders table");
             }
             

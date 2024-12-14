@@ -25,15 +25,12 @@ function loadDepartments() {
 }
 
 function openAddModal() {
-    // Clear form fields
     $('#addProgramForm')[0].reset();
     
-    // Show modal
     $('#addProgramModal').modal('show');
 }
 
 function openEditModal(programId) {
-    // First load departments
     $.ajax({
         url: '../programs/get_departments.php',
         method: 'GET',
@@ -45,7 +42,6 @@ function openEditModal(programId) {
             });
             $('#edit_department_id').html(options);
             
-            // Then fetch program details
             $.ajax({
                 url: '../programs/fetchProgramDetails.php',
                 method: 'GET',

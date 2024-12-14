@@ -1,8 +1,7 @@
 function showAlert(message, type) {
-    // Remove any existing alerts
+
     $('.alert').remove();
     
-    // Create the alert HTML
     const alertHtml = `
         <div class="alert alert-${type} alert-dismissible fade show" role="alert">
             ${message}
@@ -10,10 +9,10 @@ function showAlert(message, type) {
         </div>
     `;
     
-    // Insert the alert before the product table
+
     $('#productTableContent').prepend(alertHtml);
     
-    // Auto dismiss after 5 seconds
+
     setTimeout(function() {
         $('.alert').fadeOut('slow', function() {
             $(this).remove();
@@ -27,7 +26,7 @@ function loadProductTable() {
         method: 'GET',
         success: function(response) {
             $('#productTableContent').html(response);
-            // Reinitialize DataTable if needed
+
             
             $('#productTable').DataTable({
                 dom: 'lrtip',
@@ -48,12 +47,11 @@ function initializeDataTable() {
         order: [[0, 'asc']]
     });
 
-    // Search functionality
+
     $('#searchProduct').on('keyup', function() {
         table.search(this.value).draw();
     });
 
-    // Category filter
     $('#categoryFilter').on('change', function() {
         const categoryId = $(this).val();
         if (categoryId) {

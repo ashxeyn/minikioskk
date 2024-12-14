@@ -5,12 +5,11 @@ require_once '../classes/orderClass.php';
 header('Content-Type: application/json');
 
 try {
-    // Check if user is logged in and is a manager
+   
     if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'manager') {
         throw new Exception('Unauthorized access');
     }
 
-    // Get the POST data
     $data = json_decode(file_get_contents('php://input'), true);
     
     if (!isset($data['order_id']) || !isset($data['status'])) {
@@ -26,18 +25,17 @@ try {
     }
 
     $orderObj = new Order();
-    
-    // Update the order status
+   
     $orderObj->updateOrderStatus($orderId, $newStatus, $canteenId);
     
     $queueNumber = null;
-    // Generate queue number if the order is being accepted
+    // Pang gen queue number kung accepted
     if ($newStatus === 'accepted') {
         try {
             $queueNumber = $orderObj->generateQueueNumber($orderId);
         } catch (Exception $e) {
             error_log("Queue number generation failed: " . $e->getMessage());
-            // Continue execution even if queue number generation fails
+           
         }
     }
 

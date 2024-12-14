@@ -24,17 +24,16 @@ try {
         exit;
     }
 
-    // Place order (this will also handle stock updates)
+   
     $orderResult = $orderObj->placeOrder($user_id, $cartItems, $total);
     
     if (!$orderResult['success']) {
         throw new Exception($orderResult['message'] ?? "Failed to place order");
     }
-    
-    // Clear the cart after successful order
+   
     $cartObj->clearCart($user_id);
     
-    // Store order info in session
+    
     $_SESSION['last_order'] = [
         'order_id' => $orderResult['order_id'],
         'total_amount' => $total,

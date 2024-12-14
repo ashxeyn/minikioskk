@@ -64,14 +64,14 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-    // Handle initial page load if employee section is active
+ 
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('section') === 'employees') {
         loadEmployeesSection();
     }
 });
 
-// Load different sections of the manager dashboard
+
 function loadEmployeesSection() {
     $.ajax({
         url: '../canteen/view_employees.php',
@@ -128,12 +128,11 @@ function loadAnalyticsSection() {
     });
 }
 
-// Document ready function to initialize any necessary features
 $(document).ready(function() {
     // Add any initialization code here
 });
 
-// Add Employee Functions
+
 function submitAddEmployee() {
     const form = document.getElementById('addEmployeeForm');
     const formData = new FormData(form);
@@ -146,7 +145,7 @@ function submitAddEmployee() {
     .then(data => {
         if (data.success) {
             $('#addEmployeeModal').modal('hide');
-            location.reload(); // Refresh to show new employee
+            location.reload(); 
         } else {
             alert(data.message || 'Error adding employee');
         }
@@ -157,7 +156,6 @@ function submitAddEmployee() {
     });
 }
 
-// Edit Employee Functions
 function editEmployee(userId) {
     fetch(`../ajax/getEmployee.php?user_id=${userId}`)
         .then(response => response.json())
@@ -188,7 +186,7 @@ function submitEditEmployee() {
     .then(data => {
         if (data.success) {
             $('#editEmployeeModal').modal('hide');
-            location.reload(); // Refresh to show updated employee
+            location.reload(); 
         } else {
             alert(data.message || 'Error updating employee');
         }
@@ -199,7 +197,6 @@ function submitEditEmployee() {
     });
 }
 
-// Delete Employee Function
 function deleteEmployee(userId) {
     if (confirm('Are you sure you want to delete this employee?')) {
         fetch('../ajax/deleteEmployee.php', {
@@ -212,7 +209,7 @@ function deleteEmployee(userId) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                location.reload(); // Refresh to remove deleted employee
+                location.reload(); 
             } else {
                 alert(data.message || 'Error deleting employee');
             }

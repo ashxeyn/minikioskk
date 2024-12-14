@@ -4,14 +4,12 @@ require_once '../classes/productClass.php';
 require_once '../classes/stocksClass.php';
 require_once '../tools/functions.php';
 
-// Check if user is manager and has canteen_id
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'manager') {
     header('Location: ../accounts/login.php');
     exit;
 }
 
 try {
-    // Get manager's canteen_id from the database
     $db = new Database();
     $conn = $db->connect();
     
@@ -32,7 +30,6 @@ try {
     
     $_SESSION['canteen_id'] = $result['canteen_id'];
     
-    // Fetch products with all necessary information
     $sql = "SELECT p.*, pt.name as type_name, s.quantity as stock_quantity, 
                    s.updated_at as last_stock_update 
             FROM products p 
@@ -139,19 +136,18 @@ try {
 
     <script>
     $(document).ready(function() {
-        // Initialize DataTable with proper configuration
         try {
             let table = $('.table').DataTable({
                 "responsive": true,
                 "pageLength": 10,
-                "order": [[2, "asc"]], // Order by product name (3rd column) instead of ID
+                "order": [[2, "asc"]],
                 "columnDefs": [
                     {
-                        "targets": [1], // Image column
+                        "targets": [1], 
                         "orderable": false
                     },
                     {
-                        "targets": [8], // Actions column
+                        "targets": [8],
                         "orderable": false,
                         "searchable": false
                     }
@@ -165,19 +161,18 @@ try {
                 }
             });
 
-            // Debug log
+           
             console.log('DataTable initialized successfully');
         } catch (error) {
             console.error('Error initializing DataTable:', error);
         }
 
-        // Add Product Form Submission
+ 
         $('#addProductForm').submit(function(e) {
             e.preventDefault();
             const formData = new FormData(this);
             formData.append('canteen_id', '<?php echo $_SESSION['canteen_id']; ?>');
 
-            // Debug log form data
             console.log('Submitting form with data:');
             for (let pair of formData.entries()) {
                 console.log(pair[0] + ': ' + pair[1]);
@@ -211,11 +206,11 @@ try {
             });
         });
 
-        // Load categories when add product modal opens
+      
         $('#addProductModal').on('show.bs.modal', function () {
             console.log('Modal opening - making AJAX call to get product types');
             
-            // Clear previous options and show loading
+           
             $('#type_id').html('<option value="">Loading categories...</option>');
             $('#debug-info').text('Loading categories...');
 
@@ -250,7 +245,7 @@ try {
             });
         });
 
-        // Stock Form Submission
+
         $('#stockForm').submit(function(e) {
             e.preventDefault();
             const formData = new FormData(this);

@@ -59,26 +59,26 @@ class Stocks
                 throw new Exception("Invalid quantity");
             }
             
-            // Check if product exists
+          
             if (!$this->productExists($product_id)) {
                 throw new Exception("Product not found");
             }
             
             $db->beginTransaction();
             
-            // Get current stock
+         
             $stmt = $db->prepare("SELECT quantity FROM stocks WHERE product_id = ? FOR UPDATE");
             $stmt->execute([$product_id]);
             $current = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if ($current) {
-                // Update existing stock
+           
                 $newQuantity = $current['quantity'] + $quantity;
                 $sql = "UPDATE stocks SET quantity = ?, last_restock = NOW() WHERE product_id = ?";
                 $stmt = $db->prepare($sql);
                 $result = $stmt->execute([$newQuantity, $product_id]);
             } else {
-                // Insert new stock record
+              
                 $sql = "INSERT INTO stocks (product_id, quantity, last_restock) VALUES (?, ?, NOW())";
                 $stmt = $db->prepare($sql);
                 $result = $stmt->execute([$product_id, $quantity]);

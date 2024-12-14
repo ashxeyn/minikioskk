@@ -12,17 +12,16 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'manager') {
 try {
     $productObj = new Product();
     
-    // Get POST data
+
     $productId = $_POST['product_id'];
     $name = $_POST['name'];
     $description = $_POST['description'];
     $typeId = $_POST['type_id'];
     $price = $_POST['price'];
     
-    // Update product
+   
     $result = $productObj->updateProduct($productId, $name, $description, $typeId, $price);
     
-    // If quantity is provided, update stock
     if (isset($_POST['quantity']) && !empty($_POST['quantity'])) {
         require_once '../classes/stocksClass.php';
         $stocksObj = new Stocks();

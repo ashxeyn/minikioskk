@@ -23,7 +23,7 @@ $productObj = new Product();
         error_log("Error fetching products: " . $e->getMessage());
     }   
 
-    // Fetch all products with necessary information
+ 
     $sql = "SELECT p.*, pt.name as type_name, c.name as canteen_name,
             s.quantity as stock_quantity, s.updated_at as last_stock_update 
             FROM products p 
@@ -62,60 +62,54 @@ try {
 ?>  
 
 <head>
-    <!-- Bootstrap Icons -->
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-    <!-- DataTables CSS -->
     <link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <style>
-        /* Override DataTables styles to prevent affecting sidebar */
         .dataTables_wrapper {
-            --dt-row-selected: none;  /* Prevent DataTables selection color */
+            --dt-row-selected: none;  
         }
         
-        /* Remove table background */
+        
         .table {
             background-color: transparent !important;
         }
         
-        /* Remove header background */
+        
         .table thead th {
             background-color: transparent !important;
         }
         
-        /* Remove striping if any */
+       
         .table-striped tbody tr:nth-of-type(odd) {
             background-color: transparent !important;
         }
-        
-        /* Remove hover background if needed */
+       
         .table-hover tbody tr:hover {
             background-color: rgba(0, 0, 0, 0.02) !important;
         }
         
-        /* Ensure sidebar styles are preserved */
+      
         .sidebar {
-            background-color: #343a40 !important;  /* Force sidebar background */
+            background-color: #343a40 !important; 
         }
         
         .sidebar .nav-link {
-            color: rgba(255, 255, 255, 0.8) !important;  /* Force sidebar link color */
+            color: rgba(255, 255, 255, 0.8) !important;  
         }
         
         .sidebar .nav-link:hover {
-            color: #fff !important;  /* Force sidebar hover color */
+            color: #fff !important;  
         }
         
         .sidebar .nav-link.active {
-            color: #fff !important;  /* Force active link color */
-            background-color: rgba(255, 255, 255, 0.1) !important;  /* Force active background */
+            color: #fff !important; 
+            background-color: rgba(255, 255, 255, 0.1) !important;  
         }
     </style>
-    <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- DataTables JS -->
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
-    <!-- Bootstrap Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </head>
 

@@ -4,10 +4,10 @@ require_once '../classes/orderClass.php';
 
 $orderObj = new Order();
 
-// Check if user_id is set in session
+
 if (isset($_SESSION['user_id'])) {
     try {
-        // Fetch orders only if user_id is defined
+ 
         $orders = $orderObj->getUserOrders($_SESSION['user_id']);
         error_log("Orders fetched for user " . $_SESSION['user_id'] . ": " . print_r($orders, true));
     } catch (Exception $e) {
@@ -34,7 +34,6 @@ if (isset($_SESSION['user_id'])) {
     
     <?php if (!empty($orders)): ?>
         <div class="orders-grid">
-            <!-- Active Orders Section - Takes 2 grids -->
             <div class="orders-section active-section">
                 <h3>Active Orders</h3>
                 <div class="orders-grid-container">
@@ -85,7 +84,6 @@ if (isset($_SESSION['user_id'])) {
                 </div>
             </div>
 
-            <!-- Completed Orders Section - Takes 2 grids -->
             <div class="orders-section completed-section">
                 <h3>Completed Orders</h3>
                 <div class="orders-grid-container">

@@ -39,12 +39,9 @@ try {
     }
 
     $newStatus = $statusMap[$action];
-    
-    // Update the order status
     $result = $orderObj->updateOrderStatus($orderId, $newStatus, $canteenId);
     
     if ($result) {
-        // Generate queue number if order is accepted
         if ($action === 'accept') {
             $queueNumber = $orderObj->generateQueueNumber($orderId);
         }

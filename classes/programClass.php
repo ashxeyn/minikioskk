@@ -18,14 +18,14 @@ class Program
         try {
             $conn = $this->db->connect();
             
-            // First check if college exists
+            
             $sql = "SELECT college_id FROM colleges WHERE college_name = :college_name";
             $stmt = $conn->prepare($sql);
             $stmt->execute(['college_name' => $college_name]);
             $college = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if (!$college) {
-                // Create new college
+               
                 $sql = "INSERT INTO colleges (college_name) VALUES (:college_name)";
                 $stmt = $conn->prepare($sql);
                 $stmt->execute(['college_name' => $college_name]);
@@ -34,7 +34,7 @@ class Program
                 $college_id = $college['college_id'];
             }
             
-            // Check if department exists
+         
             $sql = "SELECT department_id FROM departments 
                     WHERE department_name = :department_name 
                     AND college_id = :college_id";
@@ -46,7 +46,7 @@ class Program
             $department = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if (!$department) {
-                // Create new department
+             
                 $sql = "INSERT INTO departments (department_name, college_id) 
                         VALUES (:department_name, :college_id)";
                 $stmt = $conn->prepare($sql);

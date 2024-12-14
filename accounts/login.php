@@ -15,7 +15,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $user = $accountObj->fetch($username);
     
-    // Debugging
     error_log("Login attempt for username: " . $username);
     error_log("User data found: " . print_r($user, true));
     if ($user) {

@@ -19,7 +19,7 @@ try {
     
     $products = $productObj->fetchProducts($canteenId);
     
-    // Handle DataTables search
+    // DataTables search newhwejkapoy 
     if (!empty($_POST['search']['value'])) {
         $searchTerm = strtolower($_POST['search']['value']);
         $products = array_filter($products, function($product) use ($searchTerm) {
@@ -33,18 +33,16 @@ try {
         });
     }
     
-    // Get total records before pagination
+   
     $totalRecords = count($products);
     $filteredRecords = count($products);
     
-    // Handle DataTables pagination
     if (isset($_POST['start']) && isset($_POST['length'])) {
         $start = intval($_POST['start']);
         $length = intval($_POST['length']);
         $products = array_slice($products, $start, $length);
     }
     
-    // Format data for DataTables
     $data = [];
     foreach ($products as $product) {
         $actions = sprintf(
@@ -77,7 +75,6 @@ try {
         ];
     }
     
-    // Return the response in DataTables format
     echo json_encode([
         "draw" => isset($_POST['draw']) ? intval($_POST['draw']) : 0,
         "recordsTotal" => count($products),

@@ -22,30 +22,29 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $password = clean_input($_POST['password']);
     $role = clean_input($_POST['role']);
 
-    // Set role flags
+   
     $is_student = ($role === 'student') ? 1 : 0;
     $is_employee = ($role === 'employee') ? 1 : 0;
     $is_guest = ($role === 'guest') ? 1 : 0;
     
-    // Validate program_id for students
+    
     if ($role === 'student' && empty($_POST['program_id'])) {
         $signupErr = "Please select a program";
         throw new Exception($signupErr);
     }
 
-    // Validate department_id for employees
+ 
     if ($role === 'employee' && empty($_POST['department_id'])) {
         $signupErr = "Please select a department";
         throw new Exception($signupErr);
     }
 
-    // Get program_id for students
+    
     $program_id = null;
     if ($role === 'student' && !empty($_POST['program_id'])) {
         $program_id = clean_input($_POST['program_id']);
     }
 
-    // Get department_id for employees
     $department_id = null;
     if ($role === 'employee' && !empty($_POST['department_id'])) {
         $department_id = clean_input($_POST['department_id']);

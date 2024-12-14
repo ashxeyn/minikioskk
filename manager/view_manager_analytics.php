@@ -9,39 +9,38 @@ if (!isset($_SESSION['canteen_id'])) {
 $canteenId = $_SESSION['canteen_id'];
 $manager = new Manager($canteenId);
 
-// Get initial data
+
 $totalSales = $manager->getTotalSales();
 $customerCount = $manager->getCustomerCount();
 $completedOrders = $manager->getCompletedOrders();
 $topSellingProducts = $manager->getTopSellingProducts();
 $monthlySales = $manager->getMonthlySales();
 ?>
-    <!-- Bootstrap Icons -->
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <!-- DataTables CSS -->
     <link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
 <style>
-        /* Override DataTables styles to prevent affecting sidebar */
+        
         .dataTables_wrapper {
-            --dt-row-selected: none;  /* Prevent DataTables selection color */
+            --dt-row-selected: none;
         }
         
-        /* Ensure sidebar styles are preserved */
         .sidebar {
-            background-color: #343a40 !important;  /* Force sidebar background */
+            background-color: #343a40 !important;
         }
         
         .sidebar .nav-link {
-            color: rgba(255, 255, 255, 0.8) !important;  /* Force sidebar link color */
+            color: rgba(255, 255, 255, 0.8) !important;
         }
         
         .sidebar .nav-link:hover {
-            color: #fff !important;  /* Force sidebar hover color */
+            color: #fff !important;  
         }
         
         .sidebar .nav-link.active {
-            color: #fff !important;  /* Force active link color */
-            background-color: rgba(255, 255, 255, 0.1) !important;  /* Force active background */
+            color: #fff !important; 
+            background-color: rgba(255, 255, 255, 0.1) !important;
         }
     </style>
 <div class="container-fluid">
@@ -86,7 +85,7 @@ $monthlySales = $manager->getMonthlySales();
             </div>
         </div>
 
-        <!-- Completed Orders -->
+     
         <div class="col-md-4">
             <div class="card">
                 <div class="card-body">
@@ -103,7 +102,7 @@ $monthlySales = $manager->getMonthlySales();
             </div>
         </div>
 
-        <!-- Total Sales -->
+      
         <div class="col-md-4">
             <div class="card">
                 <div class="card-body">
@@ -121,9 +120,8 @@ $monthlySales = $manager->getMonthlySales();
         </div>
     </div>
 
-    <!-- Charts Row -->
     <div class="row">
-        <!-- Top Selling Products -->
+      
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header">
@@ -152,7 +150,7 @@ $monthlySales = $manager->getMonthlySales();
             </div>
         </div>
 
-        <!-- Monthly Sales Chart -->
+   
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header">

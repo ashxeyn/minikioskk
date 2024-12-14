@@ -4,9 +4,7 @@ require_once '../tools/functions.php';
 
 header('Content-Type: application/json');
 
-try {
-    // Debug logging
-    error_log("Raw POST data: " . file_get_contents('php://input'));
+try {    error_log("Raw POST data: " . file_get_contents('php://input'));
     error_log("POST array: " . print_r($_POST, true));
     
     if (!isset($_POST['product_id']) || !isset($_POST['quantity'])) {
@@ -14,14 +12,14 @@ try {
         throw new Exception('Missing required parameters');
     }
     
-    // Validate product_id
+
     $product_id = filter_var($_POST['product_id'], FILTER_VALIDATE_INT);
     if ($product_id === false || $product_id <= 0) {
         error_log("Invalid product ID received: " . $_POST['product_id']);
         throw new Exception('Invalid product ID format');
     }
     
-    // Validate quantity
+   
     $quantity = filter_var($_POST['quantity'], FILTER_VALIDATE_INT);
     if ($quantity === false || $quantity <= 0) {
         error_log("Invalid quantity received: " . $_POST['quantity']);

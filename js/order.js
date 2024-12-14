@@ -23,7 +23,7 @@ function openEditModal(order_id) {
                 $('#edit_status').val(order.status);
                 $('#edit_queue_number').val(order.queue_number);
 
-                // Fetch existing products in the order
+             
                 $.ajax({
                     url: '../orders/fetchOrderProducts.php',
                     type: 'GET',

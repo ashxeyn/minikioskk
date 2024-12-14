@@ -1,9 +1,9 @@
 function openAddProductModal() {
-    // Reset form and show modal
+ 
     $('#addProductForm')[0].reset();
     $('#addProductModal').modal('show');
     
-    // Load categories for the select dropdown
+
     $.ajax({
         url: '../product/getCategories.php',
         method: 'GET',
@@ -27,13 +27,11 @@ function openAddProductModal() {
     });
 }
 
-// Handle add product form submission
 $('#addProductForm').submit(function(e) {
     e.preventDefault();
     
     const formData = new FormData(this);
     
-    // Add canteen_id from session
     const canteenId = $('#canteen_id').val();
     formData.append('canteen_id', canteenId);
 
@@ -49,7 +47,7 @@ $('#addProductForm').submit(function(e) {
                 if (result.status === 'success') {
                     $('#addProductModal').modal('hide');
                     showAlert('Product added successfully!', 'success');
-                    // Reload the product table
+    
                     loadProductTable();
                 } else {
                     showAlert('Error: ' + result.message, 'danger');
@@ -66,7 +64,6 @@ $('#addProductForm').submit(function(e) {
     });
 });
 
-// Helper function to show alerts
 function showAlert(message, type) {
     const alertHtml = `
         <div class="alert alert-${type} alert-dismissible fade show" role="alert">
@@ -75,13 +72,11 @@ function showAlert(message, type) {
         </div>
     `;
     
-    // Remove any existing alerts
+   
     $('.alert').remove();
     
-    // Add the new alert before the product table
+ 
     $('#productTable').before(alertHtml);
-    
-    // Auto dismiss after 5 seconds
     setTimeout(function() {
         $('.alert').fadeOut('slow', function() {
             $(this).remove();

@@ -3,14 +3,6 @@ session_start();
 
 require_once '../classes/accountClass.php';
 
-// if (!isset($_SESSION['user_id'])) {
-//     header("Location: ../accounts/login.php");
-//     exit();
-// }
-
-// $account = new Account();
-// $account->user_id = $_SESSION['user_id'];
-// $userInfo = $account->UserInfo();
 
 require_once '../includes/_head.php';
 ?>

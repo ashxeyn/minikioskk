@@ -22,7 +22,6 @@ class Canteen
         try {
             $conn = $this->db->connect();
             
-            // Check if canteen name already exists
             $checkSql = "SELECT canteen_id FROM canteens WHERE name = :name";
             $checkStmt = $conn->prepare($checkSql);
             $checkStmt->execute(['name' => $this->name]);
@@ -31,7 +30,7 @@ class Canteen
                 return false; // Canteen name already exists
             }
             
-            // Insert new canteen
+           
             $sql = "INSERT INTO canteens (name, campus_location, description, opening_time, closing_time, status) 
                     VALUES (:name, :campus_location, :description, :opening_time, :closing_time, :status)";
             
@@ -142,7 +141,6 @@ class Canteen
             $canteens = [];
             $products = [];
             
-            // Get canteens if search type is 'all' or 'canteens'
             if ($search_type === 'all' || $search_type === 'canteens') {
                 $sql = "SELECT canteen_id, name, campus_location, description, 
                                opening_time, closing_time, status, created_at 
@@ -159,7 +157,7 @@ class Canteen
                 $canteens = $stmt->fetchAll(PDO::FETCH_ASSOC);
             }
 
-            // Get products if search type is 'all' or 'menu'
+            
             if ($search_type === 'all' || $search_type === 'menu') {
                 $sql = "SELECT p.*, c.name as canteen_name, c.status as canteen_status
                         FROM products p 

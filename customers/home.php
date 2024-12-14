@@ -5,7 +5,6 @@ require_once '../classes/accountClass.php';
 require_once '../classes/canteenClass.php';
 require_once '../classes/productClass.php';
 
-// Handle user authentication
 $account = new Account();
 $isLoggedIn = isset($_SESSION['user_id']);
 if ($isLoggedIn) {
@@ -13,18 +12,16 @@ if ($isLoggedIn) {
     $userInfo = $account->UserInfo();
 }
 
-// Create instances of the Canteen and Product classes
 $canteenObj = new Canteen();
 $productObj = new Product();
 
-// Handle search logic
+
 $keyword = isset($_GET['search']) ? clean_input($_GET['search']) : '';
 $search_type = isset($_GET['search_type']) ? clean_input($_GET['search_type']) : 'all';
 
-// Get search results based on type
+
 $searchResults = $canteenObj->searchCanteensAndProducts($keyword, $search_type);
 
-// Get the separate arrays
 $canteens = ($search_type === 'menu') ? [] : $searchResults['canteens'];
 $menuItems = ($search_type === 'canteens') ? [] : $searchResults['products'];
 
@@ -42,7 +39,7 @@ $menuItems = ($search_type === 'canteens') ? [] : $searchResults['products'];
 </head>
 
 <body>
-    <!-- Dashboard Section -->
+
     <h3>
         <?php
         if ($isLoggedIn) {
@@ -53,7 +50,7 @@ $menuItems = ($search_type === 'canteens') ? [] : $searchResults['products'];
         ?>
     </h3>
 
-    <!-- Search Form Section -->
+  
     <form autocomplete="off" method="GET" class="search-form">
         <div class="search-container">
             <input type="search" id="search" name="search" placeholder="Search canteens or menu items..." value="<?= htmlspecialchars($keyword) ?>">
@@ -66,7 +63,7 @@ $menuItems = ($search_type === 'canteens') ? [] : $searchResults['products'];
         </div>
     </form>
 
-    <!-- Canteens Section -->
+ 
     <h3>Canteens</h3>
     <div class="canteen-container">
         <?php if (!empty($canteens)): ?>
@@ -84,7 +81,6 @@ $menuItems = ($search_type === 'canteens') ? [] : $searchResults['products'];
         <?php endif; ?>
     </div>
 
-    <!-- Menu Items Section -->
     <h3>Menu Items</h3>
     <div class="menu-container">
         <?php if (!empty($menuItems)): ?>
@@ -102,7 +98,6 @@ $menuItems = ($search_type === 'canteens') ? [] : $searchResults['products'];
         <?php endif; ?>
     </div>
 
-    <!-- Content Area -->
     <div id="contentArea"></div>
 </body>
 </html>

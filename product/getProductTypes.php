@@ -5,14 +5,14 @@ try {
     $productType = new ProductType();
     $types = $productType->getAllProductTypes();
     
-    // Debug log
+
     error_log("Fetched product types: " . print_r($types, true));
     
-    // Return as JSON
+
     header('Content-Type: application/json');
     $json = json_encode($types);
     
-    // Check for JSON encoding errors
+
     if ($json === false) {
         error_log("JSON encode error: " . json_last_error_msg());
         throw new Exception("Failed to encode product types");

@@ -4,7 +4,7 @@ session_start();
 
 header('Content-Type: application/json');
 
-// Check if user is authorized
+
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'manager') {
     echo json_encode([
         'success' => false,

@@ -13,7 +13,7 @@ function handleOrderAction(orderId, action) {
         dataType: 'json',
         success: function(response) {
             if (response.success) {
-                // Refresh the orders table
+             
                 location.reload();
             } else {
                 alert('Error: ' + response.message);

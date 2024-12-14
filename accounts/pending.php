@@ -1,8 +1,6 @@
 <?php
 session_start();
 require_once '../classes/accountClass.php';
-
-// Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
     exit;
@@ -11,14 +9,12 @@ if (!isset($_SESSION['user_id'])) {
 $account = new Account();
 $account->user_id = $_SESSION['user_id'];
 $userInfo = $account->UserInfo();
-
-// If UserInfo failed, show error message
 if (!$userInfo) {
     $statusMessage = 'Error retrieving account information. Please try again later.';
     $statusClass = 'error';
     $userInfo = ['status' => 'error', 'role' => ''];
 } else {
-    // Check both user status and manager status for managers
+    
     if ($userInfo['role'] === 'manager') {
         if ($userInfo['status'] === 'approved' && $userInfo['manager_status'] === 'accepted') {
             // Set canteen_id in session for manager
@@ -27,7 +23,6 @@ if (!$userInfo) {
             exit;
         }
         
-        // Show rejection message if either status is rejected
         if ($userInfo['status'] === 'rejected' || $userInfo['manager_status'] === 'rejected') {
             $statusMessage = 'Your account has been rejected. Please contact the administrator.';
             $statusClass = 'rejected';

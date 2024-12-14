@@ -2,7 +2,7 @@
 require_once '../classes/databaseClass.php';
 
 class RegisterAccount {
-    // Properties
+   
     public $user_id;
     public $last_name;
     public $given_name;
@@ -11,21 +11,17 @@ class RegisterAccount {
     public $username;
     public $password;
     protected $db;
-
-    // Constructor
     public function __construct() {
         $this->db = new Database();
     }
-
-    // Add user to database and return user_id
     public function addUser() {
         try {
-            // First check if username already exists
+        
             if ($this->usernameExist($this->username)) {
                 throw new Exception("Username already exists");
             }
 
-            // Check if email already exists
+       
             if ($this->emailExist($this->email)) {
                 throw new Exception("Email already exists");
             }
@@ -34,8 +30,7 @@ class RegisterAccount {
             $conn->beginTransaction();
 
             $hashedPassword = password_hash($this->password, PASSWORD_DEFAULT);
-            
-            // Insert into users table with all required fields
+         
             $sql = "INSERT INTO users (last_name, given_name, middle_name, email, username, 
                     password, role, status) 
                     VALUES (:last_name, :given_name, :middle_name, :email, :username, 
@@ -74,12 +69,12 @@ class RegisterAccount {
         }
     }
 
-    // Add pending manager record
+  
     public function addPendingManager($canteen_id) {
         try {
             $conn = $this->db->connect();
             
-            // First check if this user_id already exists in managers table
+         
             $checkSql = "SELECT COUNT(*) FROM managers WHERE user_id = :user_id";
             $checkStmt = $conn->prepare($checkSql);
             $checkStmt->execute([':user_id' => $this->user_id]);
@@ -87,8 +82,7 @@ class RegisterAccount {
             if ($checkStmt->fetchColumn() > 0) {
                 throw new Exception("Manager record already exists for this user");
             }
-            
-            // Get current date for start_date
+          
             $currentDate = date('Y-m-d');
             
             $sql = "INSERT INTO managers (user_id, canteen_id, start_date, status) 
@@ -115,7 +109,7 @@ class RegisterAccount {
         }
     }
 
-    // Check if email exists
+   
     public function emailExist($email) {
         try {
             $sql = "SELECT COUNT(*) FROM users WHERE email = :email";
@@ -130,7 +124,7 @@ class RegisterAccount {
         }
     }
 
-    // Check if username exists
+  
     public function usernameExist($username) {
         try {
             $sql = "SELECT COUNT(*) FROM users WHERE username = :username";

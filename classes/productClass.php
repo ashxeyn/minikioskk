@@ -171,7 +171,7 @@ class Product
             return $canteen ? $canteen['name'] : 'Unknown Canteen';
         }
 
-        return 'Unknown Canteen'; // Return default value if query fails
+        return 'Unknown Canteen';
     }
 
     function getStockStatus($product_id) {
@@ -219,13 +219,13 @@ class Product
             $db = $this->db->connect();
             $db->beginTransaction();
 
-            // First delete related records in stocks table
+          
             $sql = "DELETE FROM stocks WHERE product_id = :product_id";
             $stmt = $db->prepare($sql);
             $stmt->bindParam(':product_id', $product_id);
             $stmt->execute();
 
-            // Then delete the product
+          
             $sql = "DELETE FROM products WHERE product_id = :product_id";
             $stmt = $db->prepare($sql);
             $stmt->bindParam(':product_id', $product_id);
@@ -393,7 +393,7 @@ class Product
 
     public function deleteProduct($productId) {
         try {
-            // First check if the product exists
+          
             $checkSql = "SELECT product_id FROM products WHERE product_id = ?";
             $checkStmt = $this->conn->prepare($checkSql);
             $checkStmt->execute([$productId]);
@@ -402,16 +402,15 @@ class Product
                 throw new Exception("Product not found");
             }
 
-            // Delete related records first (due to foreign key constraints)
-            // Delete from stocks table
+         
             $deleteStocksSql = "DELETE FROM stocks WHERE product_id = ?";
             $this->conn->prepare($deleteStocksSql)->execute([$productId]);
             
-            // Delete from cart_items table
+           
             $deleteCartSql = "DELETE FROM cart_items WHERE product_id = ?";
             $this->conn->prepare($deleteCartSql)->execute([$productId]);
             
-            // Finally delete the product
+          
             $deleteProductSql = "DELETE FROM products WHERE product_id = ?";
             $stmt = $this->conn->prepare($deleteProductSql);
             $result = $stmt->execute([$productId]);

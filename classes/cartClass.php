@@ -23,8 +23,6 @@ class Cart {
 
             // Debug log
             error_log("Starting addToCart - User ID: $user_id, Product ID: $product_id, Quantity: $quantity");
-
-            // First verify the product exists and get its details
             $sql = "SELECT p.*, c.canteen_id 
                     FROM products p 
                     JOIN canteens c ON p.canteen_id = c.canteen_id 
@@ -37,10 +35,7 @@ class Cart {
                 throw new Exception("Product not found");
             }
 
-            // Get existing cart or create new one
             $cart_id = $this->getOrCreateCart($user_id, $db);
-
-            // Check if this product is already in the cart
             $existingItem = $this->getCartItem($cart_id, $product_id, $db);
 
             if ($existingItem) {
@@ -84,24 +79,21 @@ class Cart {
         try {
             $db = $this->db->connect();
             
-            // Start transaction
+          
             if (!$db->inTransaction()) {
                 $db->beginTransaction();
             }
 
-            // Get the cart ID first
             $sql = "SELECT cart_id FROM carts WHERE user_id = :user_id";
             $stmt = $db->prepare($sql);
             $stmt->execute(['user_id' => $user_id]);
             $cart = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if ($cart) {
-                // Delete cart items first (due to foreign key constraint)
                 $sql = "DELETE FROM cart_items WHERE cart_id = :cart_id";
                 $stmt = $db->prepare($sql);
                 $stmt->execute(['cart_id' => $cart['cart_id']]);
 
-                // Then delete the cart itself
                 $sql = "DELETE FROM carts WHERE cart_id = :cart_id";
                 $stmt = $db->prepare($sql);
                 $stmt->execute(['cart_id' => $cart['cart_id']]);
@@ -110,7 +102,6 @@ class Cart {
                 return true;
             }
 
-            // If no cart found, consider it already cleared
             return true;
             
         } catch (Exception $e) {
@@ -118,7 +109,7 @@ class Cart {
                 $db->rollBack();
             }
             error_log("Error clearing cart: " . $e->getMessage());
-            throw $e;  // Throw the error to be caught by the caller
+            throw $e;  
         }
     }
 
@@ -275,7 +266,6 @@ class Cart {
                 $db->beginTransaction();
             }
 
-            // Get the cart ID first
             $sql = "SELECT cart_id FROM carts WHERE user_id = :user_id";
             $stmt = $db->prepare($sql);
             $stmt->execute(['user_id' => $user_id]);
@@ -285,7 +275,7 @@ class Cart {
                 throw new Exception("Cart not found");
             }
 
-            // Delete the cart item
+           
             $sql = "DELETE FROM cart_items 
                     WHERE cart_id = :cart_id 
                     AND product_id = :product_id";

@@ -66,7 +66,6 @@ try {
         ];
     }
     
-    // Return the response in DataTables format
     echo json_encode([
         "draw" => isset($_POST['draw']) ? intval($_POST['draw']) : 0,
         "recordsTotal" => count($orders),

@@ -8,7 +8,7 @@ try {
         throw new Exception('Product ID is required');
     }
 
-    // Validate product_id
+
     $product_id = filter_var($_GET['product_id'], FILTER_VALIDATE_INT);
     if ($product_id === false || $product_id <= 0) {
         error_log("Invalid product ID received: " . $_GET['product_id']);
@@ -16,8 +16,6 @@ try {
     }
 
     $stocksObj = new Stocks();
-    
-    // Verify product exists first
     if (!$stocksObj->productExists($product_id)) {
         throw new Exception('Product not found');
     }

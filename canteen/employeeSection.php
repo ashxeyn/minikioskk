@@ -12,11 +12,9 @@
 
     <div class="card">
         <div class="card-body" id="employeeTableContainer">
-            <!-- Table will be loaded here -->
         </div>
     </div>
 </div>
 
-<!-- Include Modals -->
 <?php include 'addEmployeeModal.html'; ?>
 <?php include 'editEmployeeModal.html'; ?> 
