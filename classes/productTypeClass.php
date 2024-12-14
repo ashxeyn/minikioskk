@@ -8,19 +8,25 @@ class ProductType {
         $this->db = new Database();
     }
 
-    public function fetchAllTypes() {
+    public function getAllProductTypes() {
         try {
-            $sql = "SELECT pt.type_id, pt.name, pt.type, pt.description, c.name as category_name 
+            $sql = "SELECT pt.type_id, pt.name, pt.type, c.name as category_name 
                     FROM product_types pt 
                     JOIN categories c ON pt.category_id = c.category_id 
                     ORDER BY c.name, pt.name";
             
+            error_log("Executing SQL: " . $sql);
+            
             $stmt = $this->db->connect()->prepare($sql);
             $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            error_log("Query results: " . print_r($results, true));
+            
+            return $results;
         } catch (PDOException $e) {
-            error_log("Error fetching product types: " . $e->getMessage());
-            return [];
+            error_log("Error in getAllProductTypes: " . $e->getMessage());
+            throw new Exception("Failed to fetch product types");
         }
     }
 
@@ -36,19 +42,7 @@ class ProductType {
             return $stmt->fetch(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
             error_log("Error fetching product type: " . $e->getMessage());
-            return null;
-        }
-    }
-
-    public function fetchTypesByCategory($categoryId) {
-        try {
-            $sql = "SELECT * FROM product_types WHERE category_id = :category_id ORDER BY name";
-            $stmt = $this->db->connect()->prepare($sql);
-            $stmt->execute(['category_id' => $categoryId]);
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            error_log("Error fetching types by category: " . $e->getMessage());
-            return [];
+            throw new Exception("Failed to fetch product type");
         }
     }
 }

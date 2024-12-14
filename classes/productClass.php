@@ -1,4 +1,4 @@
-<?php
+z<?php
 require_once '../classes/databaseClass.php';
 
 class Product
@@ -84,27 +84,24 @@ class Product
 
     function addProduct($data) {
         try {
-            $sql = "INSERT INTO products (canteen_id, type_id, name, description, price, status) 
-                    VALUES (:canteen_id, :type_id, :name, :description, :price, :status)";
+            $sql = "INSERT INTO products (name, type_id, description, price, canteen_id, status) 
+                    VALUES (:name, :type_id, :description, :price, :canteen_id, :status)";
             
             $stmt = $this->db->connect()->prepare($sql);
             
-            $result = $stmt->execute([
-                'canteen_id' => $data['canteen_id'],
-                'type_id' => $data['type_id'],
+            $stmt->execute([
                 'name' => $data['name'],
+                'type_id' => $data['type_id'],
                 'description' => $data['description'],
                 'price' => $data['price'],
+                'canteen_id' => $data['canteen_id'],
                 'status' => $data['status']
             ]);
-
-            if ($result) {
-                return $this->db->connect()->lastInsertId();
-            }
-            return false;
+            
+            return $this->db->connect()->lastInsertId();
         } catch (PDOException $e) {
-            error_log("Error adding product: " . $e->getMessage());
-            throw new Exception("Error adding product to database");
+            error_log("Error in addProduct: " . $e->getMessage());
+            throw new Exception("Failed to add product");
         }
     }
 
@@ -138,13 +135,21 @@ class Product
         return $query->execute();
     }
 
-    function fetchProducts()
-    {
-        $sql = "SELECT * FROM products";
-        $query = $this->db->connect()->prepare($sql);
-        $query->execute();
-
-        return $query->fetchAll();
+    public function fetchProducts($canteen_id) {
+        try {
+            $sql = "SELECT p.*, pt.name as type_name, pt.type, s.quantity 
+                    FROM products p 
+                    LEFT JOIN product_types pt ON p.type_id = pt.type_id
+                    LEFT JOIN stocks s ON p.product_id = s.product_id
+                    WHERE p.canteen_id = :canteen_id";
+            
+            $stmt = $this->db->connect()->prepare($sql);
+            $stmt->execute(['canteen_id' => $canteen_id]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error fetching products: " . $e->getMessage());
+            return [];
+        }
     }
 
     function getCanteenNameById($canteen_id)

@@ -15,70 +15,60 @@ try {
             throw new Exception("Canteen ID not found in session");
         }
         $products = $productObj->fetchProducts($canteenId);
-        $productTypes = $productTypeObj->getAllProductTypes();
+        $productTypes = $productTypeObj->fetchAllTypes();
     }
 } catch (Exception $e) {
     error_log("Error fetching products: " . $e->getMessage());
 }
-?>  
+?>
 
-<head>
-    <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-    <!-- DataTables CSS -->
-    <link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-    <style>
-        /* Override DataTables styles to prevent affecting sidebar */
-        .dataTables_wrapper {
-            --dt-row-selected: none;  /* Prevent DataTables selection color */
-        }
-        
-        /* Ensure sidebar styles are preserved */
-        .sidebar {
-            background-color: #343a40 !important;  /* Force sidebar background */
-        }
-        
-        .sidebar .nav-link {
-            color: rgba(255, 255, 255, 0.8) !important;  /* Force sidebar link color */
-        }
-        
-        .sidebar .nav-link:hover {
-            color: #fff !important;  /* Force sidebar hover color */
-        }
-        
-        .sidebar .nav-link.active {
-            color: #fff !important;  /* Force active link color */
-            background-color: rgba(255, 255, 255, 0.1) !important;  /* Force active background */
-        }
-    </style>
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- DataTables JS -->
-    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
-    <!-- Bootstrap Bundle with Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-</head>
-
-
-    <div id="productTable">
-        <div class="row mb-4 align-items-center">
-            <div class="col-md-6">
-                <h2 class="mb-0">Products</h2>
-            </div>
-            <div class="col-md-6 text-end">
-                <button class="btn btn-primary" onclick="openAddProductModal()">
-                    <i class="bi bi-plus-circle"></i> Add New Product
-                </button>
+<div id="productTable">
+    <!-- Search and Filters -->
+    <div class="row mb-3">
+        <!-- Search Box -->
+        <div class="col-md-4">
+            <div class="input-group">
+                <input type="text" id="searchInput" class="form-control" placeholder="Search products...">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
             </div>
         </div>
+        
+        <!-- Category Filter -->
+        <div class="col-md-4">
+            <select id="categoryFilter" class="form-select">
+                <option value="">All Categories</option>
+                <option value="Food">Food</option>
+                <option value="Beverages">Beverages</option>
+                <option value="Utensils">Utensils</option>
+                <option value="Toiletries">Toiletries</option>
+                <option value="Others">Others</option>
+            </select>
+        </div>
+        
+        <!-- Status Filter -->
+        <div class="col-md-4">
+            <select id="statusFilter" class="form-select">
+                <option value="">All Status</option>
+                <option value="available">Available</option>
+                <option value="unavailable">Unavailable</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Add Product Button -->
+    <div class="mb-3">
+        <button class="btn btn-primary" onclick="openAddProductModal()">
+            <i class="bi bi-plus-circle"></i> Add New Product
+        </button>
+    </div>
 
     <?php if (!empty($products)): ?>
     <div class="table-responsive">
-        <table class="table table-hover" id="productsTable">
+        <table class="table table-hover">
             <thead>
                 <tr>
                     <th>Product ID</th>
+                    <th>Image</th>
                     <th>Name</th>
                     <th>Description</th>
                     <th>Type</th>
@@ -92,6 +82,13 @@ try {
                 <?php foreach ($products as $product): ?>
                     <tr>
                         <td><?= htmlspecialchars($product['product_id']) ?></td>
+                        <td>
+                            <?php if ($product['image_url']): ?>
+                                <img src="<?= htmlspecialchars($product['image_url']) ?>" alt="Product" class="product-thumbnail">
+                            <?php else: ?>
+                                <span class="no-image">No Image</span>
+                            <?php endif; ?>
+                        </td>
                         <td><?= htmlspecialchars($product['name']) ?></td>
                         <td><?= htmlspecialchars($product['description']) ?></td>
                         <td><?= htmlspecialchars($product['type']) ?></td>
@@ -179,73 +176,6 @@ try {
     </div>
 </div>
 
-<!-- Edit Product Modal -->
-<div class="modal fade" id="editProductModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Edit Product</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="editProductForm">
-                    <input type="hidden" id="editProductId" name="product_id">
-                    <div class="mb-3">
-                        <label for="editName" class="form-label">Product Name</label>
-                        <input type="text" class="form-control" id="editName" name="name" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="editDescription" class="form-label">Description</label>
-                        <textarea class="form-control" id="editDescription" name="description"></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label for="editTypeId" class="form-label">Category</label>
-                        <select class="form-control" id="editTypeId" name="type_id" required>
-                            <!-- Categories will be loaded dynamically -->
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="editPrice" class="form-label">Price</label>
-                        <input type="number" class="form-control" id="editPrice" name="price" step="0.01" required>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">Save Changes</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Stock Update Modal -->
-<div class="modal fade" id="stockModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Update Stock</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="stockForm">
-                    <input type="hidden" id="stockProductId" name="product_id">
-                    <div class="mb-3">
-                        <label class="form-label">Current Stock: <span id="currentStock">0</span></label>
-                    </div>
-                    <div class="mb-3">
-                        <label for="quantity" class="form-label">Add Stock</label>
-                        <input type="number" class="form-control" id="quantity" name="quantity" required min="1">
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">Update Stock</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
 <style>
 .product-thumbnail {
     width: 50px;
@@ -282,58 +212,6 @@ try {
 </style>
 
 <script>
-// Define loadProductTypes globally
-function loadProductTypes(selectedType = '') {
-    $.ajax({
-        url: '../ajax/getProductTypes.php',
-        method: 'GET',
-        success: function(response) {
-            try {
-                const types = JSON.parse(response);
-                let options = '<option value="">Select Category</option>';
-                types.forEach(type => {
-                    options += `<option value="${type.type_id}" ${selectedType == type.type_id ? 'selected' : ''}>
-                        ${type.name} (${type.type})
-                    </option>`;
-                });
-                $('#editTypeId, #type_id').html(options); // Update both modals' select elements
-            } catch (error) {
-                console.error('Error parsing product types:', error);
-            }
-        },
-        error: function(xhr, status, error) {
-            console.error('Error loading product types:', error);
-        }
-    });
-}
-
-function openAddProductModal() {
-    // Reset form
-    $('#addProductForm')[0].reset();
-    
-    // Load product types
-    loadProductTypes();
-    
-    // Show modal
-    new bootstrap.Modal(document.getElementById('addProductModal')).show();
-}
-
-// Rest of your document.ready function and other functions...
-$(document).ready(function() {
-    // Initialize DataTable
-    $('#productsTable').DataTable({
-        "pageLength": 10,
-        "responsive": true
-    });
-    
-    // Rest of your document.ready code...
-    var editModal = new bootstrap.Modal(document.getElementById('editProductModal'));
-    var stockModal = new bootstrap.Modal(document.getElementById('stockModal'));
-    var addModal = new bootstrap.Modal(document.getElementById('addProductModal'));
-});
-
-// Your other existing functions...
-
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('searchInput');
     const categoryFilter = document.getElementById('categoryFilter');

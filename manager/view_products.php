@@ -139,21 +139,49 @@ try {
 
     <script>
     $(document).ready(function() {
-        // Initialize DataTable
-        let table = $('.table').DataTable({
-            "responsive": true,
-            "pageLength": 10,
-            "order": [[0, "asc"]],
-            "language": {
-                "emptyTable": "No products found"
-            }
-        });
+        // Initialize DataTable with proper configuration
+        try {
+            let table = $('.table').DataTable({
+                "responsive": true,
+                "pageLength": 10,
+                "order": [[2, "asc"]], // Order by product name (3rd column) instead of ID
+                "columnDefs": [
+                    {
+                        "targets": [1], // Image column
+                        "orderable": false
+                    },
+                    {
+                        "targets": [8], // Actions column
+                        "orderable": false,
+                        "searchable": false
+                    }
+                ],
+                "language": {
+                    "emptyTable": "No products found",
+                    "zeroRecords": "No matching products found"
+                },
+                "initComplete": function() {
+                    console.log('DataTable initialization complete');
+                }
+            });
+
+            // Debug log
+            console.log('DataTable initialized successfully');
+        } catch (error) {
+            console.error('Error initializing DataTable:', error);
+        }
 
         // Add Product Form Submission
         $('#addProductForm').submit(function(e) {
             e.preventDefault();
             const formData = new FormData(this);
             formData.append('canteen_id', '<?php echo $_SESSION['canteen_id']; ?>');
+
+            // Debug log form data
+            console.log('Submitting form with data:');
+            for (let pair of formData.entries()) {
+                console.log(pair[0] + ': ' + pair[1]);
+            }
 
             $.ajax({
                 url: '../product/addProduct.php',
@@ -185,21 +213,38 @@ try {
 
         // Load categories when add product modal opens
         $('#addProductModal').on('show.bs.modal', function () {
+            console.log('Modal opening - making AJAX call to get product types');
+            
+            // Clear previous options and show loading
+            $('#type_id').html('<option value="">Loading categories...</option>');
+            $('#debug-info').text('Loading categories...');
+
             $.ajax({
-                url: '../product/getCategories.php',
+                url: '../product/getProductTypes.php',
                 method: 'GET',
                 dataType: 'json',
-                success: function(categories) {
+                success: function(types) {
+                    console.log('Received product types:', types);
                     let options = '<option value="">Select Category</option>';
-                    if (Array.isArray(categories)) {
-                        categories.forEach(category => {
-                            options += `<option value="${category.type_id}">${category.name}</option>`;
+                    if (Array.isArray(types)) {
+                        types.forEach(type => {
+                            console.log('Adding type:', type);
+                            options += `<option value="${type.type_id}">${type.name} (${type.type})</option>`;
                         });
+                        console.log('Final options HTML:', options);
                         $('#type_id').html(options);
+                        $('#debug-info').text('Categories loaded successfully');
+                    } else {
+                        console.error('Received types is not an array:', types);
+                        $('#debug-info').text('Error: Invalid data received');
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error('Error loading categories:', error);
+                    console.error('Error loading product types:');
+                    console.error('Status:', status);
+                    console.error('Error:', error);
+                    console.error('Response:', xhr.responseText);
+                    $('#debug-info').text('Error loading categories');
                     alert('Error loading categories. Please try again.');
                 }
             });

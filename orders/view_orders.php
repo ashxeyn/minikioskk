@@ -17,68 +17,50 @@ try {
     error_log("Error fetching orders: " . $e->getMessage());
 }
 ?>
+<head>
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- DataTables CSS -->
+    <link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <style>
+        /* Override DataTables styles to prevent affecting sidebar */
+        .dataTables_wrapper {
+            --dt-row-selected: none;  /* Prevent DataTables selection color */
+        }
+        
+        /* Ensure sidebar styles are preserved */
+        .sidebar {
+            background-color: #343a40 !important;  /* Force sidebar background */
+        }
+        
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8) !important;  /* Force sidebar link color */
+        }
+        
+        .sidebar .nav-link:hover {
+            color: #fff !important;  /* Force sidebar hover color */
+        }
+        
+        .sidebar .nav-link.active {
+            color: #fff !important;  /* Force active link color */
+            background-color: rgba(255, 255, 255, 0.1) !important;  /* Force active background */
+        }
+    </style>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</head>
 
-<div id="orderTable">
-    <!-- Entries control and search row -->
-    <div class="row mb-3">
-        <!-- Show entries dropdown -->
-        <div class="col-md-2">
-            <div class="entries-wrapper">
-                Show 
-                <select id="entriesPerPage" class="form-select form-select-sm d-inline-block w-auto">
-                    <option value="10">10</option>
-                    <option value="25">25</option>
-                    <option value="50">50</option>
-                    <option value="100">100</option>
-                </select>
-                entries
-            </div>
-        </div>
-
-        <!-- Existing search and filters -->
-        <div class="col-md-10">
-            <div class="row">
-                <!-- Your existing filters here -->
-                <div class="col-md-4">
-                    <div class="input-group">
-                        <input type="text" id="searchInput" class="form-control" placeholder="Search orders...">
-                        <span class="input-group-text"><i class="bi bi-search"></i></span>
-                    </div>
-                </div>
-                
-                <!-- Status Filter -->
-                <div class="col-md-4">
-                    <select id="statusFilter" class="form-select">
-                        <option value="">All Statuses</option>
-                        <option value="placed">Placed</option>
-                        <option value="accepted">Accepted</option>
-                        <option value="preparing">Preparing</option>
-                        <option value="ready">Ready</option>
-                        <option value="completed">Completed</option>
-                        <option value="cancelled">Cancelled</option>
-                    </select>
-                </div>
-                
-                <!-- Product Filter -->
-                <div class="col-md-4">
-                    <select id="productFilter" class="form-select">
-                        <option value="">All Products</option>
-                        <?php 
-                        $products = $orderObj->getUniqueProducts($canteenId);
-                        foreach($products as $product): 
-                            $name = htmlspecialchars($product['name'], ENT_QUOTES, 'UTF-8');
-                        ?>
-                            <option value="<?= $name ?>"><?= $name ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-            </div>
-        </div>
-    </div>
-
+    <h2>Orders</h2>
+    <div id="orderTable">
+   
     <?php if (!empty($orders)): ?>
     <div class="table-responsive">
-        <table class="table table-hover">
+        <table class="table table-hover" id="ordersTable">
             <thead>
                 <tr>
                     <th>Order ID</th>
@@ -131,27 +113,7 @@ try {
         <div class="alert alert-info">No orders found.</div>
     <?php endif; ?>
 
-    <!-- Add pagination controls after the table -->
-    <div class="row">
-        <div class="col-md-6">
-            <div class="table-info">
-                Showing <span id="startEntry">1</span> to <span id="endEntry">10</span> of <span id="totalEntries">0</span> entries
-            </div>
-        </div>
-        <div class="col-md-6">
-            <nav aria-label="Table navigation" class="float-end">
-                <ul class="pagination mb-0">
-                    <li class="page-item disabled" id="prevPage">
-                        <a class="page-link" href="#" tabindex="-1">Previous</a>
-                    </li>
-                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                    <li class="page-item" id="nextPage">
-                        <a class="page-link" href="#">Next</a>
-                    </li>
-                </ul>
-            </nav>
-        </div>
-    </div>
+  
 </div>
 
 <!-- Order Details Modal -->
@@ -266,6 +228,18 @@ try {
 </style>
 
 <script>
+$(document).ready(function() {
+    // Initialize DataTable
+    $('#ordersTable').DataTable({
+        "pageLength": 10,
+        "responsive": true,
+        "order": [[0, "desc"]], // Sort by Order ID descending by default
+        "columnDefs": [
+            { "orderable": false, "targets": -1 } // Disable sorting on Actions column
+        ]
+    });
+});
+
 // Define handleOrderAction in global scope
 function handleOrderAction(orderId, action) {
     let newStatus;

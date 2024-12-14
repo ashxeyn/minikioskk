@@ -67,12 +67,12 @@ document.addEventListener("DOMContentLoaded", function () {
     // Handle initial page load if employee section is active
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('section') === 'employees') {
-        loadEmployeeSection();
+        loadEmployeesSection();
     }
 });
 
 // Load different sections of the manager dashboard
-function loadEmployeeSection() {
+function loadEmployeesSection() {
     $.ajax({
         url: '../canteen/view_employees.php',
         method: 'GET',
@@ -86,7 +86,7 @@ function loadEmployeeSection() {
     });
 }
 
-function loadProductSection() {
+function loadProductsSection() {
     $.ajax({
         url: '../product/view_products.php',
         method: 'GET',
@@ -100,9 +100,9 @@ function loadProductSection() {
     });
 }
 
-function loadOrderSection() {
+function loadOrdersSection() {
     $.ajax({
-        url: '../order/view_orders.php',
+        url: '../orders/view_orders.php',
         method: 'GET',
         success: function(response) {
             $('#contentArea').html(response);

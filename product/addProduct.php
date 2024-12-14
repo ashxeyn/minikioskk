@@ -1,68 +1,83 @@
 <?php
+session_start();
 require_once '../classes/productClass.php';
 require_once '../classes/stocksClass.php';
-require_once '../tools/functions.php';
 
 header('Content-Type: application/json');
 
 try {
-    // Validate input
-    if (empty($_POST['name']) || empty($_POST['type_id']) || 
-        empty($_POST['price']) || empty($_POST['canteen_id']) || 
-        empty($_POST['initial_stock'])) {
-        throw new Exception("All required fields must be filled");
+    // Validate session and role
+    if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'manager') {
+        throw new Exception('Unauthorized access');
     }
 
-    // Clean and prepare data
-    $product_data = [
-        'canteen_id' => clean_input($_POST['canteen_id']),
-        'type_id' => clean_input($_POST['type_id']),
-        'name' => clean_input($_POST['name']),
-        'description' => clean_input($_POST['description'] ?? ''),
-        'price' => clean_input($_POST['price']),
-        'status' => 'available'
+    // Validate required fields
+    $requiredFields = ['name', 'type_id', 'price', 'canteen_id', 'initial_stock'];
+    foreach ($requiredFields as $field) {
+        if (!isset($_POST[$field]) || empty($_POST[$field])) {
+            throw new Exception("Missing required field: {$field}");
+        }
+    }
+
+    // Sanitize and validate input
+    $productData = [
+        'name' => htmlspecialchars(trim($_POST['name'])),
+        'type_id' => (int)$_POST['type_id'],
+        'description' => htmlspecialchars(trim($_POST['description'] ?? '')),
+        'price' => (float)$_POST['price'],
+        'canteen_id' => (int)$_POST['canteen_id'],
+        'initial_stock' => (int)$_POST['initial_stock']
     ];
 
-    $initial_stock = clean_input($_POST['initial_stock']);
-
-    // Validate numeric fields
-    if (!is_numeric($product_data['price']) || $product_data['price'] <= 0) {
-        throw new Exception("Invalid price value");
+    // Validate numeric values
+    if ($productData['price'] <= 0) {
+        throw new Exception('Price must be greater than zero');
+    }
+    if ($productData['initial_stock'] < 0) {
+        throw new Exception('Initial stock cannot be negative');
     }
 
-    if (!is_numeric($initial_stock) || $initial_stock < 0) {
-        throw new Exception("Invalid stock value");
-    }
-
-    // Begin transaction
+    // Initialize classes
     $productObj = new Product();
-    $stocksObj = new Stocks();
-    
-    $db = $productObj->getConnection();
+    $stockObj = new Stocks();
+
+    // Start transaction
+    $db = new PDO("mysql:host=localhost;dbname=minikiosk1", "root", "");
+    $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $db->beginTransaction();
 
     try {
-        // Add the product
-        $product_id = $productObj->addProduct($product_data);
-        
-        if (!$product_id) {
-            throw new Exception("Failed to add product");
-        }
+        // Add product
+        $productId = $productObj->addProduct([
+            'name' => $productData['name'],
+            'type_id' => $productData['type_id'],
+            'description' => $productData['description'],
+            'price' => $productData['price'],
+            'canteen_id' => $productData['canteen_id'],
+            'status' => 'available'
+        ]);
 
         // Add initial stock
-        if (!$stocksObj->addStock($product_id, $initial_stock)) {
-            throw new Exception("Failed to add initial stock");
+        if ($productId && $productData['initial_stock'] > 0) {
+            $stockObj->addStock($productId, $productData['initial_stock']);
         }
 
+        // Commit transaction
         $db->commit();
-        echo json_encode(['status' => 'success', 'message' => 'Product added successfully']);
-        
+
+        echo json_encode([
+            'status' => 'success',
+            'message' => 'Product added successfully',
+            'product_id' => $productId
+        ]);
+
     } catch (Exception $e) {
         $db->rollBack();
         throw $e;
     }
 
 } catch (Exception $e) {
+    error_log("Error adding product: " . $e->getMessage());
     echo json_encode([
         'status' => 'error',
         'message' => $e->getMessage()

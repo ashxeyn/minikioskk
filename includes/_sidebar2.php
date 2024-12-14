@@ -18,7 +18,7 @@ require_once '../classes/accountClass.php';
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link align-middle px-0" id="orderButton" onclick="loadOrderSection()">
+                    <a href="#" class="nav-link align-middle px-0" id="orderButton" onclick="loadOrdersSection()">
                         <i class="fs-5 bi-table"></i>
                         <span class="ms-1 d-none d-sm-inline">Orders</span>
                     </a>
@@ -31,7 +31,7 @@ require_once '../classes/accountClass.php';
                 </li>
                 <li class="side-nav-title">Management</li>    
                 <li class="nav-item">
-                    <a href="#" class="nav-link align-middle px-0" id="employeeButton" onclick="loadEmployeeSection()">
+                    <a href="#" class="nav-link align-middle px-0" id="employeeButton" onclick="loadEmployeesSection()">
                         <i class="fs-5 bi-people"></i>
                         <span class="ms-1 d-none d-sm-inline">Co-Employees</span>
                     </a>

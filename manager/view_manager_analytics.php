@@ -16,7 +16,34 @@ $completedOrders = $manager->getCompletedOrders();
 $topSellingProducts = $manager->getTopSellingProducts();
 $monthlySales = $manager->getMonthlySales();
 ?>
-
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- DataTables CSS -->
+    <link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+<style>
+        /* Override DataTables styles to prevent affecting sidebar */
+        .dataTables_wrapper {
+            --dt-row-selected: none;  /* Prevent DataTables selection color */
+        }
+        
+        /* Ensure sidebar styles are preserved */
+        .sidebar {
+            background-color: #343a40 !important;  /* Force sidebar background */
+        }
+        
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8) !important;  /* Force sidebar link color */
+        }
+        
+        .sidebar .nav-link:hover {
+            color: #fff !important;  /* Force sidebar hover color */
+        }
+        
+        .sidebar .nav-link.active {
+            color: #fff !important;  /* Force active link color */
+            background-color: rgba(255, 255, 255, 0.1) !important;  /* Force active background */
+        }
+    </style>
 <div class="container-fluid">
     <!-- Filter Section -->
     <div class="row mb-4">

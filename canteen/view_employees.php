@@ -27,9 +27,6 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Co-Employees</title>
-    
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <!-- DataTables CSS -->
@@ -103,27 +100,26 @@ try {
     <?php include 'addEmployeeModal.html'; ?>
     <?php include 'editEmployeeModal.html'; ?>
 
-    <style>
-    .badge {
-        padding: 0.5em 0.8em;
-    }
-    .btn-group {
-        gap: 0.25rem;
-    }
-    </style>
 
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Bootstrap Bundle with Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- DataTables -->
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Custom JS -->
     <script src="../js/manager.js"></script>
     <script>
         $(document).ready(function() {
-            $('#employeesTable').DataTable();
+            try {
+                $('#employeesTable').DataTable({
+                    "pageLength": 10,
+                    "responsive": true
+                });
+            } catch (error) {
+                console.error('DataTables initialization error:', error);
+            }
         });
     </script>
 </body>
