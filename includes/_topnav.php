@@ -40,7 +40,9 @@
                             
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="../accounts/logout.php"><i class="bi bi-box-arrow-right"></i> Sign out</a></li>
-                            <li><a class="dropdown-item" href="../accounts/register.php"><i class="bi bi-shop"></i> Register your Canteen</a></li>
+                            <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'user'): ?>
+                                <li><a class="dropdown-item" href="../accounts/register.php"><i class="bi bi-shop"></i> Register your Canteen</a></li>
+                            <?php endif; ?>
                         </ul>
                     </li>
                 </ul>

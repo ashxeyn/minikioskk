@@ -21,16 +21,11 @@ require_once '../includes/_head.php';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
-    <!-- jQuery first -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Then Bootstrap -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Then your custom scripts -->
-    <script src="../js/users.js"></script>
     <script src="../js/admin.js"></script> 
     <script src="../js/canteen.js"></script> 
+    <script src="../js/search.js"></script> 
 </head>
 <body>
     <?php require_once '../includes/_topnav.php'; ?>
@@ -40,23 +35,7 @@ require_once '../includes/_head.php';
             <div class="col py-3">
                 <div id="contentArea" class="container mt-4">
                     <h3><?php echo "Welcome to Dashboard, {$_SESSION['username']}!"; ?><br></h3>
-                    <?php 
-                    if (isset($_GET['page'])) {
-                        switch($_GET['page']) {
-                            case 'accounts':
-                                require_once '../users/accountsSection.php';
-                                break;
-                            case 'orders':
-                                require_once 'view_orders.php';
-                                break;
-                            default:
-                                require_once 'view_analytics.php';
-                                break;
-                        }
-                    } else {
-                        require_once 'view_analytics.php';
-                    }
-                    ?>
+                    <?php require_once 'view_analytics.php' ?>
                 </div>
             </div>
         </div>

@@ -1,7 +1,6 @@
 <?php
 require_once '../classes/orderClass.php';
 
-// Check if user is logged in as admin
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     header('Location: ../index.php');
     exit;
@@ -14,7 +13,6 @@ $orders = $orderObj->fetchAllOrders();
 <div class="container-fluid">
     <h2>Order Management</h2>
     
-    <!-- Search and Filters -->
     <div class="row mb-3">
         <div class="col-md-4">
             <div class="input-group">
@@ -49,7 +47,6 @@ $orders = $orderObj->fetchAllOrders();
         </div>
     </div>
 
-    <!-- Orders Table -->
     <div class="table-responsive">
         <?php if (!empty($orders)): ?>
             <table class="table table-hover">
@@ -112,7 +109,6 @@ $orders = $orderObj->fetchAllOrders();
     </div>
 </div>
 
-<!-- Edit Status Modal -->
 <div class="modal fade" id="editStatusModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -144,7 +140,6 @@ $orders = $orderObj->fetchAllOrders();
     </div>
 </div>
 
-<!-- Delete Order Modal -->
 <div class="modal fade" id="deleteOrderModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -185,7 +180,6 @@ $orders = $orderObj->fetchAllOrders();
     margin-bottom: 1rem;
 }
 
-/* Add loading indicator styles */
 .loading {
     opacity: 0.5;
     pointer-events: none;
@@ -202,31 +196,26 @@ $orders = $orderObj->fetchAllOrders();
     border-radius: 4px;
 }
 
-/* Add these styles for horizontal button alignment */
 td .btn-sm {
     display: inline-flex;
-    margin: 0 2px;  /* Add some space between buttons */
+    margin: 0 2px;  
     vertical-align: middle;
 }
 
-/* Optional: Make the actions column width fixed to prevent wrapping */
 .table td:last-child {
     white-space: nowrap;
-    width: 1%;  /* This makes the column as narrow as possible */
+    width: 1%;  
 }
 
-/* Center the buttons in the cell */
 .table td:last-child {
     text-align: center;
 }
 
-/* Ensure consistent button sizing */
 .btn-sm {
     padding: 0.25rem 0.5rem;
     line-height: 1;
 }
 
-/* Ensure icons are centered in buttons */
 .btn-sm i {
     font-size: 1rem;
     display: inline-block;
@@ -250,7 +239,6 @@ document.addEventListener('DOMContentLoaded', function() {
         rows.forEach(row => {
             let showRow = true;
             
-            // Search filter
             if (searchTerm) {
                 const canteen = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
                 const username = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
@@ -261,19 +249,16 @@ document.addEventListener('DOMContentLoaded', function() {
                          customerName.includes(searchTerm);
             }
             
-            // Status filter
             if (showRow && statusTerm) {
                 const status = row.querySelector('.badge').textContent.toLowerCase().trim();
                 showRow = status === statusTerm;
             }
             
-            // Product filter
             if (showRow && productTerm) {
                 const products = row.querySelector('td:nth-child(5)').textContent.toLowerCase();
                 showRow = products.includes(productTerm);
             }
             
-            // Show/hide row and update counter
             if (showRow) {
                 row.style.display = '';
             } else {
@@ -281,7 +266,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // Show/hide "No orders found" message
         const visibleRows = document.querySelectorAll('tbody tr[style=""]').length;
         const noOrdersMessage = document.querySelector('.alert-info');
         if (noOrdersMessage) {
@@ -289,12 +273,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Add event listeners
     searchInput.addEventListener('input', filterTable);
     statusFilter.addEventListener('change', filterTable);
     productFilter.addEventListener('change', filterTable);
     
-    // Initialize filters
     filterTable();
 });
 

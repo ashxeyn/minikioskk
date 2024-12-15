@@ -170,3 +170,149 @@ button.btn-danger:hover {
     pointer-events: none;
     margin-bottom: 5px;
 }
+
+/* DataTables specific styling */
+.dataTables_wrapper {
+    padding: 20px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.dataTables_length select {
+    padding: 5px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+}
+
+.dataTables_filter input {
+    padding: 5px 10px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    margin-left: 10px;
+}
+
+.dataTables_info {
+    padding: 10px 0;
+}
+
+.dataTables_paginate {
+    padding: 10px 0;
+}
+
+.dataTables_paginate .paginate_button {
+    padding: 5px 10px;
+    margin: 0 2px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.dataTables_paginate .paginate_button.current {
+    background: #FF7F11 ;
+
+    color: white !important;
+    border: none;
+}
+
+.dataTables_paginate .paginate_button:hover {
+    background: #FF7F11;
+    color: white !important;
+    border: none;
+}
+
+/* Add these styles to handle modal transitions */
+.modal-backdrop {
+    opacity: 0.5;
+    transition: opacity 0.15s linear;
+}
+
+.modal-backdrop.show {
+    opacity: 0.5;
+}
+
+.modal-backdrop.fade {
+    opacity: 0;
+}
+
+body.modal-open {
+    overflow: hidden;
+    padding-right: 0 !important;
+}
+
+/* Clean up any lingering backdrops */
+.modal-backdrop.fade.show {
+    z-index: 1040;
+}
+
+/* Add these styles for the modals */
+.modal-header.bg-success,
+.modal-header.bg-danger {
+    color: white;
+}
+
+.modal .bi {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.modal-body .text-center {
+    padding: 1.5rem 0;
+}
+
+.modal-dialog-centered {
+    display: flex;
+    align-items: center;
+    min-height: calc(100% - 3.5rem);
+}
+
+.success-icon {
+    color: #28a745;
+}
+
+.warning-icon {
+    color: #dc3545;
+}
+
+.modal-footer {
+    border-top: none;
+    padding-top: 0;
+}
+
+/* Tab styling */
+.nav-tabs .nav-link {
+    color: #33363F;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 10px 20px;
+    font-weight: 500;
+}
+
+.nav-tabs .nav-link:hover {
+    border-color: transparent;
+        color: #FF7F11 ;
+    ;
+}
+
+.nav-tabs .nav-link.active {
+    color: #FF7F11 ;
+    
+    border: none;
+    border-bottom: 2px solid#FF7F11;
+    background-color: transparent;
+}
+
+/* Table card styling */
+.card {
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+.card-body {
+    padding: 20px;
+}
+
+/* Add button styling */
+.btn-add {
+    margin-bottom: 20px;
+}

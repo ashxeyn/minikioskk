@@ -3,20 +3,39 @@ require_once '../classes/programClass.php';
 require_once '../tools/functions.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $program = new Program();
-    
-    $program_name = clean_input($_POST['program_name']);
-    $department = clean_input($_POST['department']);
-    $college = clean_input($_POST['college']);
-    $description = clean_input($_POST['description']);
-    
-    $department_id = $program->getOrCreateDepartment($department, $college);
-    
-    if ($department_id) {
+    try {
+        $program = new Program();
+        
+        $program_name = clean_input($_POST['program_name']);
+        $department_id = clean_input($_POST['department_id']);
+        $description = clean_input($_POST['description']);
+        
+        // Validate required fields
+        if (empty($program_name) || empty($department_id)) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Please fill in all required fields'
+            ]);
+            exit;
+        }
+        
         $result = $program->addProgram($program_name, $department_id, $description);
-        echo $result ? 'success' : 'failure';
-    } else {
-        echo 'failure';
+        
+        echo json_encode([
+            'success' => $result,
+            'message' => $result ? 'Program added successfully' : 'Failed to add program'
+        ]);
+    } catch (Exception $e) {
+        error_log("Error adding program: " . $e->getMessage());
+        echo json_encode([
+            'success' => false,
+            'message' => 'An error occurred while adding the program'
+        ]);
     }
+} else {
+    echo json_encode([
+        'success' => false,
+        'message' => 'Invalid request method'
+    ]);
 }
 ?>

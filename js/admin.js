@@ -71,10 +71,11 @@ function loadProgramSection() {
     $.ajax({
         url: "../programs/programSection.php",
         method: 'GET',
-        success: function (response) {
+        success: function(response) {
             $('#contentArea').html(response);
+            // Let program.js handle the initialization
         },
-        error: function (xhr, status, error) {
+        error: function(xhr, status, error) {
             console.error('Error loading program section:', error);
             $('#contentArea').html('<p class="text-danger">Failed to load Program section. Please try again.</p>');
         }
@@ -184,23 +185,32 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 $(document).ready(function() {
-    $('#productButton').on('click', function(e) {
+    // Handle all section loading through data attributes
+    $(document).on('click', '[data-section]', function(e) {
         e.preventDefault();
-        loadProductsSection();
-    });
-    
-    $('#canteenButton').on('click', function(e) {
-        e.preventDefault();
-        loadCanteenSection();
-    });
-    
-    $('#accountsButton').on('click', function(e) {
-        e.preventDefault();
-        loadAccountsSection();
-    });
-    
-    $('#programButton').on('click', function(e) {
-        e.preventDefault();
-        loadProgramSection();
+        const section = $(this).data('section');
+        
+        // Remove active class from all nav links
+        $('.nav-link').removeClass('active');
+        // Add active class to clicked link
+        $(this).addClass('active');
+        
+        switch(section) {
+            case 'program':
+                loadProgramSection();
+                break;
+            case 'canteen':
+                loadCanteenSection();
+                break;
+            case 'accounts':
+                loadAccountsSection();
+                break;
+            case 'products':
+                loadProductsSection();
+                break;
+            case 'registration':
+                loadRegistrationSection();
+                break;
+        }
     });
 });

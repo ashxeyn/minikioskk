@@ -140,18 +140,33 @@ body {
     margin: 5px 0;
     border-radius: 5px;
     transition: background-color 0.3s ease, color 0.3s ease;
+    outline: none !important; /* Remove focus outline */
 }
 
 .nav-pills .nav-link:hover,
 .nav-pills .nav-link:focus {
     background-color: rgba(255, 255, 255, 0.1);
-    color: #087F8C;
+    color: #087F8C !important;
 }
 
-.nav-pills .nav-link.active {
-    background-color: #BEB7A4;
-    color: #33363F;
+.nav-pills .nav-link.active,
+.nav-pills .nav-link.active:focus {
+    background-color: rgba(154, 154, 155, 0)!important;
+    color: #33363F !important;
     font-weight: bold;
+    box-shadow: none !important;
+}
+
+/* Remove focus ring */
+.nav-link:focus-visible {
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+/* Custom focus style if needed */
+.nav-link:focus {
+    outline: none !important;
+    box-shadow: none !important;
 }
 
 .navbar-nav {
@@ -175,7 +190,6 @@ body {
         margin: 0.5rem 0;
     }
 }
-
 .cart-item {
     display: flex;
     justify-content: space-between;

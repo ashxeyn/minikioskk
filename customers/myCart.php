@@ -152,7 +152,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Cart</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../css/customer-cart.css">
     
 
@@ -533,12 +532,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $('#responseMessage').text(message);
             if (success) {
                 $('#responseMessage').removeClass('text-danger').addClass('text-success');
+                
             } else {
                 $('#responseMessage').removeClass('text-success').addClass('text-danger');
             }
             
             const responseModal = new bootstrap.Modal(document.getElementById('responseModal'));
             responseModal.show();
+            loadCartSection();
         }
 
         function updateQuantity(productId, action) {
