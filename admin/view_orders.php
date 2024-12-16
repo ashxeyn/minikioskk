@@ -1,10 +1,6 @@
 <?php
 require_once '../classes/orderClass.php';
 
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
-    header('Location: ../index.php');
-    exit;
-}
 
 $orderObj = new Order();
 $orders = $orderObj->fetchAllOrders();

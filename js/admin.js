@@ -1,6 +1,19 @@
 function loadOrderSection() {
     $.ajax({
-        url: "../orders/orderSection.php",
+        url: "../admin/view_orders.php",
+        method: 'GET',
+        success: function (response) {
+            $('#contentArea').html(response);
+        },
+        error: function (xhr, status, error) {
+            console.error('Error loading accounts section:', error);
+            $('#contentArea').html('<p class="text-danger">Failed to load Accounts section. Please try again.</p>');
+        }
+    });
+}
+function loadDashboardSection() {
+    $.ajax({
+        url: "../admin/view_analytics.php",
         method: 'GET',
         success: function (response) {
             $('#contentArea').html(response);
@@ -13,7 +26,7 @@ function loadOrderSection() {
 }
 function loadProductsSection() {
     $.ajax({
-        url: "../product/productSection.php",
+        url: "../admin/view_products.php",
         method: 'GET',
         success: function (response) {
             $('#contentArea').html(response);
@@ -41,7 +54,7 @@ function loadAccountsSection() {
 
 function loadProductsSection() {
     $.ajax({
-        url: "../product/productSection.php",
+        url: "../admin/view_products.php",
         method: 'GET',
         success: function (response) {
             $('#contentArea').html(response);
@@ -84,7 +97,7 @@ function loadProgramSection() {
 
 function loadOrderSection() {
     $.ajax({
-        url: "../orders/orderSection.php",
+        url: "../admin/view_orders.php",
         method: 'GET',
         success: function (response) {
             $('#contentArea').html(response);
@@ -196,8 +209,15 @@ $(document).ready(function() {
         $(this).addClass('active');
         
         switch(section) {
+            case 'dashboard':
+                loadDashboardSection();
+                break;
             case 'program':
                 loadProgramSection();
+                break;
+            
+            case 'orders':
+                loadOrderSection();
                 break;
             case 'canteen':
                 loadCanteenSection();

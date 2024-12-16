@@ -4,10 +4,7 @@ require_once '../classes/stocksClass.php';
 
 header('Content-Type: application/json');
 
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'manager') {
-    echo json_encode(['error' => 'Unauthorized access']);
-    exit;
-}
+
 
 if (!isset($_GET['product_id'])) {
     echo json_encode(['error' => 'Product ID is required']);

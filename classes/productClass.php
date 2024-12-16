@@ -370,36 +370,32 @@ class Product
 
     public function deleteProduct($productId) {
         try {
-          
-            $checkSql = "SELECT product_id FROM products WHERE product_id = ?";
-            $checkStmt = $this->conn->prepare($checkSql);
-            $checkStmt->execute([$productId]);
-            
-            if ($checkStmt->rowCount() === 0) {
-                throw new Exception("Product not found");
-            }
+            $db = $this->db->connect();
+            $db->beginTransaction();
 
-         
-            $deleteStocksSql = "DELETE FROM stocks WHERE product_id = ?";
-            $this->conn->prepare($deleteStocksSql)->execute([$productId]);
-            
-           
-            $deleteCartSql = "DELETE FROM cart_items WHERE product_id = ?";
-            $this->conn->prepare($deleteCartSql)->execute([$productId]);
-            
-          
-            $deleteProductSql = "DELETE FROM products WHERE product_id = ?";
-            $stmt = $this->conn->prepare($deleteProductSql);
-            $result = $stmt->execute([$productId]);
-            
-            if (!$result) {
-                throw new Exception("Failed to delete product");
+            // Delete related records first
+            $sql = "DELETE FROM stocks WHERE product_id = :product_id";
+            $stmt = $db->prepare($sql);
+            $stmt->execute(['product_id' => $productId]);
+
+            // Delete the product
+            $sql = "DELETE FROM products WHERE product_id = :product_id";
+            $stmt = $db->prepare($sql);
+            $result = $stmt->execute(['product_id' => $productId]);
+
+            if ($result) {
+                $db->commit();
+                return true;
+            } else {
+                $db->rollBack();
+                return false;
             }
-            
-            return true;
         } catch (PDOException $e) {
-            error_log("Database Error: " . $e->getMessage());
-            throw new Exception("Database error occurred");
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+            error_log("Error in deleteProduct: " . $e->getMessage());
+            return false;
         }
     }
 
@@ -461,6 +457,41 @@ class Product
         } catch (PDOException $e) {
             error_log("Error updating product: " . $e->getMessage());
             throw $e;
+        }
+    }
+
+    public function getProductById($productId) {
+        try {
+            $sql = "SELECT p.*, pt.name as type_name, c.name as canteen_name,
+                           s.quantity as stock_quantity 
+                    FROM products p 
+                    LEFT JOIN product_types pt ON p.type_id = pt.type_id 
+                    LEFT JOIN canteens c ON p.canteen_id = c.canteen_id
+                    LEFT JOIN stocks s ON p.product_id = s.product_id 
+                    WHERE p.product_id = :product_id";
+                    
+            $stmt = $this->db->connect()->prepare($sql);
+            $stmt->execute(['product_id' => $productId]);
+            
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$result) {
+                return null;
+            }
+            
+            return [
+                'product_id' => $result['product_id'],
+                'name' => $result['name'],
+                'description' => $result['description'],
+                'price' => $result['price'],
+                'type_id' => $result['type_id'],
+                'stock_quantity' => $result['stock_quantity'] ?? 0,
+                'type_name' => $result['type_name'],
+                'canteen_name' => $result['canteen_name']
+            ];
+        } catch (PDOException $e) {
+            error_log("Error in getProductById: " . $e->getMessage());
+            throw new Exception("Failed to fetch product details");
         }
     }
 }

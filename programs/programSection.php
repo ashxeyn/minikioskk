@@ -6,7 +6,7 @@ if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || $_SESSION['role
 }
 ?>
 
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="en">
 <head>
     <!-- Bootstrap CSS -->
@@ -31,9 +31,10 @@ if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || $_SESSION['role
     <!-- Load scripts in correct order -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
-    
+    <script src="/vendor/datatables-1.11.5/js/jquery.dataTables.min.js"></script>
+<script src="/vendor/datatables-1.11.5/js/dataTables.bootstrap5.min.js"></script>
+<script src="/vendor/datatables-1.11.5/js/dataTables.responsive.min.js"></script>
+<script src="/vendor/datatables-1.11.5/js/responsive.bootstrap5.min.js"></script>
     <!-- Custom JS - Must be loaded after jQuery and Bootstrap -->
     <script src="../js/program.js"></script>
     

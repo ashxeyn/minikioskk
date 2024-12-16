@@ -3,7 +3,7 @@ session_start();
 require_once '../classes/productClass.php';
 require_once '../classes/productTypeClass.php';
 
-$productObj = new Product();
+$productObj = new Product(); 
     
     $productTypeObj = new ProductType();
     $products = [];
@@ -61,58 +61,21 @@ try {
 }
 ?>  
 
+<!DOCTYPE html>
+<html>
 <head>
+    <!-- Existing CSS files -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.dataTables.min.css">
     
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-    <style>
-        .dataTables_wrapper {
-            --dt-row-selected: none;  
-        }
-        
-        
-        .table {
-            background-color: transparent !important;
-        }
-        
-        
-        .table thead th {
-            background-color: transparent !important;
-        }
-        
-       
-        .table-striped tbody tr:nth-of-type(odd) {
-            background-color: transparent !important;
-        }
-       
-        .table-hover tbody tr:hover {
-            background-color: rgba(0, 0, 0, 0.02) !important;
-        }
-        
-      
-        .sidebar {
-            background-color: #343a40 !important; 
-        }
-        
-        .sidebar .nav-link {
-            color: rgba(255, 255, 255, 0.8) !important;  
-        }
-        
-        .sidebar .nav-link:hover {
-            color: #fff !important;  
-        }
-        
-        .sidebar .nav-link.active {
-            color: #fff !important; 
-            background-color: rgba(255, 255, 255, 0.1) !important;  
-        }
-    </style>
+    <!-- jQuery first, then DataTables -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
+    
+    <!-- Bootstrap JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </head>
-
 
     <div id="productTable">
         <div class="row mb-4 align-items-center">
@@ -386,27 +349,21 @@ try {
 <script>
 // Define loadProductTypes globally
 function loadProductTypes(selectedType = '') {
-    $.ajax({
-        url: '../ajax/getProductTypes.php',
-        method: 'GET',
-        success: function(response) {
-            try {
-                const types = JSON.parse(response);
-                let options = '<option value="">Select Category</option>';
-                types.forEach(type => {
-                    options += `<option value="${type.type_id}" ${selectedType == type.type_id ? 'selected' : ''}>
-                        ${type.name} (${type.type})
-                    </option>`;
-                });
-                $('#editTypeId, #type_id').html(options); // Update both modals' select elements
-            } catch (error) {
-                console.error('Error parsing product types:', error);
-            }
-        },
-        error: function(xhr, status, error) {
+    fetch('../ajax/getAdminProductTypes.php')
+        .then(response => response.json())
+        .then(types => {
+            let options = '<option value="">Select Category</option>';
+            types.forEach(type => {
+                options += `<option value="${type.type_id}" ${selectedType == type.type_id ? 'selected' : ''}>
+                    ${type.name} (${type.category_name})
+                </option>`;
+            });
+            $('#editTypeId, #type_id').html(options);
+        })
+        .catch(error => {
             console.error('Error loading product types:', error);
-        }
-    });
+            showResponse('Error loading product categories', false);
+        });
 }
 
 function openAddProductModal() {
@@ -422,52 +379,54 @@ function openAddProductModal() {
 
 // Rest of your document.ready function and other functions...
 $(document).ready(function() {
-    // Initialize DataTable
-    $('#productsTable').DataTable({
-        "processing": true,
-        "serverSide": true,
-        "ajax": {
-            "url": "../ajax/getProducts.php",
-            "type": "POST"
-        },
-        "pageLength": 10,
-        "responsive": true,
-        "order": [[1, "asc"]], // Order by name column
-        "columns": [
-            { 
-                "data": null,
-                "render": function (data, type, row, meta) {
-                    return meta.row + meta.settings._iDisplayStart + 1;
-                }
+    // Make sure DataTable is available before initializing
+    if ($.fn.DataTable) {
+        $('#productsTable').DataTable({
+            "processing": true,
+            "serverSide": true,
+            "ajax": {
+                "url": "../ajax/getProducts.php",
+                "type": "POST"
             },
-            { "data": "name" },
-            { "data": "type" },
-            { "data": "description" },
-            { "data": "price" },
-            { "data": "stock" },
-            { "data": "status" },
-            { "data": "actions" }
-        ],
-        "columnDefs": [
-            { "orderable": false, "targets": [7] }, // Actions column not sortable
-            { "orderable": false, "searchable": false, "targets": [0] } // Counter column not sortable or searchable
-        ],
-        "language": {
-            "processing": "Loading...",
-            "search": "Search:",
-            "lengthMenu": "Show _MENU_ entries",
-            "info": "Showing _START_ to _END_ of _TOTAL_ entries",
-            "infoEmpty": "Showing 0 to 0 of 0 entries",
-            "infoFiltered": "(filtered from _MAX_ total entries)",
-            "emptyTable": "No products found",
-            "zeroRecords": "No matching products found"
-        }
-    });
+            "pageLength": 10,
+            "responsive": true,
+            "order": [[1, "asc"]], // Order by name column
+            "columns": [
+                { 
+                    "data": null,
+                    "render": function (data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    }
+                },
+                { "data": "name" },
+                { "data": "type" },
+                { "data": "description" },
+                { "data": "price" },
+                { "data": "stock" },
+                { "data": "status" },
+                { "data": "actions" }
+            ],
+            "columnDefs": [
+                { "orderable": false, "targets": [7] },
+                { "orderable": false, "searchable": false, "targets": [0] }
+            ]
+        });
+    } else {
+        console.error('DataTables plugin not loaded');
+    }
     
     // Rest of your document.ready code...
     var editModal = new bootstrap.Modal(document.getElementById('editProductModal'));
     var stockModal = new bootstrap.Modal(document.getElementById('stockModal'));
     var addModal = new bootstrap.Modal(document.getElementById('addProductModal'));
+    
+    // Load product types when page loads
+    loadProductTypes();
+    
+    // Load product types when add modal opens
+    $('#addProductModal').on('show.bs.modal', function() {
+        loadProductTypes();
+    });
 });
 
 // Your other existing functions...
@@ -542,10 +501,12 @@ function showResponse(message, success = true) {
 }
 
 function deleteProduct(productId) {
-    showConfirmation('Are you sure you want to delete this product?', function() {
-        const responseModal = bootstrap.Modal.getInstance(document.getElementById('responseModal'));
-        responseModal.hide();
-        
+    // Show confirmation modal
+    $('#confirmMessage').text('Are you sure you want to delete this product?');
+    $('#confirmModal').modal('show');
+    
+    // Set up the confirm action
+    $('#confirmAction').off('click').on('click', function() {
         const formData = new FormData();
         formData.append('product_id', productId);
         
@@ -555,23 +516,36 @@ function deleteProduct(productId) {
         })
         .then(response => response.json())
         .then(data => {
-            showResponse(
-                data.success ? 'Product deleted successfully' : (data.message || 'Error deleting product'),
-                data.success
-            );
+            // Hide confirmation modal
+            $('#confirmModal').modal('hide');
             
+            // Show response message
             if (data.success) {
-                $('#productsTable').DataTable().ajax.reload(null, false);
+                showResponse('Product deleted successfully', true);
+                // Reload DataTable
+                const dataTable = $('#productsTable').DataTable();
+                if (dataTable) {
+                    dataTable.ajax.reload();
+                } else {
+                    location.reload();
+                }
+            } else {
+                showResponse(data.message || 'Error deleting product', false);
             }
         })
         .catch(error => {
             console.error('Error:', error);
+            $('#confirmModal').modal('hide');
             showResponse('Error deleting product', false);
         });
     });
 }
 
 function editProduct(productId) {
+    // Show confirmation modal
+    $('#editProductId').val(productId);
+    
+    // Fetch product details
     fetch(`../ajax/getProduct.php?product_id=${productId}`)
         .then(response => response.json())
         .then(data => {
@@ -579,18 +553,19 @@ function editProduct(productId) {
                 showResponse(data.error, false);
                 return;
             }
-            // Fill the edit modal with product data
-            document.getElementById('editProductId').value = data.product_id;
-            document.getElementById('editName').value = data.name;
-            document.getElementById('editDescription').value = data.description;
-            document.getElementById('editPrice').value = data.price;
-            document.getElementById('editTypeId').value = data.type_id;
-            document.getElementById('editCurrentStock').textContent = data.stock_quantity || 0;
             
+            // Fill the edit modal with product data
+            $('#editName').val(data.name);
+            $('#editDescription').val(data.description);
+            $('#editPrice').val(data.price);
+            $('#editTypeId').val(data.type_id);
+            $('#editCurrentStock').text(data.stock_quantity || 0);
+            
+            // Load product types and set selected
             loadProductTypes(data.type_id);
             
-            const editModal = new bootstrap.Modal(document.getElementById('editProductModal'));
-            editModal.show();
+            // Show the modal
+            $('#editProductModal').modal('show');
         })
         .catch(error => {
             console.error('Error:', error);
@@ -598,11 +573,82 @@ function editProduct(productId) {
         });
 }
 
-function deleteProduct(productId) {
-    if (confirm('Are you sure you want to delete this product?')) {
-        // Implement delete functionality
-    }
-}
+// Modify the edit product form submission handler
+$('#editProductForm').submit(function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    formData.append('canteen_id', '<?php echo $_SESSION['canteen_id']; ?>');
+    
+    // Get the quantity value for stock update
+    const quantity = $('#editQuantity').val();
+    const productId = $('#editProductId').val();
+    
+    console.log('Updating product:', Object.fromEntries(formData));
+    
+    // First update the product details
+    $.ajax({
+        url: '../ajax/updateProduct.php',
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(response) {
+            console.log('Update product response:', response);
+            
+            try {
+                const result = typeof response === 'string' ? JSON.parse(response) : response;
+                
+                if (result.success) {
+                    console.log('Product updated successfully:', result);
+                    
+                    // If quantity was provided, update stock
+                    if (quantity && quantity > 0) {
+                        const stockFormData = new FormData();
+                        stockFormData.append('product_id', productId);
+                        stockFormData.append('quantity', quantity);
+                        
+                        // Make a second AJAX call to update the stock
+                        $.ajax({
+                            url: '../ajax/addStock.php',
+                            type: 'POST',
+                            data: stockFormData,
+                            processData: false,
+                            contentType: false,
+                            success: function(stockResponse) {
+                                console.log('Stock update response:', stockResponse);
+                                $('#editProductModal').modal('hide');
+                                showResponse('Product and stock updated successfully', true);
+                                $('#editProductForm')[0].reset();
+                                $('#productsTable').DataTable().ajax.reload();
+                            },
+                            error: function(xhr, status, error) {
+                                console.error('Error updating stock:', error);
+                                showResponse('Product updated but error updating stock', false);
+                            }
+                        });
+                    } else {
+                        // If no quantity provided, just close modal and show success
+                        $('#editProductModal').modal('hide');
+                        showResponse('Product updated successfully', true);
+                        $('#editProductForm')[0].reset();
+                        $('#productsTable').DataTable().ajax.reload();
+                    }
+                } else {
+                    console.error('Error updating product:', result.message);
+                    showResponse(result.message || 'Error updating product', false);
+                }
+            } catch (error) {
+                console.error('Error parsing update product response:', error);
+                showResponse('Error processing server response', false);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Update product ajax error:', {xhr, status, error});
+            showResponse('Error submitting form: ' + error, false);
+        }
+    });
+});
 
 $(document).ready(function() {
     // Initialize DataTable code here...
@@ -612,9 +658,10 @@ $(document).ready(function() {
         e.preventDefault();
         
         const formData = new FormData(this);
-        
-        // Add the canteen_id from session
         formData.append('canteen_id', '<?php echo $_SESSION['canteen_id']; ?>');
+        
+        // Log the form data being sent
+        console.log('Adding new product:', Object.fromEntries(formData));
         
         $.ajax({
             url: '../ajax/addProduct.php',
@@ -623,29 +670,49 @@ $(document).ready(function() {
             processData: false,
             contentType: false,
             success: function(response) {
+                console.log('Add product response:', response);
+                
                 try {
-                    if (response.success) {
-                        // Close the modal
-                        $('#addProductModal').modal('hide');
+                    const result = typeof response === 'string' ? JSON.parse(response) : response;
+                    
+                    if (result.success) {
+                        console.log('Product added successfully:', result);
                         
-                        // Show success message
-                        showResponse('Product added successfully', true);
+                        // Add initial stock for the new product
+                        const stockFormData = new FormData();
+                        stockFormData.append('product_id', result.product_id);
+                        stockFormData.append('quantity', formData.get('initial_stock'));
                         
-                        // Reset the form
-                        $('#addProductForm')[0].reset();
-                        
-                        // Reload the DataTable
-                        $('#productsTable').DataTable().ajax.reload();
+                        // Make a second AJAX call to add the initial stock
+                        $.ajax({
+                            url: '../ajax/addInitialStock.php',
+                            type: 'POST',
+                            data: stockFormData,
+                            processData: false,
+                            contentType: false,
+                            success: function(stockResponse) {
+                                console.log('Stock added response:', stockResponse);
+                                $('#addProductModal').modal('hide');
+                                showResponse('Product and initial stock added successfully', true);
+                                $('#addProductForm')[0].reset();
+                                $('#productsTable').DataTable().ajax.reload();
+                            },
+                            error: function(xhr, status, error) {
+                                console.error('Error adding stock:', error);
+                                showResponse('Product added but error setting initial stock', false);
+                            }
+                        });
                     } else {
-                        showResponse(response.message || 'Error adding product', false);
+                        console.error('Error adding product:', result.message);
+                        showResponse(result.message || 'Error adding product', false);
                     }
                 } catch (error) {
-                    console.error('Error parsing response:', error);
+                    console.error('Error parsing add product response:', error);
                     showResponse('Error processing server response', false);
                 }
             },
             error: function(xhr, status, error) {
-                console.error('Ajax error:', error);
+                console.error('Add product ajax error:', {xhr, status, error});
                 showResponse('Error submitting form: ' + error, false);
             }
         });
@@ -692,6 +759,9 @@ $('#editProductForm').submit(function(e) {
         formData.append('quantity', quantity);
     }
     
+    // Add console log before submission
+    console.log('Updating product:', Object.fromEntries(formData));
+    
     $.ajax({
         url: '../ajax/updateProduct.php',
         type: 'POST',
@@ -699,10 +769,14 @@ $('#editProductForm').submit(function(e) {
         processData: false,
         contentType: false,
         success: function(response) {
+            // Add console log for response
+            console.log('Update product response:', response);
+            
             try {
                 const result = typeof response === 'string' ? JSON.parse(response) : response;
                 
                 if (result.success) {
+                    console.log('Product updated successfully:', result);
                     // Close the modal
                     $('#editProductModal').modal('hide');
                     
@@ -715,15 +789,16 @@ $('#editProductForm').submit(function(e) {
                     // Reload the DataTable
                     $('#productsTable').DataTable().ajax.reload();
                 } else {
+                    console.error('Error updating product:', result.message);
                     showResponse(result.message || 'Error updating product', false);
                 }
             } catch (error) {
-                console.error('Error parsing response:', error);
+                console.error('Error parsing update product response:', error);
                 showResponse('Error processing server response', false);
             }
         },
         error: function(xhr, status, error) {
-            console.error('Ajax error:', error);
+            console.error('Update product ajax error:', {xhr, status, error});
             showResponse('Error submitting form: ' + error, false);
         }
     });
@@ -731,19 +806,3 @@ $('#editProductForm').submit(function(e) {
 </script>
 
 <!-- Add this modal for showing responses -->
-<div class="modal fade" id="responseModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Message</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p id="responseMessage"></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
-            </div>
-        </div>
-    </div>
-</div>

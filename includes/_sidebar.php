@@ -7,7 +7,7 @@ require_once '../classes/accountClass.php';
             <ul class="nav nav-pills flex-column mb-sm-auto mb-0 align-items-center align-items-sm-start" id="menu">
                 <li class="side-nav-title">Home</li>
                 <li class="nav-item">
-                    <a href="adminDashboard.php" class="nav-link align-middle px-0" data-section="dashboard">
+                    <a href="admin/adminDashboard.php" class="nav-link align-middle px-0" data-section="dashboard">
                         <i class="fs-5 bi-house"></i>
                         <span class="ms-1 d-none d-sm-inline">Dashboard</span>
                     </a>
