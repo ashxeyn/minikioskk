@@ -64,7 +64,7 @@ $menuItems = ($search_type === 'canteens') ? [] : $searchResults['products'];
     </form>
 
  
-    <h3>Canteens</h3>
+    <h2>Canteens</h2>
     <div class="canteen-container">
         <?php if (!empty($canteens)): ?>
             <?php foreach ($canteens as $canteen): ?>

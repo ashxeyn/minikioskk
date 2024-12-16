@@ -19,9 +19,22 @@ require_once '../includes/_head.php';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+     <!-- jQuery -->
+    <script src="../assets/jquery/jquery-3.6.0.min.js"></script>
+    
+    <!-- Bootstrap -->
+    <link href="../assets/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <script src="../assets/bootstrap/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- DataTables JS -->
+    <script src="../assets/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="../assets/datatables/js/dataTables.responsive.min.js"></script>
+    <script src="../assets/datatables/js/dataTables.buttons.min.js"></script>
+
+    <!-- DataTables CSS -->
+    <link href="../assets/datatables/css/jquery.dataTables.min.css" rel="stylesheet">
+    <link href="../assets/datatables/css/responsive.dataTables.min.css" rel="stylesheet">
+    <link href="../assets/datatables/css/buttons.dataTables.min.css" rel="stylesheet">
     <script src="../js/manager.js"></script>
     <title>Manager Dashboard</title>
 </head>

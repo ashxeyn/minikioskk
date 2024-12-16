@@ -5,87 +5,56 @@ require_once '../classes/employeeClass.php';
 header('Content-Type: application/json');
 
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'manager') {
-    echo json_encode([
-        'draw' => $_POST['draw'] ?? 1,
-        'recordsTotal' => 0,
-        'recordsFiltered' => 0,
-        'data' => [],
-        'error' => 'Unauthorized access'
-    ]);
+    http_response_code(403);
+    echo json_encode(['error' => 'Unauthorized access']);
     exit;
 }
 
 try {
     $employee = new Employee();
-    $canteenId = $_SESSION['canteen_id'] ?? null;
     
-    if (!$canteenId) {
+    // Get the canteen ID from session
+    if (!isset($_SESSION['canteen_id'])) {
         throw new Exception("Canteen ID not found in session");
     }
 
-    // Get total records count
-    $totalRecords = $employee->getTotalEmployeesCount($canteenId);
-    
-    // Get filtered records count and data
-    $search = $_POST['search']['value'] ?? '';
+    // Get search parameters from DataTables
+    $draw = $_POST['draw'] ?? 1;
     $start = $_POST['start'] ?? 0;
     $length = $_POST['length'] ?? 10;
-    $orderColumn = $_POST['order'][0]['column'] ?? 0;
+    $search = $_POST['search']['value'] ?? '';
+    $orderColumn = $_POST['order'][0]['column'] ?? 1; // Default to name column
     $orderDir = $_POST['order'][0]['dir'] ?? 'asc';
-    
-    $columns = ['user_id', 'name', 'username', 'email', 'status'];
-    $orderBy = $columns[$orderColumn] ?? 'user_id';
-    
-    $result = $employee->getEmployeesForDataTable($canteenId, $search, $start, $length, $orderBy, $orderDir);
-    
-    // Format data for DataTables
-    $data = [];
-    foreach ($result['data'] as $employee) {
-        $actions = '';
-        if ($employee['manager_status'] === 'pending') {
-            $actions = sprintf(
-                '<div class="btn-group">
-                    <button class="btn btn-sm btn-success" onclick="approveEmployee(%d)">
-                        <i class="bi bi-check-circle"></i> Approve
-                    </button>
-                </div>',
-                $employee['user_id']
-            );
-        }
 
-        $data[] = [
-            "DT_RowId" => "employee_" . $employee['user_id'],
-            "user_id" => $employee['user_id'], // Keep for actions
-            "name" => htmlspecialchars($employee['last_name'] . ', ' . 
-                     $employee['given_name'] . ' ' . 
-                     ($employee['middle_name'] ?? '')),
-            "username" => htmlspecialchars($employee['username']),
-            "email" => htmlspecialchars($employee['email']),
-            "manager_status" => sprintf(
-                '<span class="badge %s">%s</span>',
-                $employee['manager_status'] === 'accepted' ? 'bg-success' : 
-                ($employee['manager_status'] === 'pending' ? 'bg-warning' : 'bg-danger'),
-                ucfirst($employee['manager_status'])
-            ),
-            "actions" => $actions
-        ];
-    }
+    // Get total and filtered records
+    $totalRecords = $employee->getTotalEmployeesCount($_SESSION['canteen_id']);
+    
+    // Get the filtered data
+    $employees = $employee->fetchCanteenEmployees(
+        $_SESSION['canteen_id'],
+        $search,
+        $start,
+        $length,
+        $orderColumn,
+        $orderDir
+    );
 
-    // Return the response in DataTables format
+    // Format response for DataTables
     echo json_encode([
-        "draw" => isset($_POST['draw']) ? intval($_POST['draw']) : 0,
-        "recordsTotal" => $result['total_count'],
-        "recordsFiltered" => $result['filtered_count'],
-        "data" => $data
+        'draw' => intval($draw),
+        'recordsTotal' => $totalRecords,
+        'recordsFiltered' => count($employees),
+        'data' => $employees
     ]);
 
 } catch (Exception $e) {
+    http_response_code(500);
     echo json_encode([
+        'error' => 'Server error: ' . $e->getMessage(),
         'draw' => $_POST['draw'] ?? 1,
         'recordsTotal' => 0,
         'recordsFiltered' => 0,
-        'data' => [],
-        'error' => $e->getMessage()
+        'data' => []
     ]);
 }
 ?> 

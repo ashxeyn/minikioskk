@@ -18,20 +18,25 @@ try {
 }
 ?>
 <head>
-    <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-    <!-- jQuery -->
-    <script src="../assets/jquery/jquery-3.6.0.min.js"></script>
-    <!-- Bootstrap -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- DataTables JS -->
-    <script src="../assets/datatables/js/jquery.dataTables.min.js"></script>
-    <script src="../assets/datatables/js/dataTables.responsive.min.js"></script>
-    <script src="../assets/datatables/js/dataTables.buttons.min.js"></script>
-    <!-- DataTables CSS -->
-    <link href="../assets/datatables/css/jquery.dataTables.min.css" rel="stylesheet">
-    <link href="../assets/datatables/css/responsive.dataTables.min.css" rel="stylesheet">
-    <link href="../assets/datatables/css/buttons.dataTables.min.css" rel="stylesheet">
+        <!-- Bootstrap Icons -->
+        <link href="../assets/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+        <!-- jQuery -->
+        <script src="../assets/jquery/jquery-3.6.0.min.js"></script>
+
+        <!-- Bootstrap -->
+        <link href="../assets/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+        <script src="../assets/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+        <!-- DataTables JS -->
+        <script src="../assets/datatables/js/jquery.dataTables.min.js"></script>
+        <script src="../assets/datatables/js/dataTables.responsive.min.js"></script>
+        <script src="../assets/datatables/js/dataTables.buttons.min.js"></script>
+
+        <!-- DataTables CSS -->
+        <link href="../assets/datatables/css/jquery.dataTables.min.css" rel="stylesheet">
+        <link href="../assets/datatables/css/responsive.dataTables.min.css" rel="stylesheet">
+        <link href="../assets/datatables/css/buttons.dataTables.min.css" rel="stylesheet">  
     <style>
         /* Override DataTables styles to prevent affecting sidebar */
         .dataTables_wrapper {
@@ -70,34 +75,34 @@ try {
         }
         
         /* Status-specific colors */
-        .badge-pending {
-            background-color: #ffc107 !important;
-            color: #000 !important;
+        .badge-placed {
+            background-color: #6c757d !important;  /* Gray background */
+            color: white !important;
         }
         
         .badge-accepted {
-            background-color: #17a2b8 !important;
-            color: #fff !important;
+            background-color: #17a2b8 !important;  /* Info blue background */
+            color: white !important;
         }
         
         .badge-preparing {
-            background-color: #fd7e14 !important;
-            color: #fff !important;
+            background-color: #ffc107 !important;  /* Warning yellow background */
+            color: black !important;
         }
         
         .badge-ready {
-            background-color: #20c997 !important;
-            color: #fff !important;
+            background-color: #28a745 !important;  /* Success green background */
+            color: white !important;
         }
         
         .badge-completed {
-            background-color: #198754 !important;
-            color: #fff !important;
+            background-color: #198754 !important;  /* Darker green background */
+            color: white !important;
         }
         
         .badge-cancelled {
-            background-color: #dc3545 !important;
-            color: #fff !important;
+            background-color: #dc3545 !important;  /* Danger red background */
+            color: white !important;
         }
         
         /* DataTables Pagination and Length Menu Styles */
@@ -147,6 +152,14 @@ try {
             content: "";
             display: table;
             clear: both;
+        }
+        
+        .btn-group {
+            gap: 0.25rem;
+        }
+        
+        .table th {
+            background-color: #f8f9fa;
         }
     </style>
 </head>
@@ -453,5 +466,10 @@ function handleOrderAction(orderId, action) {
     };
     
     responseModal.show();
+}
+
+// Update the status badge rendering
+function getStatusBadge(status) {
+    return `<span class="badge badge-${status.toLowerCase()}">${status}</span>`;
 }
 </script>

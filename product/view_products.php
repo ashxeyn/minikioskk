@@ -110,7 +110,8 @@ try {
     <script src="../assets/jquery/jquery-3.6.0.min.js"></script>
     
     <!-- Bootstrap -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link href="../assets/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <script src="../assets/bootstrap/js/bootstrap.bundle.min.js"></script>
     
     <!-- DataTables JS -->
     <script src="../assets/datatables/js/jquery.dataTables.min.js"></script>
@@ -121,6 +122,9 @@ try {
     <link href="../assets/datatables/css/jquery.dataTables.min.css" rel="stylesheet">
     <link href="../assets/datatables/css/responsive.dataTables.min.css" rel="stylesheet">
     <link href="../assets/datatables/css/buttons.dataTables.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link href="../assets/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 </head>
 
 
@@ -216,11 +220,6 @@ try {
                         <label for="type_id" class="form-label">Product Type</label>
                         <select class="form-control" id="type_id" name="type_id" required>
                             <option value="">Select Type</option>
-                            <?php foreach ($productTypes as $type): ?>
-                                <option value="<?php echo htmlspecialchars($type['type_id']); ?>">
-                                    <?php echo htmlspecialchars($type['name']); ?>
-                                </option>
-                            <?php endforeach; ?>
                         </select>
                     </div>
 
@@ -274,6 +273,7 @@ try {
                     <div class="mb-3">
                         <label for="editQuantity" class="form-label">Add Stock</label>
                         <input type="number" class="form-control" id="editQuantity" name="quantity" min="0">
+                        <small class="form-text text-muted">Enter the quantity to add to current stock</small>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -394,44 +394,24 @@ try {
 </style>
 
 <script>
-// Define loadProductTypes globally
-function loadProductTypes(selectedType = '') {
-    $.ajax({
-        url: '../ajax/getProductTypes.php',
-        method: 'GET',
-        success: function(response) {
-            try {
-                const types = JSON.parse(response);
-                let options = '<option value="">Select Category</option>';
-                types.forEach(type => {
-                    options += `<option value="${type.type_id}" ${selectedType == type.type_id ? 'selected' : ''}>
-                        ${type.name} (${type.type})
-                    </option>`;
-                });
-                $('#editTypeId, #type_id').html(options); // Update both modals' select elements
-            } catch (error) {
-                console.error('Error parsing product types:', error);
-            }
-        },
-        error: function(xhr, status, error) {
-            console.error('Error loading product types:', error);
+$(document).ready(function() {
+    // Initialize all modals
+    var modals = [
+        'addProductModal',
+        'editProductModal',
+        'responseModal',
+        'confirmModal',
+        'successModal',
+        'errorModal'
+    ];
+    
+    modals.forEach(function(modalId) {
+        var modalElement = document.getElementById(modalId);
+        if (modalElement) {
+            new bootstrap.Modal(modalElement);
         }
     });
-}
 
-function openAddProductModal() {
-    // Reset form
-    $('#addProductForm')[0].reset();
-    
-    // Load product types
-    loadProductTypes();
-    
-    // Show modal
-    new bootstrap.Modal(document.getElementById('addProductModal')).show();
-}
-
-// Rest of your document.ready function and other functions...
-$(document).ready(function() {
     // Initialize DataTable
     $('#productsTable').DataTable({
         "processing": true,
@@ -459,172 +439,22 @@ $(document).ready(function() {
             { "data": "actions" }
         ],
         "columnDefs": [
-            { "orderable": false, "targets": [7] }, // Actions column not sortable
-            { "orderable": false, "searchable": false, "targets": [0] } // Counter column not sortable or searchable
-        ],
-        "language": {
-            "processing": "Loading...",
-            "search": "Search:",
-            "lengthMenu": "Show _MENU_ entries",
-            "info": "Showing _START_ to _END_ of _TOTAL_ entries",
-            "infoEmpty": "Showing 0 to 0 of 0 entries",
-            "infoFiltered": "(filtered from _MAX_ total entries)",
-            "emptyTable": "No products found",
-            "zeroRecords": "No matching products found"
-        }
+            { "orderable": false, "targets": [7] },
+            { "orderable": false, "searchable": false, "targets": [0] }
+        ]
     });
-    
-    // Rest of your document.ready code...
-    var editModal = new bootstrap.Modal(document.getElementById('editProductModal'));
-    var stockModal = new bootstrap.Modal(document.getElementById('stockModal'));
-    var addModal = new bootstrap.Modal(document.getElementById('addProductModal'));
-});
-
-// Your other existing functions...
-
-document.addEventListener('DOMContentLoaded', function() {
-    const searchInput = document.getElementById('searchInput');
-    const categoryFilter = document.getElementById('categoryFilter');
-    const statusFilter = document.getElementById('statusFilter');
-    
-    function filterTable() {
-        const searchTerm = searchInput.value.toLowerCase();
-        const categoryTerm = categoryFilter.value.toLowerCase();
-        const statusTerm = statusFilter.value.toLowerCase();
-        
-        const rows = document.querySelectorAll('tbody tr');
-        
-        rows.forEach(row => {
-            const name = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
-            const type = row.querySelector('td:nth-child(5)').textContent.toLowerCase();
-            const status = row.querySelector('.badge').textContent.toLowerCase();
-            
-            const matchesSearch = name.includes(searchTerm);
-            const matchesCategory = !categoryTerm || type.includes(categoryTerm);
-            const matchesStatus = !statusTerm || status === statusTerm;
-            
-            row.style.display = (matchesSearch && matchesCategory && matchesStatus) ? '' : 'none';
-        });
-    }
-    
-    searchInput.addEventListener('input', filterTable);
-    categoryFilter.addEventListener('change', filterTable);
-    statusFilter.addEventListener('change', filterTable);
-});
-
-function showConfirmation(message, callback) {
-    const responseMessage = document.getElementById('responseMessage');
-    responseMessage.textContent = message;
-    responseMessage.className = 'text-primary';
-    
-    const modalElement = document.getElementById('responseModal');
-    const modalFooter = modalElement.querySelector('.modal-footer');
-    modalFooter.innerHTML = `
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-primary" id="confirmAction">Confirm</button>
-    `;
-    
-    document.getElementById('confirmAction').onclick = callback;
-    
-    const responseModal = new bootstrap.Modal(modalElement);
-    responseModal.show();
-}
-
-function showResponse(message, success = true) {
-    const responseMessage = document.getElementById('responseMessage');
-    responseMessage.textContent = message;
-    responseMessage.className = success ? 'text-success' : 'text-danger';
-    
-    const modalElement = document.getElementById('responseModal');
-    const modalFooter = modalElement.querySelector('.modal-footer');
-    modalFooter.innerHTML = `
-        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
-    `;
-    
-    const responseModal = new bootstrap.Modal(modalElement);
-    responseModal.show();
-    
-    if (success) {
-        modalElement.addEventListener('hidden.bs.modal', function() {
-            $('#productsTable').DataTable().ajax.reload(null, false);
-        }, { once: true });
-    }
-}
-
-function deleteProduct(productId) {
-    showConfirmation('Are you sure you want to delete this product?', function() {
-        const responseModal = bootstrap.Modal.getInstance(document.getElementById('responseModal'));
-        responseModal.hide();
-        
-        const formData = new FormData();
-        formData.append('product_id', productId);
-        
-        fetch('../ajax/deleteProduct.php', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            showResponse(
-                data.success ? 'Product deleted successfully' : (data.message || 'Error deleting product'),
-                data.success
-            );
-            
-            if (data.success) {
-                $('#productsTable').DataTable().ajax.reload(null, false);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showResponse('Error deleting product', false);
-        });
-    });
-}
-
-function editProduct(productId) {
-    fetch(`../ajax/getProduct.php?product_id=${productId}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                showResponse(data.error, false);
-                return;
-            }
-            // Fill the edit modal with product data
-            document.getElementById('editProductId').value = data.product_id;
-            document.getElementById('editName').value = data.name;
-            document.getElementById('editDescription').value = data.description;
-            document.getElementById('editPrice').value = data.price;
-            document.getElementById('editTypeId').value = data.type_id;
-            document.getElementById('editCurrentStock').textContent = data.stock_quantity || 0;
-            
-            loadProductTypes(data.type_id);
-            
-            const editModal = new bootstrap.Modal(document.getElementById('editProductModal'));
-            editModal.show();
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showResponse('Error loading product details', false);
-        });
-}
-
-function deleteProduct(productId) {
-    if (confirm('Are you sure you want to delete this product?')) {
-        // Implement delete functionality
-    }
-}
-
-$(document).ready(function() {
-    // Initialize DataTable code here...
 
     // Add Product Form Submission
-    $('#addProductForm').submit(function(e) {
+    $('#addProductForm').on('submit', function(e) {
         e.preventDefault();
-        
         const formData = new FormData(this);
         
-        // Add the canteen_id from session
+        // Add canteen_id from session
         formData.append('canteen_id', '<?php echo $_SESSION['canteen_id']; ?>');
+        
+        // Get initial stock value
+        const initialStock = $('#initial_stock').val();
+        formData.append('initial_stock', initialStock);
         
         $.ajax({
             url: '../ajax/addProduct.php',
@@ -633,111 +463,160 @@ $(document).ready(function() {
             processData: false,
             contentType: false,
             success: function(response) {
-                try {
-                    if (response.success) {
-                        // Close the modal
-                        $('#addProductModal').modal('hide');
-                        
-                        // Show success message
-                        showResponse('Product added successfully', true);
-                        
-                        // Reset the form
-                        $('#addProductForm')[0].reset();
-                        
-                        // Reload the DataTable
-                        $('#productsTable').DataTable().ajax.reload();
-                    } else {
-                        showResponse(response.message || 'Error adding product', false);
-                    }
-                } catch (error) {
-                    console.error('Error parsing response:', error);
-                    showResponse('Error processing server response', false);
+                const result = typeof response === 'string' ? JSON.parse(response) : response;
+                if (result.success) {
+                    $('#addProductModal').modal('hide');
+                    showResponse('Product added successfully', true);
+                    $('#addProductForm')[0].reset();
+                    $('#productsTable').DataTable().ajax.reload();
+                } else {
+                    showResponse(result.message || 'Error adding product', false);
                 }
             },
             error: function(xhr, status, error) {
-                console.error('Ajax error:', error);
                 showResponse('Error submitting form: ' + error, false);
             }
         });
     });
 
-    // Add validation for price and stock inputs
-    $('#price, #initial_stock').on('input', function() {
-        this.value = this.value.replace(/[^0-9.]/g, '');
-    });
-});
-
-// Make sure the showResponse function is defined
-function showResponse(message, success = true) {
-    const responseMessage = document.getElementById('responseMessage');
-    responseMessage.textContent = message;
-    responseMessage.className = success ? 'text-success' : 'text-danger';
-    
-    const modalElement = document.getElementById('responseModal');
-    const modalFooter = modalElement.querySelector('.modal-footer');
-    modalFooter.innerHTML = `
-        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
-    `;
-    
-    const responseModal = new bootstrap.Modal(modalElement);
-    responseModal.show();
-    
-    if (success) {
-        modalElement.addEventListener('hidden.bs.modal', function() {
-            $('#productsTable').DataTable().ajax.reload(null, false);
-        }, { once: true });
-    }
-}
-
-// Add this to your existing JavaScript
-$('#editProductForm').submit(function(e) {
-    e.preventDefault();
-    
-    const formData = new FormData(this);
-    formData.append('canteen_id', '<?php echo $_SESSION['canteen_id']; ?>');
-    
-    // Get the quantity value
-    const quantity = $('#editQuantity').val();
-    if (quantity && quantity > 0) {
-        formData.append('quantity', quantity);
-    }
-    
-    $.ajax({
-        url: '../ajax/updateProduct.php',
-        type: 'POST',
-        data: formData,
-        processData: false,
-        contentType: false,
-        success: function(response) {
-            try {
+    // Edit Product Form Submission
+    $('#editProductForm').on('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        
+        // Add canteen_id from session
+        formData.append('canteen_id', '<?php echo $_SESSION['canteen_id']; ?>');
+        
+        // Get the quantity value for stock update
+        const quantity = $('#editQuantity').val();
+        if (quantity && quantity > 0) {
+            formData.append('quantity', quantity);
+        }
+        
+        $.ajax({
+            url: '../ajax/updateProduct.php',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
                 const result = typeof response === 'string' ? JSON.parse(response) : response;
-                
                 if (result.success) {
-                    // Close the modal
                     $('#editProductModal').modal('hide');
-                    
-                    // Show success message
                     showResponse('Product updated successfully', true);
-                    
-                    // Reset the form
                     $('#editProductForm')[0].reset();
-                    
-                    // Reload the DataTable
                     $('#productsTable').DataTable().ajax.reload();
                 } else {
                     showResponse(result.message || 'Error updating product', false);
                 }
+            },
+            error: function(xhr, status, error) {
+                showResponse('Error updating product: ' + error, false);
+            }
+        });
+    });
+});
+
+// Function to open Add Product Modal
+function openAddProductModal() {
+    loadProductTypes();
+    $('#addProductModal').modal('show');
+}
+
+// Function to load product types
+function loadProductTypes(selectedType = '') {
+    $.ajax({
+        url: '../ajax/getProductTypes.php',
+        method: 'GET',
+        success: function(response) {
+            try {
+                const types = JSON.parse(response);
+                let options = '<option value="">Select Category</option>';
+                types.forEach(type => {
+                    options += `<option value="${type.type_id}" ${selectedType == type.type_id ? 'selected' : ''}>
+                        ${type.name} (${type.type})
+                    </option>`;
+                });
+                $('#editTypeId, #type_id').html(options);
             } catch (error) {
-                console.error('Error parsing response:', error);
-                showResponse('Error processing server response', false);
+                console.error('Error parsing product types:', error);
+                showResponse('Error loading product types', false);
             }
         },
         error: function(xhr, status, error) {
-            console.error('Ajax error:', error);
-            showResponse('Error submitting form: ' + error, false);
+            console.error('Error loading product types:', error);
+            showResponse('Error loading product types', false);
         }
     });
-});
+}
+
+// Function to edit product
+function editProduct(productId) {
+    $.ajax({
+        url: `../ajax/getProduct.php?product_id=${productId}`,
+        method: 'GET',
+        success: function(response) {
+            try {
+                const data = typeof response === 'string' ? JSON.parse(response) : response;
+                if (data.error) {
+                    showResponse(data.error, false);
+                    return;
+                }
+                
+                $('#editProductId').val(data.product_id);
+                $('#editName').val(data.name);
+                $('#editDescription').val(data.description);
+                $('#editPrice').val(data.price);
+                $('#editCurrentStock').text(data.stock_quantity || 0);
+                
+                loadProductTypes(data.type_id);
+                $('#editProductModal').modal('show');
+            } catch (error) {
+                console.error('Error parsing product data:', error);
+                showResponse('Error loading product details', false);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Error:', error);
+            showResponse('Error loading product details', false);
+        }
+    });
+}
+
+// Function to delete product
+function deleteProduct(productId) {
+    if (confirm('Are you sure you want to delete this product?')) {
+        $.ajax({
+            url: '../ajax/deleteProduct.php',
+            type: 'POST',
+            data: { product_id: productId },
+            success: function(response) {
+                const result = typeof response === 'string' ? JSON.parse(response) : response;
+                if (result.success) {
+                    showResponse('Product deleted successfully', true);
+                    $('#productsTable').DataTable().ajax.reload();
+                } else {
+                    showResponse(result.message || 'Error deleting product', false);
+                }
+            },
+            error: function(xhr, status, error) {
+                showResponse('Error deleting product: ' + error, false);
+            }
+        });
+    }
+}
+
+// Function to show response messages
+function showResponse(message, success = true) {
+    const responseMessage = document.getElementById('responseMessage');
+    if (responseMessage) {
+        responseMessage.textContent = message;
+        responseMessage.className = success ? 'text-success' : 'text-danger';
+        
+        const responseModal = new bootstrap.Modal(document.getElementById('responseModal'));
+        responseModal.show();
+    }
+}
 </script>
 
 <!-- Add this modal for showing responses -->

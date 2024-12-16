@@ -41,17 +41,41 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Co-Employees</title>
     
+    <!-- jQuery -->
+    <script src="../assets/jquery/jquery-3.6.0.min.js"></script>
+    
+    <!-- Bootstrap -->
+    <link href="../assets/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <script src="../assets/bootstrap/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- DataTables JS -->
+    <script src="../assets/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="../assets/datatables/js/dataTables.responsive.min.js"></script>
+    <script src="../assets/datatables/js/dataTables.buttons.min.js"></script>
+
     <!-- DataTables CSS -->
     <link href="../assets/datatables/css/jquery.dataTables.min.css" rel="stylesheet">
     <link href="../assets/datatables/css/responsive.dataTables.min.css" rel="stylesheet">
     <link href="../assets/datatables/css/buttons.dataTables.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link href="../assets/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     
     <style>
-    .badge {
-        padding: 0.5em 0.8em;
-    }
     .btn-group {
         gap: 0.25rem;
+    }
+    .table {
+        background-color: transparent !important;
+    }
+    .table thead th {
+        background-color: transparent !important;
+    }
+    .table-striped tbody tr:nth-of-type(odd) {
+        background-color: transparent !important;
+    }
+    .table-hover tbody tr:hover {
+        background-color: rgba(0, 0, 0, 0.02) !important;
     }
     </style>
 </head>
@@ -62,7 +86,7 @@ try {
                 <h2>Manage Co-Employees</h2>
             </div>
             <div class="col-md-6 text-end">
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
+                <button type="button" class="btn btn-primary" onclick="openAddEmployeeModal()">
                     <i class="bi bi-plus-circle"></i> Add Co-Employee
                 </button>
             </div>
@@ -78,9 +102,27 @@ try {
                                 <th>Name</th>
                                 <th>Username</th>
                                 <th>Email</th>
-                                <th>Status</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
+                        <tbody>
+                            <?php foreach ($employees as $emp): ?>
+                            <tr>
+                                <td></td>
+                                <td><?= htmlspecialchars($emp['name']) ?></td>
+                                <td><?= htmlspecialchars($emp['username']) ?></td>
+                                <td><?= htmlspecialchars($emp['email']) ?></td>
+                                <td>
+                                    <div class="btn-group">
+                                      
+                                        <button class="btn btn-sm btn-danger" onclick="deleteEmployee(<?= $emp['user_id'] ?>)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -89,11 +131,12 @@ try {
 
     <?php include 'addEmployeeModal.html'; ?>
 
+    <!-- Response Modal -->
     <div class="modal fade" id="responseModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Action Status</h5>
+                    <h5 class="modal-title">Message</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
@@ -106,99 +149,160 @@ try {
         </div>
     </div>
 
-    <!-- Load scripts in correct order -->
-    <script src="../assets/jquery/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- DataTables JS -->
-    <script src="../assets/datatables/js/jquery.dataTables.min.js"></script>
-    <script src="../assets/datatables/js/dataTables.responsive.min.js"></script>
-    <script src="../assets/datatables/js/dataTables.buttons.min.js"></script>
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteConfirmModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Delete</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete this employee? This action cannot be undone.</p>
+                    <p class="text-danger"><strong>Warning:</strong> This will permanently remove the employee's access and all associated data.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmDelete">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
-        $(document).ready(function() {
+    $(document).ready(function() {
+        // Initialize DataTable
+        const table = $('#employeesTable').DataTable({
+            "processing": true,
+            "serverSide": false, // Using local data
+            "ajax": {
+                "url": "../ajax/getEmployees.php",
+                "type": "POST",
+                "data": function(d) {
+                    d.canteen_id = <?php echo $_SESSION['canteen_id']; ?>;
+                }
+            },
+            "pageLength": 10,
+            "responsive": true,
+            "order": [[1, "asc"]], // Order by name column
+            "columns": [
+                { 
+                    "data": null,
+                    "render": function (data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    }
+                },
+                { "data": "name" },
+                { "data": "username" },
+                { "data": "email" },
+                { 
+                    "data": null,
+                    "render": function(data, type, row) {
+                        return `
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-danger" onclick="deleteEmployee(${row.user_id})">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        `;
+                    }
+                }
+            ],
+            "columnDefs": [
+                { "orderable": false, "targets": [0, 4] },
+                { "searchable": false, "targets": [0, 4] }
+            ]
+        });
+
+        // Add Employee Form Submission
+        $('#addEmployeeForm').on('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            formData.append('canteen_id', '<?php echo $_SESSION['canteen_id']; ?>');
+            
             $.ajax({
-                url: '../ajax/checkSession.php',
-                method: 'GET',
+                url: '../ajax/addEmployee.php',
+                type: 'POST',
+                data: Object.fromEntries(formData),
                 success: function(response) {
-                    if (response.success) {
-                        initializeDataTable();
+                    const result = typeof response === 'string' ? JSON.parse(response) : response;
+                    if (result.success) {
+                        $('#addEmployeeModal').modal('hide');
+                        showResponse('Employee added successfully', true);
+                        $('#addEmployeeForm')[0].reset();
+                        table.ajax.reload();
                     } else {
-                        console.error('Session error:', response.error);
-                        showResponse('Error: ' + response.error, false);
+                        showResponse(result.message || 'Error adding employee', false);
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error('Ajax error:', error);
-                    showResponse('Error checking session', false);
+                    showResponse('Error submitting form: ' + error, false);
                 }
             });
         });
 
-        function initializeDataTable() {
-            try {
-                $('#employeesTable').DataTable({
-                    "processing": true,
-                    "serverSide": true,
-                    "ajax": {
-                        "url": "../ajax/getEmployees.php",
-                        "type": "POST",
-                        "error": function(xhr, error, thrown) {
-                            console.error('DataTables error:', error, thrown);
-                            if (error === "Canteen ID not found in session") {
-                                location.reload();
-                            }
+        // Store the user ID to be deleted
+        let userIdToDelete = null;
+
+        // Update delete employee function
+        window.deleteEmployee = function(userId) {
+            userIdToDelete = userId;
+            $('#deleteConfirmModal').modal('show');
+        };
+
+        // Handle delete confirmation
+        $('#confirmDelete').click(function() {
+            if (userIdToDelete) {
+                // Show loading state
+                $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Deleting...');
+                
+                $.ajax({
+                    url: '../ajax/deleteEmployee.php',
+                    type: 'POST',
+                    data: { 
+                        user_id: userIdToDelete,
+                        canteen_id: <?php echo $_SESSION['canteen_id']; ?>
+                    },
+                    success: function(response) {
+                        $('#deleteConfirmModal').modal('hide');
+                        const result = typeof response === 'string' ? JSON.parse(response) : response;
+                        if (result.success) {
+                            showResponse('Employee deleted successfully', true);
+                            // Reload only the table data
+                            table.ajax.reload(null, false);
+                        } else {
+                            showResponse(result.error || 'Error deleting employee', false);
                         }
                     },
-                    "columns": [
-                        { 
-                            "data": null,
-                            "render": function (data, type, row, meta) {
-                                return meta.row + meta.settings._iDisplayStart + 1;
-                            }
-                        },
-                        { "data": "name" },
-                        { "data": "username" },
-                        { "data": "email" },
-                        { "data": "manager_status" }
-                    ],
-                    "columnDefs": [
-                        { "orderable": false, "searchable": false, "targets": [0] }
-                    ],
-                    "pageLength": 10,
-                    "responsive": true,
-                    "order": [[1, "asc"]],
-                    "language": {
-                        "processing": "Loading...",
-                        "search": "Search:",
-                        "lengthMenu": "Show _MENU_ entries",
-                        "info": "Showing _START_ to _END_ of _TOTAL_ entries",
-                        "infoEmpty": "Showing 0 to 0 of 0 entries",
-                        "infoFiltered": "(filtered from _MAX_ total entries)",
-                        "emptyTable": "No employees found",
-                        "zeroRecords": "No matching records found"
+                    error: function(xhr, status, error) {
+                        $('#deleteConfirmModal').modal('hide');
+                        showResponse('Error deleting employee: ' + error, false);
+                    },
+                    complete: function() {
+                        // Reset button state
+                        $('#confirmDelete').prop('disabled', false).text('Delete');
                     }
                 });
-            } catch (error) {
-                console.error('DataTables initialization error:', error);
-                showResponse('Error initializing table', false);
             }
-        }
+        });
 
+        // Function to show response messages
         function showResponse(message, success = true) {
             const responseMessage = document.getElementById('responseMessage');
-            responseMessage.textContent = message;
-            responseMessage.className = success ? 'text-success' : 'text-danger';
-            modalFooter.innerHTML = `
-
-            const modalElement = document.getElementById('responseModal');
-            const modalFooter = modalElement.querySelector('.modal-footer');
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
-            `;
-
-            const responseModal = bootstrap.Modal.getOrCreateInstance(modalElement);
-            responseModal.show();
+            if (responseMessage) {
+                responseMessage.textContent = message;
+                responseMessage.className = success ? 'text-success' : 'text-danger';
+                
+                const responseModal = new bootstrap.Modal(document.getElementById('responseModal'));
+                responseModal.show();
+            }
         }
+    });
+
+    // Function to open Add Employee Modal
+    function openAddEmployeeModal() {
+        $('#addEmployeeModal').modal('show');
+    }
     </script>
 </body>
 </html>

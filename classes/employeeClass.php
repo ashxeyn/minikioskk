@@ -2,26 +2,30 @@
 require_once 'databaseClass.php';
 
 class Employee {
-    private $conn;
+    private $db;
 
     public function __construct() {
-        $db = new Database();
-        $this->conn = $db->connect();
+        $this->db = new Database();
     }
 
     public function fetchCanteenEmployees($canteenId) {
         try {
-            $sql = "SELECT u.user_id, u.username, u.email, u.last_name, u.given_name, 
-                           u.middle_name, u.status, m.manager_id 
+            $sql = "SELECT u.user_id, CONCAT(u.last_name, ', ', u.given_name) as name, 
+                           u.username, u.email
                     FROM users u 
                     JOIN managers m ON u.user_id = m.user_id 
-                    WHERE m.canteen_id = ? AND u.role = 'manager'
-                    AND u.user_id != ?"; 
+                    WHERE m.canteen_id = :canteen_id 
+                    AND u.role = 'manager'
+                    AND u.user_id != :current_user
+                    ORDER BY u.last_name, u.given_name";
             
-            $stmt = $this->conn->prepare($sql);
-            $stmt->execute([$canteenId, $_SESSION['user_id']]);
+            $stmt = $this->db->getConnection()->prepare($sql);
+            $stmt->execute([
+                'canteen_id' => $canteenId,
+                'current_user' => $_SESSION['user_id'] ?? 0
+            ]);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
+        } catch (Exception $e) {
             error_log("Error fetching canteen employees: " . $e->getMessage());
             throw new Exception("Error fetching employees");
         }
@@ -29,142 +33,218 @@ class Employee {
 
     public function addEmployee($data) {
         try {
-            $this->conn->beginTransaction();
+            $db = $this->db->getConnection();
+            $db->beginTransaction();
 
-          
-            $sql = "SELECT COUNT(*) FROM users WHERE email = ? OR username = ?";
-            $stmt = $this->conn->prepare($sql);
-            $stmt->execute([$data['email'], $data['username']]);
+            // Check for existing email/username
+            $sql = "SELECT COUNT(*) FROM users WHERE email = :email OR username = :username";
+            $stmt = $db->prepare($sql);
+            $stmt->execute([
+                'email' => $data['email'],
+                'username' => $data['username']
+            ]);
             if ($stmt->fetchColumn() > 0) {
                 throw new Exception("Email or username already exists");
             }
 
-         
-            $sql = "INSERT INTO users (email, username, password, role, status, 
-                                     last_name, given_name, middle_name, canteen_id) 
-                    VALUES (?, ?, ?, 'manager', 'pending', ?, ?, ?, ?)";
+            // Insert into users table with approved status
+            $userSql = "INSERT INTO users (username, email, password, role, status, last_name, given_name, middle_name, canteen_id) 
+                        VALUES (:username, :email, :password, 'manager', 'approved', :last_name, :given_name, :middle_name, :canteen_id)";
             
-            $stmt = $this->conn->prepare($sql);
-            $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
-            
-            $stmt->execute([
-                $data['email'],
-                $data['username'],
-                $hashedPassword,
-                $data['last_name'],
-                $data['given_name'],
-                $data['middle_name'] ?? null,
-                $data['canteen_id']
+            $userStmt = $db->prepare($userSql);
+            $result = $userStmt->execute([
+                'username' => $data['username'],
+                'email' => $data['email'],
+                'password' => password_hash($data['password'], PASSWORD_DEFAULT),
+                'last_name' => $data['last_name'],
+                'given_name' => $data['given_name'],
+                'middle_name' => $data['middle_name'] ?? null,
+                'canteen_id' => $data['canteen_id']
             ]);
 
-            $userId = $this->conn->lastInsertId();
-
-          
-            $sql = "INSERT INTO managers (user_id, canteen_id, start_date, status) 
-                    VALUES (?, ?, CURDATE(), 'pending')";
-            
-            $stmt = $this->conn->prepare($sql);
-            $stmt->execute([$userId, $data['canteen_id']]);
-
-            $this->conn->commit();
-            return true;
-        } catch (PDOException $e) {
-            $this->conn->rollBack();
-            error_log("Error adding employee: " . $e->getMessage());
-            throw new Exception("Error adding employee");
-        }
-    }
-
-    public function deleteEmployee($userId, $canteenId) {
-        try {
-            $sql = "SELECT COUNT(*) FROM managers 
-                    WHERE user_id = ? AND canteen_id = ?";
-            $stmt = $this->conn->prepare($sql);
-            $stmt->execute([$userId, $canteenId]);
-            if ($stmt->fetchColumn() == 0) {
-                throw new Exception("Unauthorized deletion attempt");
+            if (!$result) {
+                throw new Exception("Failed to create user account");
             }
 
-            $this->conn->beginTransaction();
+            $userId = $db->lastInsertId();
 
-          
-            $sql = "DELETE FROM managers WHERE user_id = ?";
-            $stmt = $this->conn->prepare($sql);
-            $stmt->execute([$userId]);
+            // Insert into managers table
+            $managerSql = "INSERT INTO managers (user_id, canteen_id, start_date, status) 
+                          VALUES (:user_id, :canteen_id, CURDATE(), 'approved')";
+            
+            $managerStmt = $db->prepare($managerSql);
+            $result = $managerStmt->execute([
+                'user_id' => $userId,
+                'canteen_id' => $data['canteen_id']
+            ]);
 
-        
-            $sql = "DELETE FROM users WHERE user_id = ?";
-            $stmt = $this->conn->prepare($sql);
-            $stmt->execute([$userId]);
+            if (!$result) {
+                throw new Exception("Failed to create manager record");
+            }
 
-            $this->conn->commit();
+            $db->commit();
             return true;
-        } catch (PDOException $e) {
-            $this->conn->rollBack();
-            error_log("Error deleting employee: " . $e->getMessage());
-            throw new Exception("Error deleting employee");
+        } catch (Exception $e) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+            throw new Exception($e->getMessage());
         }
     }
 
-    public function getEmployeeDetails($userId, $canteenId) {
+    public function getAllEmployees() {
         try {
-            $sql = "SELECT u.*, m.manager_id 
-                    FROM users u 
-                    JOIN managers m ON u.user_id = m.user_id 
-                    WHERE u.user_id = ? AND m.canteen_id = ?";
+            $sql = "SELECT u.user_id, CONCAT(u.last_name, ', ', u.given_name) as name, 
+                           u.username, u.email
+                    FROM users u
+                    JOIN employees e ON u.user_id = e.user_id
+                    WHERE u.role = 'employee'
+                    ORDER BY u.last_name, u.given_name";
             
-            $stmt = $this->conn->prepare($sql);
-            $stmt->execute([$userId, $canteenId]);
-            return $stmt->fetch(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            error_log("Error getting employee details: " . $e->getMessage());
-            throw new Exception("Error getting employee details");
+            $stmt = $this->db->getConnection()->prepare($sql);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            throw new Exception("Error fetching employees: " . $e->getMessage());
         }
+    }
+
+    public function getEmployeeById($userId) {
+        try {
+            $sql = "SELECT u.user_id, u.username, u.email, u.last_name, u.given_name, u.middle_name,
+                           e.employee_number, e.department_id, e.position
+                    FROM users u
+                    JOIN employees e ON u.user_id = e.user_id
+                    WHERE u.user_id = :user_id AND u.role = 'employee'";
+            
+            $stmt = $this->db->getConnection()->prepare($sql);
+            $stmt->execute(['user_id' => $userId]);
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            throw new Exception("Error fetching employee details: " . $e->getMessage());
+        }
+    }
+
+    private function generateEmployeeNumber() {
+        return 'EMP' . date('Y') . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
     }
 
     public function updateEmployee($data) {
         try {
-            $this->conn->beginTransaction();
+            $db = $this->db->getConnection();
+            $db->beginTransaction();
 
-          
+            // Check for duplicate email/username
             $sql = "SELECT COUNT(*) FROM users 
-                    WHERE (email = ? OR username = ?) 
-                    AND user_id != ?";
-            $stmt = $this->conn->prepare($sql);
-            $stmt->execute([$data['email'], $data['username'], $data['user_id']]);
+                    WHERE (email = :email OR username = :username) 
+                    AND user_id != :user_id";
+            $stmt = $db->prepare($sql);
+            $stmt->execute([
+                'email' => $data['email'],
+                'username' => $data['username'],
+                'user_id' => $data['user_id']
+            ]);
             if ($stmt->fetchColumn() > 0) {
                 throw new Exception("Email or username already exists");
             }
 
-            $sql = "UPDATE users 
-                    SET email = ?, username = ?, last_name = ?, 
-                        given_name = ?, middle_name = ?
-                    WHERE user_id = ?";
+            // Update users table
+            $userSql = "UPDATE users 
+                       SET username = :username,
+                           email = :email,
+                           last_name = :last_name,
+                           given_name = :given_name,
+                           middle_name = :middle_name
+                       WHERE user_id = :user_id";
             
-            $stmt = $this->conn->prepare($sql);
-            $stmt->execute([
-                $data['email'],
-                $data['username'],
-                $data['last_name'],
-                $data['given_name'],
-                $data['middle_name'] ?? null,
-                $data['user_id']
+            $userStmt = $db->prepare($userSql);
+            $result = $userStmt->execute([
+                'username' => $data['username'],
+                'email' => $data['email'],
+                'last_name' => $data['last_name'],
+                'given_name' => $data['given_name'],
+                'middle_name' => $data['middle_name'] ?? null,
+                'user_id' => $data['user_id']
             ]);
 
-        
-            if (!empty($data['password'])) {
-                $sql = "UPDATE users SET password = ? WHERE user_id = ?";
-                $stmt = $this->conn->prepare($sql);
-                $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
-                $stmt->execute([$hashedPassword, $data['user_id']]);
+            if (!$result) {
+                throw new Exception("Failed to update user details");
             }
 
-            $this->conn->commit();
+            if (isset($data['department_id'])) {
+                // Update employees table
+                $empSql = "UPDATE employees 
+                          SET department_id = :department_id,
+                              position = :position
+                          WHERE user_id = :user_id";
+                
+                $empStmt = $db->prepare($empSql);
+                $result = $empStmt->execute([
+                    'department_id' => $data['department_id'],
+                    'position' => $data['position'] ?? 'Staff',
+                    'user_id' => $data['user_id']
+                ]);
+
+                if (!$result) {
+                    throw new Exception("Failed to update employee details");
+                }
+            }
+
+            $db->commit();
             return true;
-        } catch (PDOException $e) {
-            $this->conn->rollBack();
-            error_log("Error updating employee: " . $e->getMessage());
-            throw new Exception("Error updating employee");
+        } catch (Exception $e) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+            throw new Exception($e->getMessage());
+        }
+    }
+
+    public function deleteEmployee($userId, $canteenId = null) {
+        try {
+            $db = $this->db->getConnection();
+            $db->beginTransaction();
+
+            if ($canteenId !== null) {
+                // Check if employee belongs to the canteen
+                $sql = "SELECT COUNT(*) FROM managers 
+                        WHERE user_id = :user_id AND canteen_id = :canteen_id";
+                $stmt = $db->prepare($sql);
+                $stmt->execute([
+                    'user_id' => $userId,
+                    'canteen_id' => $canteenId
+                ]);
+                if ($stmt->fetchColumn() == 0) {
+                    throw new Exception("Unauthorized deletion attempt");
+                }
+
+                // Delete from managers table
+                $sql = "DELETE FROM managers WHERE user_id = :user_id";
+                $stmt = $db->prepare($sql);
+                $stmt->execute(['user_id' => $userId]);
+            } else {
+                // Delete from employees table
+                $sql = "DELETE FROM employees WHERE user_id = :user_id";
+                $stmt = $db->prepare($sql);
+                $stmt->execute(['user_id' => $userId]);
+            }
+
+            // Delete from users table
+            $sql = "DELETE FROM users WHERE user_id = :user_id";
+            $stmt = $db->prepare($sql);
+            $result = $stmt->execute(['user_id' => $userId]);
+
+            if (!$result) {
+                throw new Exception("Failed to delete user");
+            }
+
+            $db->commit();
+            return true;
+        } catch (Exception $e) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+            throw new Exception($e->getMessage());
         }
     }
 
@@ -173,105 +253,20 @@ class Employee {
             $sql = "SELECT COUNT(*) as count 
                     FROM users u 
                     JOIN managers m ON u.user_id = m.user_id 
-                    WHERE m.canteen_id = ? AND u.role = 'manager'
-                    AND u.user_id != ?";
+                    WHERE m.canteen_id = :canteen_id AND u.role = 'manager'
+                    AND u.user_id != :current_user";
             
-            $stmt = $this->conn->prepare($sql);
-            $stmt->execute([$canteenId, $_SESSION['user_id']]);
+            $stmt = $this->db->getConnection()->prepare($sql);
+            $stmt->execute([
+                'canteen_id' => $canteenId,
+                'current_user' => $_SESSION['user_id'] ?? 0
+            ]);
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
             return $result['count'];
-        } catch (PDOException $e) {
+        } catch (Exception $e) {
             error_log("Error getting total employees count: " . $e->getMessage());
             throw new Exception("Error getting total count");
         }
-    }
-
-    public function getEmployeesForDataTable($canteenId, $search, $start, $length, $orderBy, $orderDir) {
-        try {
-            // Base query for total count
-            $countSql = "SELECT COUNT(*) as total
-                        FROM users u 
-                        JOIN managers m ON u.user_id = m.user_id 
-                        WHERE m.canteen_id = :canteen_id 
-                        AND u.role = 'manager'
-                        AND u.user_id != :current_user";
-            
-            $countStmt = $this->conn->prepare($countSql);
-            $countStmt->execute([
-                ':canteen_id' => $canteenId,
-                ':current_user' => $_SESSION['user_id']
-            ]);
-            $totalRecords = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
-           
-            $sql = "SELECT u.user_id, u.username, u.email, u.last_name, u.given_name, 
-                           u.middle_name, u.status, m.status as manager_status
-                    FROM users u 
-                    JOIN managers m ON u.user_id = m.user_id 
-                    WHERE m.canteen_id = :canteen_id 
-                    AND u.role = 'manager'
-                    AND u.user_id != :current_user";
-            
-            $params = [
-                ':canteen_id' => $canteenId,
-                ':current_user' => $_SESSION['user_id']
-            ];
-            
-         
-            if (!empty($search)) {
-                $sql .= " AND (u.username LIKE :search 
-                          OR u.email LIKE :search 
-                          OR u.last_name LIKE :search 
-                          OR u.given_name LIKE :search 
-                          OR u.middle_name LIKE :search)";
-                $params[':search'] = "%$search%";
-            }
-            
-            
-            $filteredStmt = $this->conn->prepare($sql);
-            $filteredStmt->execute($params);
-            $filteredCount = $filteredStmt->rowCount();
-            
-          
-            $sql .= " ORDER BY " . $this->sanitizeOrderBy($orderBy) . " " . ($orderDir === 'asc' ? 'ASC' : 'DESC');
-            
-         
-            $sql .= " LIMIT :start, :length";
-            $params[':start'] = (int)$start;
-            $params[':length'] = (int)$length;
-            
-            $stmt = $this->conn->prepare($sql);
-           
-            foreach ($params as $key => $value) {
-                if (in_array($key, [':start', ':length'])) {
-                    $stmt->bindValue($key, $value, PDO::PARAM_INT);
-                } else {
-                    $stmt->bindValue($key, $value);
-                }
-            }
-            
-            $stmt->execute();
-            $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            return [
-                'total_count' => $totalRecords,
-                'filtered_count' => $filteredCount,
-                'data' => $data
-            ];
-        } catch (PDOException $e) {
-            error_log("Error getting employees for DataTable: " . $e->getMessage());
-            throw new Exception("Error fetching employees: " . $e->getMessage());
-        }
-    }
-    
-    private function sanitizeOrderBy($column) {
-        $allowedColumns = [
-            'user_id' => 'u.user_id',
-            'name' => 'u.last_name',
-            'username' => 'u.username',
-            'email' => 'u.email',
-            'status' => 'm.status'
-        ];
-        return $allowedColumns[$column] ?? 'u.last_name';
     }
 }
 ?> 

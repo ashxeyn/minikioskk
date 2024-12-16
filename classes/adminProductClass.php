@@ -90,18 +90,30 @@ class AdminProduct {
                 throw new Exception("Failed to update product");
             }
 
-            // Update stock if provided
-            if (isset($data['stock_quantity'])) {
-                $stockSql = "INSERT INTO stocks (product_id, quantity, updated_at) 
-                            VALUES (:product_id, :quantity, NOW())
-                            ON DUPLICATE KEY UPDATE 
-                            quantity = :quantity,
-                            updated_at = NOW()";
+            // Update stock if quantity is provided
+            if (isset($data['quantity']) && $data['quantity'] > 0) {
+                // First check if stock record exists
+                $checkSql = "SELECT quantity FROM stocks WHERE product_id = :product_id";
+                $checkStmt = $db->prepare($checkSql);
+                $checkStmt->execute(['product_id' => $data['product_id']]);
+                $currentStock = $checkStmt->fetch(PDO::FETCH_ASSOC);
+
+                if ($currentStock) {
+                    // Update existing stock
+                    $stockSql = "UPDATE stocks 
+                                SET quantity = quantity + :quantity,
+                                    last_restock = CURRENT_TIMESTAMP 
+                                WHERE product_id = :product_id";
+                } else {
+                    // Insert new stock record
+                    $stockSql = "INSERT INTO stocks (product_id, quantity, last_restock) 
+                                VALUES (:product_id, :quantity, CURRENT_TIMESTAMP)";
+                }
                 
                 $stockStmt = $db->prepare($stockSql);
                 $stockResult = $stockStmt->execute([
                     'product_id' => $data['product_id'],
-                    'quantity' => $data['stock_quantity']
+                    'quantity' => $data['quantity']
                 ]);
 
                 if (!$stockResult) {
@@ -145,14 +157,14 @@ class AdminProduct {
             $productId = $db->lastInsertId();
 
             // Add initial stock if provided
-            if (isset($data['stock_quantity']) && $data['stock_quantity'] > 0) {
-                $stockSql = "INSERT INTO stocks (product_id, quantity, updated_at) 
-                            VALUES (:product_id, :quantity, NOW())";
+            if (isset($data['initial_stock']) && $data['initial_stock'] > 0) {
+                $stockSql = "INSERT INTO stocks (product_id, quantity, last_restock) 
+                            VALUES (:product_id, :quantity, CURRENT_TIMESTAMP)";
                 
                 $stockStmt = $db->prepare($stockSql);
                 $stockResult = $stockStmt->execute([
                     'product_id' => $productId,
-                    'quantity' => $data['stock_quantity']
+                    'quantity' => $data['initial_stock']
                 ]);
 
                 if (!$stockResult) {

@@ -31,6 +31,19 @@ try {
         });
     }
     
+    // Get total count before pagination
+    $totalRecords = count($orders);
+    $filteredRecords = count($orders);
+    
+    // Handle DataTables pagination
+    $start = isset($_POST['start']) ? intval($_POST['start']) : 0;
+    $length = isset($_POST['length']) ? intval($_POST['length']) : 10;
+    
+    // Only slice the array if length is not -1 (which means "show all")
+    if ($length > 0) {
+        $orders = array_slice($orders, $start, $length);
+    }
+    
     // Format data for DataTables
     $data = [];
     foreach ($orders as $order) {
@@ -68,8 +81,8 @@ try {
     
     echo json_encode([
         "draw" => isset($_POST['draw']) ? intval($_POST['draw']) : 0,
-        "recordsTotal" => count($orders),
-        "recordsFiltered" => count($data),
+        "recordsTotal" => $totalRecords,
+        "recordsFiltered" => $filteredRecords,
         "data" => $data
     ]);
     

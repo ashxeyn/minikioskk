@@ -19,7 +19,10 @@ try {
     
     $products = $productObj->fetchProducts($canteenId);
     
-    // DataTables search newhwejkapoy 
+    // Get total count before any filtering
+    $totalRecords = count($products);
+    
+    // DataTables search
     if (!empty($_POST['search']['value'])) {
         $searchTerm = strtolower($_POST['search']['value']);
         $products = array_filter($products, function($product) use ($searchTerm) {
@@ -33,13 +36,15 @@ try {
         });
     }
     
-   
-    $totalRecords = count($products);
+    // Get filtered count after search
     $filteredRecords = count($products);
     
-    if (isset($_POST['start']) && isset($_POST['length'])) {
-        $start = intval($_POST['start']);
-        $length = intval($_POST['length']);
+    // Handle DataTables pagination
+    $start = isset($_POST['start']) ? intval($_POST['start']) : 0;
+    $length = isset($_POST['length']) ? intval($_POST['length']) : 10;
+    
+    // Only slice the array if length is not -1 (which means "show all")
+    if ($length > 0) {
         $products = array_slice($products, $start, $length);
     }
     
@@ -77,8 +82,8 @@ try {
     
     echo json_encode([
         "draw" => isset($_POST['draw']) ? intval($_POST['draw']) : 0,
-        "recordsTotal" => count($products),
-        "recordsFiltered" => count($data),
+        "recordsTotal" => $totalRecords,
+        "recordsFiltered" => $filteredRecords,
         "data" => $data
     ]);
     
