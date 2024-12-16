@@ -75,10 +75,13 @@
             </div>
             <div class="modal-body">
                 <p>Are you sure you want to delete this program?</p>
+                <form id="deleteProgramForm">
+                    <input type="hidden" id="deleteProgramId" name="program_id">
+                </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-danger" onclick="deleteProgram()">Delete</button>
+                <button type="submit" form="deleteProgramForm" class="btn btn-danger">Delete</button>
             </div>
         </div>
     </div>

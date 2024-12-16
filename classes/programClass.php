@@ -109,29 +109,39 @@ class Program
     
     function updateProgram($program_id, $program_name, $department_id, $description)
     {
-        $sql = "UPDATE programs 
-                SET program_name = :program_name, 
-                    department_id = :department_id, 
-                    description = :description
-                WHERE program_id = :program_id"; 
-        $query = $this->db->connect()->prepare($sql);
-    
-        $query->bindParam(':program_name', $program_name);
-        $query->bindParam(':department_id', $department_id);
-        $query->bindParam(':description', $description);
-        $query->bindParam(':program_id', $program_id);
-    
-        return $query->execute(); 
+        try {
+            $sql = "UPDATE programs 
+                    SET program_name = :program_name,
+                        department_id = :department_id,
+                        description = :description
+                    WHERE program_id = :program_id";
+                
+            $stmt = $this->db->connect()->prepare($sql);
+            
+            return $stmt->execute([
+                'program_id' => $program_id,
+                'program_name' => $program_name,
+                'department_id' => $department_id,
+                'description' => $description
+            ]);
+        } catch (PDOException $e) {
+            error_log("Error in updateProgram: " . $e->getMessage());
+            return false;
+        }
     }
     
 
    
     function deleteProgram($program_id)
     {
-        $sql = "DELETE FROM programs WHERE program_id = :program_id";
-        $query = $this->db->connect()->prepare($sql);
-        $query->bindParam(':program_id', $program_id); 
-        return $query->execute(); 
+        try {
+            $sql = "DELETE FROM programs WHERE program_id = :program_id";
+            $stmt = $this->db->connect()->prepare($sql);
+            return $stmt->execute(['program_id' => $program_id]);
+        } catch (PDOException $e) {
+            error_log("Error in deleteProgram: " . $e->getMessage());
+            return false;
+        }
     }
 
     

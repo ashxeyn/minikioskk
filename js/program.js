@@ -145,14 +145,16 @@ $('#editProgramForm').on('submit', function(e) {
     });
 });
 
-function openDeleteModal(programId) {
-    $('#deleteProgramId').val(programId);
+function deleteProgram(programId) {
+    // Show the delete confirmation modal
     $('#deleteProgramModal').modal('show');
+    // Set the program ID in the hidden input
+    $('#deleteProgramId').val(programId);
 }
 
+// Add this event handler for the delete form submission
 $('#deleteProgramForm').submit(function(e) {
     e.preventDefault();
-
     const programId = $('#deleteProgramId').val();
 
     $.ajax({
@@ -160,15 +162,23 @@ $('#deleteProgramForm').submit(function(e) {
         type: 'POST',
         data: { program_id: programId },
         success: function(response) {
-            if (response === 'success') {
-                $('#deleteProgramModal').modal('hide');
-                loadProgramTable();
-            } else {
-                alert('Failed to delete program. Please try again.');
+            try {
+                const result = JSON.parse(response);
+                if (result.status === 'success') {
+                    $('#deleteProgramModal').modal('hide');
+                    showAlert('Program deleted successfully!', 'success');
+                    loadProgramTable();
+                } else {
+                    showAlert(result.message || 'Error deleting program', 'danger');
+                }
+            } catch (e) {
+                console.error('Error parsing response:', e);
+                showAlert('Error deleting program', 'danger');
             }
         },
-        error: function() {
-            alert('An error occurred. Please try again.');
+        error: function(xhr, status, error) {
+            console.error('Error:', error);
+            showAlert('Error deleting program', 'danger');
         }
     });
 });
@@ -258,33 +268,6 @@ function editProgram(programId) {
     });
 }
 
-function deleteProgram(programId) {
-    if (confirm('Are you sure you want to delete this program?')) {
-        $.ajax({
-            url: '../ajax/deleteProgram.php',
-            type: 'POST',
-            data: { program_id: programId },
-            success: function(response) {
-                try {
-                    const result = JSON.parse(response);
-                    if (result.success) {
-                        location.reload();
-                    } else {
-                        alert(result.message || 'Error deleting program');
-                    }
-                } catch (e) {
-                    console.error('Error parsing response:', e);
-                    alert('Error deleting program');
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error('Error:', error);
-                alert('Error deleting program');
-            }
-        });
-    }
-}
-
 // Initialize everything when the document is ready
 $(document).ready(function() {
     // Wait for DataTables to load
@@ -303,3 +286,61 @@ $(document).ready(function() {
         loadDepartments($(this).val(), '#edit_department_id');
     });
 });
+
+// Add this function to handle program updates
+function updateProgram() {
+    const formData = {
+        program_id: $('#edit_program_id').val(),
+        program_name: $('#edit_program_name').val(),
+        department_id: $('#edit_department_id').val(),
+        description: $('#edit_description').val()
+    };
+
+    $.ajax({
+        url: '../programs/editProgram.php',
+        method: 'POST',
+        data: formData,
+        success: function(response) {
+            try {
+                const result = JSON.parse(response);
+                if (result.status === 'success') {
+                    $('#editProgramModal').modal('hide');
+                    showAlert('Program updated successfully!', 'success');
+                    loadProgramTable();
+                } else {
+                    showAlert(result.message || 'Error updating program', 'danger');
+                }
+            } catch (e) {
+                console.error('Error parsing response:', e);
+                showAlert('Error updating program', 'danger');
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Error:', error);
+            showAlert('Error updating program', 'danger');
+        }
+    });
+}
+
+// Add this function to show alerts (if not already present)
+function showAlert(message, type) {
+    const alertHtml = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    `;
+    
+    // Remove any existing alerts
+    $('.alert').remove();
+    
+    // Add the new alert before the program table
+    $('#programTable').before(alertHtml);
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(function() {
+        $('.alert').fadeOut('slow', function() {
+            $(this).remove();
+        });
+    }, 5000);
+}
