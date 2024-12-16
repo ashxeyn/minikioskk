@@ -145,17 +145,10 @@ body {
 
 .nav-pills .nav-link:hover,
 .nav-pills .nav-link:focus {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: #087F8C !important;
+    background-color: transparent;
+    color: #4a4848 !important;
 }
 
-.nav-pills .nav-link.active,
-.nav-pills .nav-link.active:focus {
-    background-color: rgba(154, 154, 155, 0)!important;
-    color: #33363F !important;
-    font-weight: bold;
-    box-shadow: none !important;
-}
 
 /* Remove focus ring */
 .nav-link:focus-visible {

@@ -4,7 +4,7 @@ class Database{
     private $host = "localhost";
     private $username = "root";
     private $password = "";
-    private $database = "minikiosk1";
+    private $database = "minikiosk2";
     private $conn = null;
 
     public function connect() {

@@ -189,10 +189,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
         
   
-        .modal-backdrop.show {
-            opacity: 0.7;
-        }
-        
+  
 
         @media (max-width: 576px) {
             .modal-dialog {
@@ -501,6 +498,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 type: 'POST',
                 dataType: 'json',
                 success: function(response) {
+                    // First, close the checkout modal
+                    const checkoutModal = bootstrap.Modal.getInstance(document.getElementById('checkoutModal'));
+                    checkoutModal.hide();
+
                     if (response.success) {
                         // Show success message
                         showResponseModal('Order placed successfully! Order ID: ' + response.order_id, true);
@@ -512,10 +513,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         // Update cart count
                         updateCartCount();
                         loadCartSection();
-                        // Redirect to order status page after a short delay
-                        setTimeout(function() {
-                          
-                        }, 2000);
                     } else {
                         showResponseModal(response.message || 'Failed to place order', false);
                     }
@@ -529,16 +526,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
 
         function showResponseModal(message, success) {
+            const responseModal = document.getElementById('responseModal');
             $('#responseMessage').text(message);
+            
+            // Add success/error classes
             if (success) {
+                $('#responseModal').addClass('success').removeClass('error');
                 $('#responseMessage').removeClass('text-danger').addClass('text-success');
-                
             } else {
+                $('#responseModal').addClass('error').removeClass('success');
                 $('#responseMessage').removeClass('text-success').addClass('text-danger');
             }
             
-            const responseModal = new bootstrap.Modal(document.getElementById('responseModal'));
-            responseModal.show();
+            // Show the modal
+            const bsResponseModal = new bootstrap.Modal(responseModal);
+            bsResponseModal.show();
             loadCartSection();
         }
 
