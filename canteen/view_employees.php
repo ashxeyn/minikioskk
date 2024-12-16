@@ -40,9 +40,12 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Co-Employees</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    
+    <!-- DataTables CSS -->
+    <link href="../assets/datatables/css/jquery.dataTables.min.css" rel="stylesheet">
+    <link href="../assets/datatables/css/responsive.dataTables.min.css" rel="stylesheet">
+    <link href="../assets/datatables/css/buttons.dataTables.min.css" rel="stylesheet">
+    
     <style>
     .badge {
         padding: 0.5em 0.8em;
@@ -104,10 +107,14 @@ try {
     </div>
 
     <!-- Load scripts in correct order -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="../assets/jquery/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+    
+    <!-- DataTables JS -->
+    <script src="../assets/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="../assets/datatables/js/dataTables.responsive.min.js"></script>
+    <script src="../assets/datatables/js/dataTables.buttons.min.js"></script>
+
     <script>
         $(document).ready(function() {
             $.ajax({

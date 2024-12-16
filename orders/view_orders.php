@@ -20,8 +20,18 @@ try {
 <head>
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- jQuery -->
+    <script src="../assets/jquery/jquery-3.6.0.min.js"></script>
+    <!-- Bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- DataTables JS -->
+    <script src="../assets/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="../assets/datatables/js/dataTables.responsive.min.js"></script>
+    <script src="../assets/datatables/js/dataTables.buttons.min.js"></script>
     <!-- DataTables CSS -->
-    <link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link href="../assets/datatables/css/jquery.dataTables.min.css" rel="stylesheet">
+    <link href="../assets/datatables/css/responsive.dataTables.min.css" rel="stylesheet">
+    <link href="../assets/datatables/css/buttons.dataTables.min.css" rel="stylesheet">
     <style>
         /* Override DataTables styles to prevent affecting sidebar */
         .dataTables_wrapper {
@@ -89,14 +99,56 @@ try {
             background-color: #dc3545 !important;
             color: #fff !important;
         }
+        
+        /* DataTables Pagination and Length Menu Styles */
+        .dataTables_length {
+            margin-bottom: 1rem;
+            float: left;
+        }
+        
+        .dataTables_length select {
+            padding: 0.375rem 1.75rem 0.375rem 0.75rem;
+            border: 1px solid #ced4da;
+            border-radius: 0.25rem;
+            margin: 0 0.5rem;
+        }
+        
+        .dataTables_paginate {
+            margin-top: 1rem;
+            float: right;
+        }
+        
+        .dataTables_paginate .paginate_button {
+            padding: 0.375rem 0.75rem;
+            margin-left: 2px;
+            border: 1px solid #dee2e6;
+            border-radius: 0.25rem;
+            cursor: pointer;
+        }
+        
+        .dataTables_paginate .paginate_button.current {
+            background: #0d6efd;
+            color: white !important;
+            border-color: #0d6efd;
+        }
+        
+        .dataTables_paginate .paginate_button:hover:not(.current) {
+            background: #e9ecef;
+            color: #0a58ca !important;
+        }
+        
+        .dataTables_info {
+            padding-top: 0.5rem;
+            float: left;
+        }
+        
+        /* Clear floats */
+        .dataTables_wrapper::after {
+            content: "";
+            display: table;
+            clear: both;
+        }
     </style>
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- DataTables JS -->
-    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
-    <!-- Bootstrap Bundle with Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </head>
 
     <h2>Orders</h2>
@@ -247,10 +299,6 @@ try {
     margin: 0;
 }
 
-.table-info {
-    padding: 0.5rem 0;
-}
-
 .page-link {
     padding: 0.375rem 0.75rem;
 }
@@ -262,11 +310,13 @@ $(document).ready(function() {
     $('#ordersTable').DataTable({
         "processing": true,
         "serverSide": true,
+        "dom": '<"top"lf>rt<"bottom"ip><"clear">',
         "ajax": {
             "url": "../ajax/getOrders.php",
             "type": "POST"
         },
         "pageLength": 10,
+        "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
         "responsive": true,
         "order": [[0, "desc"]],
         "columns": [
