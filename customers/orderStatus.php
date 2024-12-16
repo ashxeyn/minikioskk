@@ -91,6 +91,7 @@ if (isset($_SESSION['user_id'])) {
                     foreach ($orders as $order): 
                         if ($order['status'] === 'completed'):
                             $hasCompletedOrders = true;
+                            $hasActiveReorder = $orderObj->hasActiveReorder($_SESSION['user_id'], $order['order_id']);
                     ?>
                         <div class="order-card completed">
                             <div class="order-row">
@@ -118,6 +119,17 @@ if (isset($_SESSION['user_id'])) {
                                 <p><?= date('F j, Y, g:i a', strtotime($order['created_at'])); ?></p>
                             </div>
                             
+                            <div class="reorder-section">
+                                <?php if ($hasActiveReorder): ?>
+                                    <button class="btn btn-secondary reorder-btn" disabled title="This order has a pending reorder">
+                                        <i class="bi bi-arrow-repeat"></i> Already Reordered
+                                    </button>
+                                <?php else: ?>
+                                    <button class="btn btn-success reorder-btn" onclick="reorderItems(<?= $order['order_id']; ?>)">
+                                        <i class="bi bi-arrow-repeat"></i> Reorder
+                                    </button>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     <?php 
                         endif;
@@ -131,6 +143,45 @@ if (isset($_SESSION['user_id'])) {
     <?php else: ?>
         <div class="alert alert-info">No orders found.</div>
     <?php endif; ?>
+</div>
+
+<div class="modal fade" id="reorderModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Reorder Items</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to reorder these items?</p>
+                <div id="reorderItems"></div>
+                <hr>
+                <p class="text-end fw-bold">Total: <span id="reorderTotal"></span></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" id="confirmReorder">Confirm Reorder</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Response Modal -->
+<div class="modal fade" id="responseModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="responseMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <style>
@@ -260,19 +311,44 @@ if (isset($_SESSION['user_id'])) {
 .reorder-btn i {
     margin-right: 5px;
 }
+
+/* Add these styles for the modals */
+.modal-content {
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.modal-header {
+    border-bottom: 1px solid #dee2e6;
+    background-color: #f8f9fa;
+    border-radius: 10px 10px 0 0;
+}
+
+.modal-footer {
+    border-top: 1px solid #dee2e6;
+    background-color: #f8f9fa;
+    border-radius: 0 0 10px 10px;
+}
+
+#reorderItems {
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    margin: 10px 0;
+}
+
+.text-success {
+    color: #28a745 !important;
+}
+
+.text-danger {
+    color: #dc3545 !important;
+}
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-
-
-// Function to update cart count if needed
-function updateCartCount(count) {
-    const cartCountElement = document.getElementById('cartCount');
-    if (cartCountElement) {
-        cartCountElement.textContent = count;
-    }
-}
-</script>
+<script src="../js/orderStatus.js" type="module"></script>
 </body>
 </html>

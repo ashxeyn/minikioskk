@@ -264,16 +264,22 @@ class Order
 
     public function getOrderById($orderId, $canteenId) {
         try {
-            $sql = "SELECT o.*, u.username, u.name as customer_name 
+            $sql = "SELECT o.*, u.username, 
+                    CONCAT(u.given_name, ' ', u.last_name) as customer_name 
                     FROM orders o 
                     JOIN users u ON o.user_id = u.user_id 
-                    WHERE o.order_id = :order_id AND o.canteen_id = :canteen_id";
+                    WHERE o.order_id = :order_id";
+            
+            $params = [':order_id' => $orderId];
+            
+            // Add canteen check if provided
+            if ($canteenId !== null) {
+                $sql .= " AND o.canteen_id = :canteen_id";
+                $params[':canteen_id'] = $canteenId;
+            }
             
             $stmt = $this->db->connect()->prepare($sql);
-            $stmt->execute([
-                ':order_id' => $orderId,
-                ':canteen_id' => $canteenId
-            ]);
+            $stmt->execute($params);
             
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
             if (!$result) {
@@ -474,8 +480,9 @@ class Order
 
     public function getOrderItems($order_id) {
         try {
-            $sql = "SELECT oi.product_id, oi.quantity 
+            $sql = "SELECT oi.product_id, oi.quantity, oi.unit_price, p.name 
                     FROM order_items oi 
+                    JOIN products p ON oi.product_id = p.product_id 
                     WHERE oi.order_id = :order_id";
                     
             $stmt = $this->db->connect()->prepare($sql);
@@ -551,6 +558,72 @@ class Order
             error_log("Error adding order item: " . $e->getMessage());
             throw new Exception("Failed to add order item");
         }
+    }
+
+    public function hasActiveReorder($userId, $originalOrderId) {
+        try {
+            // Get items from the original order
+            $originalItems = $this->getOrderItems($originalOrderId);
+            if (empty($originalItems)) {
+                return false;
+            }
+
+            // Get all active orders for the user
+            $sql = "SELECT o.order_id 
+                    FROM orders o 
+                    WHERE o.user_id = :user_id 
+                    AND o.status != 'completed' 
+                    AND o.status != 'cancelled'";
+            
+            $stmt = $this->db->connect()->prepare($sql);
+            $stmt->execute([':user_id' => $userId]);
+            $activeOrders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // For each active order, check if items match
+            foreach ($activeOrders as $order) {
+                $activeItems = $this->getOrderItems($order['order_id']);
+                
+                // Skip the original order itself
+                if ($order['order_id'] == $originalOrderId) {
+                    continue;
+                }
+
+                // Compare items
+                if ($this->compareOrderItems($originalItems, $activeItems)) {
+                    return true; // Found matching active order
+                }
+            }
+
+            return false;
+
+        } catch (Exception $e) {
+            error_log("Error checking active reorders: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    private function compareOrderItems($items1, $items2) {
+        if (count($items1) !== count($items2)) {
+            return false;
+        }
+
+        // Sort both arrays by product_id to ensure consistent comparison
+        usort($items1, function($a, $b) {
+            return $a['product_id'] - $b['product_id'];
+        });
+        usort($items2, function($a, $b) {
+            return $a['product_id'] - $b['product_id'];
+        });
+
+        // Compare each item
+        for ($i = 0; $i < count($items1); $i++) {
+            if ($items1[$i]['product_id'] != $items2[$i]['product_id'] ||
+                $items1[$i]['quantity'] != $items2[$i]['quantity']) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
 
