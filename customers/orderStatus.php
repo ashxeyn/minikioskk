@@ -32,17 +32,37 @@ if (isset($_SESSION['user_id'])) {
     <h2>Your Order Status</h2>
     
     <?php if (!empty($orders)): ?>
-        <div class="orders-grid">
-            <div class="orders-section active-section">
-                <h3>Active Orders</h3>
+        <!-- Tab Navigation -->
+        <ul class="nav nav-tabs mb-4" id="orderTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="active-tab" data-bs-toggle="tab" data-bs-target="#active" type="button" role="tab">
+                    Active Orders
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completed" type="button" role="tab">
+                    Completed Orders
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="cancelled-tab" data-bs-toggle="tab" data-bs-target="#cancelled" type="button" role="tab">
+                    Cancelled Orders
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="orderTabContent">
+            <!-- Active Orders Tab -->
+            <div class="tab-pane fade show active" id="active" role="tabpanel">
                 <div class="orders-grid-container">
                     <?php 
                     $hasActiveOrders = false;
                     foreach ($orders as $order): 
-                        if ($order['status'] !== 'completed'):
+                        if ($order['status'] === 'placed' || $order['status'] === 'preparing' || $order['status'] === 'ready'):
                             $hasActiveOrders = true;
                     ?>
-                        <div class="order-card <?= $order['order_id'] === ($_SESSION['last_order']['order_id'] ?? null) ? 'latest-order' : '' ?>">
+                        <div class="order-card">
                             <div class="order-row">
                                 <p><strong>Order ID:</strong></p>
                                 <p><?= htmlspecialchars($order['order_id']); ?></p>
@@ -59,7 +79,7 @@ if (isset($_SESSION['user_id'])) {
                             </div>
                             <div class="order-row">
                                 <p><strong>Canteen:</strong></p>
-                                <p><?= htmlspecialchars($order['canteen_name'] ?? 'Not Available'); ?></p>
+                                <p><?= htmlspecialchars($order['name'] ?? 'Not Available'); ?></p>
                             </div>
                             <div class="order-row">
                                 <p><strong>Items:</strong></p>
@@ -90,8 +110,8 @@ if (isset($_SESSION['user_id'])) {
                 </div>
             </div>
 
-            <div class="orders-section completed-section">
-                <h3>Completed Orders</h3>
+            <!-- Completed Orders Tab -->
+            <div class="tab-pane fade" id="completed" role="tabpanel">
                 <div class="orders-grid-container">
                     <?php 
                     $hasCompletedOrders = false;
@@ -143,6 +163,50 @@ if (isset($_SESSION['user_id'])) {
                     endforeach; 
                     if (!$hasCompletedOrders): ?>
                         <p class="no-orders">No completed orders.</p>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <!-- Cancelled Orders Tab -->
+            <div class="tab-pane fade" id="cancelled" role="tabpanel">
+                <div class="orders-grid-container">
+                    <?php 
+                    $hasCancelledOrders = false;
+                    foreach ($orders as $order): 
+                        if ($order['status'] === 'cancelled'):
+                            $hasCancelledOrders = true;
+                    ?>
+                        <div class="order-card cancelled">
+                            <div class="order-row">
+                                <p><strong>Order ID:</strong></p>
+                                <p><?= htmlspecialchars($order['order_id']); ?></p>
+                            </div>
+                            <div class="order-row">
+                                <p><strong>Status:</strong></p>
+                                <p class="status-cancelled">Cancelled</p>
+                            </div>
+                            <div class="order-row">
+                                <p><strong>Canteen:</strong></p>
+                                <p><?= htmlspecialchars($order['canteen_name'] ?? 'Not Available'); ?></p>
+                            </div>
+                            <div class="order-row">
+                                <p><strong>Items:</strong></p>
+                                <p><?= htmlspecialchars($order['items'] ?? 'No items'); ?></p>
+                            </div>
+                            <div class="order-row">
+                                <p><strong>Total Amount:</strong></p>
+                                <p>₱<?= number_format($order['total_amount'], 2); ?></p>
+                            </div>
+                            <div class="order-row">
+                                <p><strong>Cancelled At:</strong></p>
+                                <p><?= date('F j, Y, g:i a', strtotime($order['created_at'])); ?></p>
+                            </div>
+                        </div>
+                    <?php 
+                        endif;
+                    endforeach; 
+                    if (!$hasCancelledOrders): ?>
+                        <p class="no-orders">No cancelled orders.</p>
                     <?php endif; ?>
                 </div>
             </div>
@@ -212,88 +276,51 @@ if (isset($_SESSION['user_id'])) {
 </div>
 
 <style>
-/* Update grid layout */
-.orders-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 20px;
-    padding: 20px;
+/* Update tab styles */
+.nav-tabs {
+    border-bottom: 2px solid #dee2e6;
+    margin-bottom: 20px;
 }
 
-.active-section {
-    grid-column: span 2;
+.nav-tabs .nav-link {
+    color: #495057;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 10px 20px;
+    margin-bottom: -2px;
+    transition: all 0.3s ease;
 }
 
-.completed-section {
-    grid-column: span 2;
+.nav-tabs .nav-link:hover {
+    border-color: transparent;
+    color: #FF7F11;
 }
 
-/* Update container to center cards */
+.nav-tabs .nav-link.active {
+    color: #FF7F11;
+    border-bottom: 2px solid #FF7F11;
+    font-weight: bold;
+}
+
+/* Update container styles */
 .orders-grid-container {
     display: flex;
     flex-direction: column;
-    align-items: center;
     gap: 20px;
-    padding: 15px;
-    background: #f8f9fa;
-    border-radius: 10px;
-    min-height: 200px; /* Minimum height instead of fixed height */
-    overflow-y: visible; /* Remove scrollbar */
+    padding: 20px;
 }
 
-/* Update order card styles */
 .order-card {
     background: white;
-    border-radius: 8px;
+    border-radius: 10px;
     padding: 20px;
-    margin-bottom: 0;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    width: 90%; /* Fixed width for cards */
-    max-width: 400px; /* Maximum width */
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
 }
 
-.orders-section {
-    margin-bottom: 0;
-    background: white;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.orders-section h3 {
-    color: #333;
-    margin-bottom: 20px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid #eee;
-    text-align: center;
-}
-
-/* Center no orders message */
-.no-orders {
-    color: #666;
-    font-style: italic;
-    padding: 15px;
-    background: #f8f9fa;
-    border-radius: 8px;
-    text-align: center;
-    width: 90%;
-    max-width: 400px;
-    margin: auto;
-}
-
-/* Responsive design */
-@media (max-width: 1200px) {
-    .orders-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .active-section,
-    .completed-section {
-        grid-column: span 1;
-    }
-}
-
-/* Keep existing status styles */
+/* Keep your existing status and button styles */
 .status-pending {
     color: #ffc107;
     font-weight: bold;
@@ -313,7 +340,6 @@ if (isset($_SESSION['user_id'])) {
     border: 2px solid #007bff;
 }
 
-/* Add these new styles */
 .reorder-section {
     margin-top: 15px;
     text-align: center;

@@ -622,5 +622,20 @@ class Account
         $this->role = 'admin';
         return $this->addUser();
     }
+
+    public function getUserById($userId) {
+        try {
+            $sql = "SELECT user_id, username, role, email 
+                    FROM users 
+                    WHERE user_id = :user_id";
+            
+            $stmt = $this->db->connect()->prepare($sql);
+            $stmt->execute(['user_id' => $userId]);
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error fetching user: " . $e->getMessage());
+            return false;
+        }
+    }
 }
 ?>

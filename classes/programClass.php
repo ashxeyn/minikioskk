@@ -68,15 +68,30 @@ class Program
     function addProgram($program_name, $department_id, $description)
     {
         try {
+            $conn = $this->db->connect();
+            
+            // Debug log before insert
+            error_log("Adding program with name: $program_name, department_id: $department_id");
+            
             $sql = "INSERT INTO programs (program_name, department_id, description) 
                     VALUES (:program_name, :department_id, :description)";
-            $stmt = $this->db->connect()->prepare($sql);
+            
+            $stmt = $conn->prepare($sql);
             $result = $stmt->execute([
                 'program_name' => $program_name,
                 'department_id' => $department_id,
                 'description' => $description
             ]);
-            return $result;
+
+            if ($result) {
+                $newId = $conn->lastInsertId();
+                // Debug log after insert
+                error_log("New program added with ID: " . $newId);
+                return $newId;
+            }
+            
+            error_log("Failed to add program");
+            return false;
         } catch (PDOException $e) {
             error_log("Error adding program: " . $e->getMessage());
             return false;
@@ -137,24 +152,50 @@ class Program
    
     function deleteProgram($program_id)
     {
-        $sql = "DELETE FROM programs WHERE program_id = :program_id";
-        $query = $this->db->connect()->prepare($sql);
-        $query->bindParam(':program_id', $program_id); 
-        return $query->execute(); 
+        try {
+            $conn = $this->db->connect();
+            
+            // Debug log
+            error_log("Attempting to delete program ID: " . $program_id);
+            
+            $sql = "DELETE FROM programs WHERE program_id = :program_id";
+            $stmt = $conn->prepare($sql);
+            $result = $stmt->execute(['program_id' => $program_id]);
+            
+            // Debug log
+            error_log("Delete result: " . ($result ? "success" : "failed"));
+            
+            return $result;
+        } catch (PDOException $e) {
+            error_log("Error in deleteProgram: " . $e->getMessage());
+            return false;
+        }
     }
 
     
     function fetchPrograms()
     {
         try {
-            $sql = "SELECT p.*, d.department_name, c.college_name 
+            $sql = "SELECT 
+                    p.program_id,
+                    p.program_name, 
+                    p.description,
+                    p.department_id,
+                    d.department_name, 
+                    c.college_name 
                     FROM programs p
                     JOIN departments d ON p.department_id = d.department_id
                     JOIN colleges c ON d.college_id = c.college_id
-                    ORDER BY p.program_name";
-            $query = $this->db->connect()->prepare($sql);
-            $query->execute();
-            return $query->fetchAll(PDO::FETCH_ASSOC);
+                    ORDER BY p.program_id ASC";
+                    
+            $stmt = $this->db->connect()->prepare($sql);
+            $stmt->execute();
+            
+            // Debug log to check what's being returned
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            error_log("Fetched programs: " . print_r($results, true));
+            
+            return $results;
         } catch (PDOException $e) {
             error_log("Error fetching programs: " . $e->getMessage());
             return [];

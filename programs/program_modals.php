@@ -89,10 +89,11 @@
             </div>
             <div class="modal-body">
                 <p>Are you sure you want to delete this program?</p>
+                <input type="hidden" id="deleteProgramId">
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-danger" onclick="deleteProgram()">Delete</button>
+                <button type="button" class="btn btn-danger" onclick="confirmDeleteProgram()">Delete</button>
             </div>
         </div>
     </div>

@@ -185,8 +185,8 @@ class Canteen
         }
     }
 
-    function registerCanteen()
-    {
+        function registerCanteen()
+        {
         $db = $this->db->connect();
 
         $sql = "INSERT INTO canteens (name, campus_location, description, opening_time, closing_time, status) 

@@ -22,11 +22,13 @@ try {
 ?>
 
 <div class="container-fluid mt-4">
+    <!-- Alert Container -->
+    <div id="alertContainer"></div>
+    
     <div class="row mb-4">
         <div class="col-md-6">
             <h2>Manage Programs</h2>
         </div>
-       
     </div>
 
     <!-- Tabs -->
@@ -72,11 +74,10 @@ try {
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php if (!empty($programs)): 
-                                    $counter = 1; ?>
+                                <?php if (!empty($programs)): ?>
                                     <?php foreach ($programs as $prog): ?>
                                         <tr>
-                                            <td><?= $counter++ ?></td>
+                                            <td><?= htmlspecialchars($prog['program_id']) ?></td>
                                             <td><?= htmlspecialchars($prog['program_name']) ?></td>
                                             <td><?= htmlspecialchars($prog['department_name']) ?></td>
                                             <td><?= htmlspecialchars($prog['college_name']) ?></td>
@@ -85,7 +86,7 @@ try {
                                                 <button class="btn btn-warning btn-sm" data-action="edit" data-program-id="<?= $prog['program_id'] ?>">
                                                     <i class="bi bi-pencil"></i>
                                                 </button>
-                                                <button class="btn btn-danger btn-sm" data-action="delete" data-program-id="<?= $prog['program_id'] ?>">
+                                                <button class="btn btn-danger btn-sm" onclick="openDeleteModal(<?= $prog['program_id'] ?>)">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
                                             </td>
@@ -277,24 +278,6 @@ try {
     </div>
 </div>
 
-<!-- Alert Modal -->
-<div class="modal fade" id="alertModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Message</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p id="alertMessage"></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script>
 // Define the functions in the same file to ensure they're available
 function editCollege(id, name, abbreviation, description) {
@@ -320,6 +303,25 @@ function editDepartment(id, name, collegeId, description) {
     
     $('#editDepartmentModal').modal('show');
 }
+function showAlert(message, isSuccess) {
+        // Remove any existing alerts
+        $('.alert').remove();
+        
+        const alertDiv = $(`
+            <div class="alert alert-${isSuccess ? 'success' : 'danger'} alert-dismissible fade show" 
+                 role="alert" style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; min-width: 300px; text-align: center;">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `).appendTo('body');
+        
+        // Auto dismiss after 3 seconds
+        setTimeout(() => {
+            alertDiv.fadeOut('slow', function() {
+                $(this).remove();
+            });
+        }, 3000);
+    }
 
 function updateCollege() {
     const formData = {
@@ -338,8 +340,10 @@ function updateCollege() {
                 const result = JSON.parse(response);
                 if (result.success) {
                     $('#editCollegeModal').modal('hide');
-                    showAlert('College updated successfully', 'success');
-                    location.reload();
+                    showAlert('College updated successfully');
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
                 } else {
                     showAlert(result.message || 'Error updating college', 'danger');
                 }
@@ -371,8 +375,10 @@ function updateDepartment() {
                 const result = JSON.parse(response);
                 if (result.success) {
                     $('#editDepartmentModal').modal('hide');
-                    showAlert('Department updated successfully', 'success');
-                    location.reload();
+                    showAlert('Department updated successfully');
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
                 } else {
                     showAlert(result.message || 'Error updating department', 'danger');
                 }
@@ -387,14 +393,40 @@ function updateDepartment() {
     });
 }
 
-function showAlert(message, type) {
-    const alertDiv = $(`<div class="alert alert-${type} alert-dismissible fade show" role="alert">
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>`);
+// Add this function to handle delete modal opening
+function openDeleteModal(programId) {
+    $('#deleteProgramId').val(programId);
+    $('#deleteProgramModal').modal('show');
+}
+
+function confirmDeleteProgram() {
+    const programId = $('#deleteProgramId').val();
     
-    $('.container-fluid').prepend(alertDiv);
-    setTimeout(() => alertDiv.alert('close'), 3000);
+    $.ajax({
+        url: '../programs/deleteProgram.php',
+        type: 'POST',
+        data: { program_id: programId },
+        success: function(response) {
+            try {
+                const result = JSON.parse(response);
+                if (result.success) {
+                    $('#deleteProgramModal').modal('hide');
+                    showAlert('Program deleted successfully');
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    showAlert(result.message || 'Error deleting program', 'danger');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Error processing response', 'danger');
+            }
+        },
+        error: function() {
+            showAlert('Error deleting program', 'danger');
+        }
+    });
 }
 
 // Initialize event handlers when document is ready
@@ -430,4 +462,34 @@ $(document).ready(function() {
     });
 });
 </script>
+
+<style>
+/* Add these styles to your existing CSS */
+#alertContainer {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1050;
+    min-width: 300px;
+    max-width: 500px;
+}
+
+.alert {
+    margin-bottom: 0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.alert-success {
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+    color: #155724;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    color: #721c24;
+}
+</style>
 

@@ -4,11 +4,11 @@ function loadCanteenTable() {
         method: 'GET',
         success: function (response) {
             $('#canteenTableContainer').html(response);
-            // Destroy existing DataTable if it exists
+            
             if ($.fn.DataTable.isDataTable('#canteenTable')) {
                 $('#canteenTable').DataTable().destroy();
             }
-            // Reinitialize DataTable
+       
             initializeDataTable();
         },
         error: function () {

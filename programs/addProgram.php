@@ -19,11 +19,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             exit;
         }
         
-        $result = $program->addProgram($program_name, $department_id, $description);
+        $program_id = $program->addProgram($program_name, $department_id, $description);
         
         echo json_encode([
-            'success' => $result,
-            'message' => $result ? 'Program added successfully' : 'Failed to add program'
+            'success' => ($program_id !== false),
+            'message' => ($program_id !== false) ? 'Program added successfully' : 'Failed to add program',
+            'program_id' => $program_id
         ]);
     } catch (Exception $e) {
         error_log("Error adding program: " . $e->getMessage());

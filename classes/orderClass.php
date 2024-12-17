@@ -601,64 +601,24 @@ class Order
         }
     }
 
-    public function hasActiveReorder($userId, $originalOrderId) {
+    public function hasActiveReorder($user_id, $original_order_id) {
         try {
-            // Get items from the original order
-            $originalItems = $this->getOrderItems($originalOrderId);
-            if (empty($originalItems)) {
-                return false;
-            }
-
-            // Get all active orders for the user
-            $sql = "SELECT o.order_id 
-                    FROM orders o 
-                    WHERE o.user_id = :user_id 
-                    AND o.status IN ('placed', 'accepted', 'preparing', 'ready')";
+            $sql = "SELECT COUNT(*) FROM orders 
+                    WHERE user_id = :user_id 
+                    AND original_order_id = :original_order_id 
+                    AND status IN ('placed', 'preparing', 'ready')";
             
             $stmt = $this->db->connect()->prepare($sql);
-            $stmt->execute([':user_id' => $userId]);
-            $activeOrders = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            // For each active order, check if items match
-            foreach ($activeOrders as $order) {
-                $activeItems = $this->getOrderItems($order['order_id']);
-                
-                // Skip if this is the original order
-                if ($order['order_id'] == $originalOrderId) {
-                    continue;
-                }
-
-                // Compare items
-                if ($this->compareOrderItems($originalItems, $activeItems)) {
-                    return true; // Found matching active order
-                }
-            }
-
-            return false;
-
-        } catch (Exception $e) {
-            error_log("Error checking active reorders: " . $e->getMessage());
+            $stmt->execute([
+                'user_id' => $user_id,
+                'original_order_id' => $original_order_id
+            ]);
+            
+            return $stmt->fetchColumn() > 0;
+        } catch (PDOException $e) {
+            error_log("Error checking active reorder: " . $e->getMessage());
             return false;
         }
-    }
-
-    private function compareOrderItems($items1, $items2) {
-        if (count($items1) !== count($items2)) {
-            return false;
-        }
-
-        // Create arrays with product_id as key for easier comparison
-        $items1Map = array_column($items1, 'quantity', 'product_id');
-        $items2Map = array_column($items2, 'quantity', 'product_id');
-
-        // Compare products and quantities
-        foreach ($items1Map as $productId => $quantity) {
-            if (!isset($items2Map[$productId]) || $items2Map[$productId] != $quantity) {
-                return false;
-            }
-        }
-
-        return true;
     }
 
     }

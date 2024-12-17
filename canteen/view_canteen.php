@@ -14,11 +14,11 @@ require_once '../classes/canteenClass.php';
     <link rel="stylesheet" href="../assets/datatables/css/responsive.bootstrap5.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     
-    <!-- Add jQuery first -->
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Use CDN Bootstrap JS -->
+    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Then other JavaScript files -->
+
     <script src="../assets/datatables/js/jquery.dataTables.min.js"></script>
     <script src="../assets/datatables/js/dataTables.bootstrap5.min.js"></script>
     <script src="../assets/datatables/js/dataTables.responsive.min.js"></script>

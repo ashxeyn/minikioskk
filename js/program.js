@@ -603,6 +603,7 @@ function showSuccessModal(message) {
     $('#successMessage').text(message);
     const successModal = new bootstrap.Modal(document.getElementById('successModal'));
     successModal.show();
+    loadProgramSection();
 }
 
 function showDeleteConfirmModal(programId) {
@@ -615,6 +616,7 @@ function showDeleteConfirmModal(programId) {
     });
     
     deleteModal.show();
+    loadProgramSection();
 }
 
 // Update the delete function to use confirmation modal
