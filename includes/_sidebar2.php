@@ -3,7 +3,7 @@ require_once '../classes/accountClass.php';
 ?>
 
 <head>
-<link rel="stylesheet" href="../css/style.css">
+
 </head>
 
 

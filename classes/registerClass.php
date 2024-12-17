@@ -16,18 +16,17 @@ class RegisterAccount {
     }
     public function addUser() {
         try {
-        
-            if ($this->usernameExist($this->username)) {
-                throw new Exception("Username already exists");
-            }
-
-       
-            if ($this->emailExist($this->email)) {
-                throw new Exception("Email already exists");
-            }
-
             $conn = $this->db->connect();
             $conn->beginTransaction();
+
+            if ($this->emailExist($this->email)) {
+                $_SESSION['error'] = "Email already exists";
+                return false;
+            }
+            if ($this->usernameExist($this->username)) {
+                $_SESSION['error'] = "Username already exists";
+                return false;
+            }
 
             $hashedPassword = password_hash($this->password, PASSWORD_DEFAULT);
          
@@ -48,10 +47,13 @@ class RegisterAccount {
                 ':status' => 'pending'
             ];
             
-            if ($stmt->execute($params)) {
-                $this->user_id = $conn->lastInsertId();
+            $stmt->execute($params);
+            $userId = $conn->lastInsertId();
+            
+            if ($userId) {
                 $conn->commit();
-                return $this->user_id;
+                $this->user_id = $userId;
+                return $userId;
             }
             
             $conn->rollBack();
@@ -62,9 +64,7 @@ class RegisterAccount {
                 $conn->rollBack();
             }
             error_log("Error registering user: " . $e->getMessage());
-            return false;
-        } catch (Exception $e) {
-            error_log("Registration error: " . $e->getMessage());
+            $_SESSION['error'] = "Database error occurred: " . $e->getMessage();
             return false;
         }
     }

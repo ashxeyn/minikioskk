@@ -30,7 +30,7 @@ SET time_zone = "+00:00";
 CREATE TABLE `canteens` (
   `canteen_id` int(11) NOT NULL,
   `name` varchar(255) NOT NULL,
-  `campus_location` varchar(255) NOT NULL,
+  `campus_location` enum('Main Campus', 'College of Law', 'College of Medicine', 'College of Nursing', 'College of Engineering') NOT NULL,
   `description` text DEFAULT NULL,
   `opening_time` time DEFAULT NULL,
   `closing_time` time DEFAULT NULL,
@@ -44,7 +44,7 @@ CREATE TABLE `canteens` (
 
 INSERT INTO `canteens` (`canteen_id`, `name`, `campus_location`, `description`, `opening_time`, `closing_time`, `status`, `created_at`) VALUES
 (1, 'Main Canteen', 'Main Campus', 'Primary campus canteen', '07:00:00', '20:00:00', 'open', '2024-12-12 18:13:16'),
-(2, 'CCS Canteen', 'CCS Building', 'Computing Studies canteen', '08:00:00', '17:00:00', 'open', '2024-12-12 18:13:16'),
+(2, 'CCS Canteen', 'College of Engineering', 'Computing Studies canteen', '08:00:00', '17:00:00', 'open', '2024-12-12 18:13:16'),
 (3, 'Engineering Cafe', 'Engineering Building', 'Engineering building cafe', '07:30:00', '18:00:00', 'open', '2024-12-12 18:13:16'),
 (4, 'Science Hub', 'Science Complex', 'Science building food court', '08:00:00', '19:00:00', 'open', '2024-12-12 18:13:16'),
 (5, 'Ribshack', 'Campus A', '', '00:00:00', '00:00:00', 'open', '2024-12-13 00:45:43'),
@@ -424,11 +424,11 @@ CREATE TABLE `students` (
 
 CREATE TABLE `users` (
   `user_id` int(11) NOT NULL,
-  `email` varchar(255) DEFAULT NULL,
-  `username` varchar(255) NOT NULL,
+  `email` varchar(255) NOT NULL UNIQUE,
+  `username` varchar(255) NOT NULL UNIQUE,
   `password` varchar(255) NOT NULL,
   `role` enum('admin','manager','employee','student','guest') NOT NULL DEFAULT 'student',
-  `status` enum('pending','approved','rejected') DEFAULT 'pending',
+  `status` enum('pending','approved','rejected') NOT NULL DEFAULT 'pending',
   `last_name` varchar(255) NOT NULL,
   `given_name` varchar(255) NOT NULL,
   `middle_name` varchar(255) DEFAULT NULL,

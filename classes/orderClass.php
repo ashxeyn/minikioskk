@@ -490,18 +490,25 @@ class Order
 
     public function getOrderItems($order_id) {
         try {
-            $sql = "SELECT oi.product_id, oi.quantity, oi.unit_price, p.name 
+            $sql = "SELECT oi.*, p.name as name, p.product_id, s.quantity as stock_quantity
                     FROM order_items oi 
                     JOIN products p ON oi.product_id = p.product_id 
+                    LEFT JOIN stocks s ON p.product_id = s.product_id
                     WHERE oi.order_id = :order_id";
                     
             $stmt = $this->db->connect()->prepare($sql);
             $stmt->execute(['order_id' => $order_id]);
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            if (empty($items)) {
+                error_log("No items found for order ID: " . $order_id);
+            }
+            
+            return $items;
             
         } catch (Exception $e) {
             error_log("Error getting order items: " . $e->getMessage());
-            throw $e;
+            throw new Exception("Failed to get order items: " . $e->getMessage());
         }
     }
 
@@ -533,40 +540,64 @@ class Order
 
     public function createOrder($orderData) {
         try {
-            $sql = "INSERT INTO orders (user_id, total_amount, status, payment_status, canteen_id, created_at) 
-                    VALUES (:user_id, :total_amount, :status, :payment_status, :canteen_id, NOW())";
+            $db = $this->db->connect();
             
-            $stmt = $this->db->connect()->prepare($sql);
-            $stmt->execute([
+            $sql = "INSERT INTO orders (user_id, total_amount, status, payment_status, canteen_id, created_at, updated_at) 
+                    VALUES (:user_id, :total_amount, :status, :payment_status, :canteen_id, NOW(), NOW())";
+            
+            $stmt = $db->prepare($sql);
+            $result = $stmt->execute([
                 ':user_id' => $orderData['user_id'],
                 ':total_amount' => $orderData['total_amount'],
                 ':status' => $orderData['status'],
                 ':payment_status' => $orderData['payment_status'],
                 ':canteen_id' => $orderData['canteen_id']
             ]);
+
+            if (!$result) {
+                throw new Exception("Failed to insert new order");
+            }
+
+            $newOrderId = $db->lastInsertId();
+            if (!$newOrderId) {
+                throw new Exception("Failed to get new order ID");
+            }
+
+            return $newOrderId;
             
-            return $this->db->connect()->lastInsertId();
         } catch (PDOException $e) {
             error_log("Error creating order: " . $e->getMessage());
-            throw new Exception("Failed to create order");
+            throw new Exception("Failed to create order: " . $e->getMessage());
         }
     }
 
     public function addOrderItem($itemData) {
         try {
-            $sql = "INSERT INTO order_items (order_id, product_id, quantity, unit_price) 
-                    VALUES (:order_id, :product_id, :quantity, :unit_price)";
+            $db = $this->db->connect();
             
-            $stmt = $this->db->connect()->prepare($sql);
-            return $stmt->execute([
+            $sql = "INSERT INTO order_items (order_id, product_id, quantity, unit_price, subtotal) 
+                    VALUES (:order_id, :product_id, :quantity, :unit_price, :subtotal)";
+            
+            $subtotal = $itemData['quantity'] * $itemData['unit_price'];
+            
+            $stmt = $db->prepare($sql);
+            $result = $stmt->execute([
                 ':order_id' => $itemData['order_id'],
                 ':product_id' => $itemData['product_id'],
                 ':quantity' => $itemData['quantity'],
-                ':unit_price' => $itemData['unit_price']
+                ':unit_price' => $itemData['unit_price'],
+                ':subtotal' => $subtotal
             ]);
+
+            if (!$result) {
+                throw new Exception("Database error while adding order item");
+            }
+
+            return true;
+            
         } catch (PDOException $e) {
             error_log("Error adding order item: " . $e->getMessage());
-            throw new Exception("Failed to add order item");
+            throw new Exception("Failed to add order item: " . $e->getMessage());
         }
     }
 
@@ -582,8 +613,7 @@ class Order
             $sql = "SELECT o.order_id 
                     FROM orders o 
                     WHERE o.user_id = :user_id 
-                    AND o.status != 'completed' 
-                    AND o.status != 'cancelled'";
+                    AND o.status IN ('placed', 'accepted', 'preparing', 'ready')";
             
             $stmt = $this->db->connect()->prepare($sql);
             $stmt->execute([':user_id' => $userId]);
@@ -593,7 +623,7 @@ class Order
             foreach ($activeOrders as $order) {
                 $activeItems = $this->getOrderItems($order['order_id']);
                 
-                // Skip the original order itself
+                // Skip if this is the original order
                 if ($order['order_id'] == $originalOrderId) {
                     continue;
                 }
@@ -617,18 +647,13 @@ class Order
             return false;
         }
 
-        // Sort both arrays by product_id to ensure consistent comparison
-        usort($items1, function($a, $b) {
-            return $a['product_id'] - $b['product_id'];
-        });
-        usort($items2, function($a, $b) {
-            return $a['product_id'] - $b['product_id'];
-        });
+        // Create arrays with product_id as key for easier comparison
+        $items1Map = array_column($items1, 'quantity', 'product_id');
+        $items2Map = array_column($items2, 'quantity', 'product_id');
 
-        // Compare each item
-        for ($i = 0; $i < count($items1); $i++) {
-            if ($items1[$i]['product_id'] != $items2[$i]['product_id'] ||
-                $items1[$i]['quantity'] != $items2[$i]['quantity']) {
+        // Compare products and quantities
+        foreach ($items1Map as $productId => $quantity) {
+            if (!isset($items2Map[$productId]) || $items2Map[$productId] != $quantity) {
                 return false;
             }
         }

@@ -9,8 +9,6 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'manager') {
 }
 
 require_once '../classes/accountClass.php';
-
-
 require_once '../includes/_head.php';
 ?>
 
