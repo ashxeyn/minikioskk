@@ -676,3 +676,420 @@ function initializeDataTables() {
         }
     });
 }
+
+// College edit button handler
+$(document).on('click', '[data-action="edit-college"]', function() {
+    const collegeId = $(this).data('college-id');
+    const row = $(this).closest('tr');
+    
+    // Get data from the row
+    const collegeName = row.find('td:eq(1)').text();
+    const abbreviation = row.find('td:eq(2)').text();
+    const description = row.find('td:eq(3)').text();
+    
+    // Fill the edit modal
+    $('#edit_college_id').val(collegeId);
+    $('#edit_college_name').val(collegeName);
+    $('#edit_abbreviation').val(abbreviation);
+    $('#edit_college_description').val(description);
+    
+    // Show the modal
+    $('#editCollegeModal').modal('show');
+});
+
+// College delete button handler
+$(document).on('click', '[data-action="delete-college"]', function() {
+    const collegeId = $(this).data('college-id');
+    if (confirm('Are you sure you want to delete this college?')) {
+        $.ajax({
+            url: 'deleteCollege.php',
+            method: 'POST',
+            data: { college_id: collegeId },
+            success: function(response) {
+                if (response.success) {
+                    location.reload();
+                } else {
+                    alert(response.message || 'Error deleting college');
+                }
+            },
+            error: function() {
+                alert('Error processing request');
+            }
+        });
+    }
+});
+
+// Department edit button handler
+$(document).on('click', '[data-action="edit-department"]', function() {
+    const departmentId = $(this).data('department-id');
+    const row = $(this).closest('tr');
+    
+    // Get data from the row
+    const departmentName = row.find('td:eq(1)').text();
+    const collegeName = row.find('td:eq(2)').text();
+    const description = row.find('td:eq(3)').text();
+    
+    // Fill the edit modal
+    $('#edit_department_id').val(departmentId);
+    $('#edit_department_name').val(departmentName);
+    $('#edit_department_description').val(description);
+    
+    // Load colleges and select the current one
+    loadColleges('#edit_department_college_id', collegeName);
+    
+    // Show the modal
+    $('#editDepartmentModal').modal('show');
+});
+
+// Department delete button handler
+$(document).on('click', '[data-action="delete-department"]', function() {
+    const departmentId = $(this).data('department-id');
+    if (confirm('Are you sure you want to delete this department?')) {
+        $.ajax({
+            url: 'deleteDepartment.php',
+            method: 'POST',
+            data: { department_id: departmentId },
+            success: function(response) {
+                if (response.success) {
+                    location.reload();
+                } else {
+                    alert(response.message || 'Error deleting department');
+                }
+            },
+            error: function() {
+                alert('Error processing request');
+            }
+        });
+    }
+});
+
+// Update College function
+function updateCollege() {
+    const formData = {
+        college_id: $('#edit_college_id').val(),
+        college_name: $('#edit_college_name').val(),
+        abbreviation: $('#edit_abbreviation').val(),
+        description: $('#edit_college_description').val()
+    };
+
+    $.ajax({
+        url: 'editCollege.php',
+        method: 'POST',
+        data: formData,
+        success: function(response) {
+            try {
+                const result = JSON.parse(response);
+                if (result.success) {
+                    $('#editCollegeModal').modal('hide');
+                    showAlert('College updated successfully!', 'success');
+                    loadProgramSection();
+                } else {
+                    showAlert(result.message || 'Error updating college', 'danger');
+                }
+            } catch (e) {
+                console.error('Error:', e);
+                showAlert('Error updating college', 'danger');
+            }
+        },
+        error: function() {
+            showAlert('Error updating college', 'danger');
+        }
+    });
+}
+
+// Update Department function
+function updateDepartment() {
+    const formData = {
+        department_id: $('#edit_department_id').val(),
+        department_name: $('#edit_department_name').val(),
+        college_id: $('#edit_department_college_id').val(),
+        description: $('#edit_department_description').val()
+    };
+
+    $.ajax({
+        url: 'editDepartment.php',
+        method: 'POST',
+        data: formData,
+        success: function(response) {
+            try {
+                const result = JSON.parse(response);
+                if (result.success) {
+                    $('#editDepartmentModal').modal('hide');
+                    showAlert('Department updated successfully!', 'success');
+                    loadProgramSection();
+                } else {
+                    showAlert(result.message || 'Error updating department', 'danger');
+                }
+            } catch (e) {
+                console.error('Error:', e);
+                showAlert('Error updating department', 'danger');
+            }
+        },
+        error: function() {
+            showAlert('Error updating department', 'danger');
+        }
+    });
+}
+
+// Make functions available globally
+window.updateCollege = updateCollege;
+window.updateDepartment = updateDepartment;
+
+// Update the click handlers
+$(document).on('click', '[data-action="edit-college"]', function() {
+    const collegeId = $(this).data('college-id');
+    const row = $(this).closest('tr');
+    
+    $('#edit_college_id').val(collegeId);
+    $('#edit_college_name').val(row.find('td:eq(1)').text().trim());
+    $('#edit_abbreviation').val(row.find('td:eq(2)').text().trim());
+    $('#edit_college_description').val(row.find('td:eq(3)').text().trim());
+    
+    $('#editCollegeModal').modal('show');
+});
+
+$(document).on('click', '[data-action="delete-college"]', function() {
+    const collegeId = $(this).data('college-id');
+    if (confirm('Are you sure you want to delete this college?')) {
+        $.ajax({
+            url: 'deleteCollege.php',
+            method: 'POST',
+            data: { college_id: collegeId },
+            success: function(response) {
+                try {
+                    const result = JSON.parse(response);
+                    if (result.success) {
+                        showAlert('College deleted successfully!', 'success');
+                        loadProgramSection();
+                    } else {
+                        showAlert(result.message || 'Error deleting college', 'danger');
+                    }
+                } catch (e) {
+                    console.error('Error:', e);
+                    showAlert('Error deleting college', 'danger');
+                }
+            },
+            error: function() {
+                showAlert('Error deleting college', 'danger');
+            }
+        });
+    }
+});
+
+$(document).on('click', '[data-action="edit-department"]', function() {
+    const departmentId = $(this).data('department-id');
+    const row = $(this).closest('tr');
+    
+    $('#edit_department_id').val(departmentId);
+    $('#edit_department_name').val(row.find('td:eq(1)').text().trim());
+    $('#edit_department_description').val(row.find('td:eq(3)').text().trim());
+    
+    // Load colleges first
+    loadColleges('#edit_department_college_id');
+    
+    // Set college after loading (using the college name from the table)
+    const collegeName = row.find('td:eq(2)').text().trim();
+    setTimeout(() => {
+        $('#edit_department_college_id option').each(function() {
+            if ($(this).text().includes(collegeName)) {
+                $(this).prop('selected', true);
+                return false;
+            }
+        });
+    }, 500);
+    
+    $('#editDepartmentModal').modal('show');
+});
+
+$(document).on('click', '[data-action="delete-department"]', function() {
+    const departmentId = $(this).data('department-id');
+    if (confirm('Are you sure you want to delete this department?')) {
+        $.ajax({
+            url: 'deleteDepartment.php',
+            method: 'POST',
+            data: { department_id: departmentId },
+            success: function(response) {
+                try {
+                    const result = JSON.parse(response);
+                    if (result.success) {
+                        showAlert('Department deleted successfully!', 'success');
+                        loadProgramSection();
+                    } else {
+                        showAlert(result.message || 'Error deleting department', 'danger');
+                    }
+                } catch (e) {
+                    console.error('Error:', e);
+                    showAlert('Error deleting department', 'danger');
+                }
+            },
+            error: function() {
+                showAlert('Error deleting department', 'danger');
+            }
+        });
+    }
+});
+
+// College functions
+function editCollege(id, name, abbreviation, description) {
+    $('#edit_college_id').val(id);
+    $('#edit_college_name').val(name);
+    $('#edit_abbreviation').val(abbreviation);
+    $('#edit_college_description').val(description);
+    $('#editCollegeModal').modal('show');
+}
+
+function updateCollege() {
+    const formData = {
+        college_id: $('#edit_college_id').val(),
+        college_name: $('#edit_college_name').val(),
+        abbreviation: $('#edit_abbreviation').val(),
+        description: $('#edit_college_description').val()
+    };
+
+    $.ajax({
+        url: '../programs/editCollege.php',
+        type: 'POST',
+        data: formData,
+        success: function(response) {
+            try {
+                const result = JSON.parse(response);
+                if (result.success) {
+                    $('#editCollegeModal').modal('hide');
+                    showAlert('College updated successfully', 'success');
+                    location.reload();
+                } else {
+                    showAlert(result.message || 'Error updating college', 'danger');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Error processing response', 'danger');
+            }
+        },
+        error: function() {
+            showAlert('Error updating college', 'danger');
+        }
+    });
+}
+
+function deleteCollege(id) {
+    if (confirm('Are you sure you want to delete this college?')) {
+        $.ajax({
+            url: '../programs/deleteCollege.php',
+            type: 'POST',
+            data: { college_id: id },
+            success: function(response) {
+                try {
+                    const result = JSON.parse(response);
+                    if (result.success) {
+                        showAlert('College deleted successfully', 'success');
+                        location.reload();
+                    } else {
+                        showAlert(result.message || 'Error deleting college', 'danger');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showAlert('Error processing response', 'danger');
+                }
+            },
+            error: function() {
+                showAlert('Error deleting college', 'danger');
+            }
+        });
+    }
+}
+
+// Department functions
+function editDepartment(id, name, collegeId, description) {
+    $('#edit_department_id').val(id);
+    $('#edit_department_name').val(name);
+    $('#edit_department_description').val(description);
+    
+    // Load colleges first
+    loadColleges('#edit_department_college_id');
+    
+    // Set selected college after a short delay
+    setTimeout(() => {
+        $('#edit_department_college_id').val(collegeId);
+    }, 500);
+    
+    $('#editDepartmentModal').modal('show');
+}
+
+function updateDepartment() {
+    const formData = {
+        department_id: $('#edit_department_id').val(),
+        department_name: $('#edit_department_name').val(),
+        college_id: $('#edit_department_college_id').val(),
+        description: $('#edit_department_description').val()
+    };
+
+    $.ajax({
+        url: '../programs/editDepartment.php',
+        type: 'POST',
+        data: formData,
+        success: function(response) {
+            try {
+                const result = JSON.parse(response);
+                if (result.success) {
+                    $('#editDepartmentModal').modal('hide');
+                    showAlert('Department updated successfully', 'success');
+                    location.reload();
+                } else {
+                    showAlert(result.message || 'Error updating department', 'danger');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Error processing response', 'danger');
+            }
+        },
+        error: function() {
+            showAlert('Error updating department', 'danger');
+        }
+    });
+}
+
+function deleteDepartment(id) {
+    if (confirm('Are you sure you want to delete this department?')) {
+        $.ajax({
+            url: '../programs/deleteDepartment.php',
+            type: 'POST',
+            data: { department_id: id },
+            success: function(response) {
+                try {
+                    const result = JSON.parse(response);
+                    if (result.success) {
+                        showAlert('Department deleted successfully', 'success');
+                        location.reload();
+                    } else {
+                        showAlert(result.message || 'Error deleting department', 'danger');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showAlert('Error processing response', 'danger');
+                }
+            },
+            error: function() {
+                showAlert('Error deleting department', 'danger');
+            }
+        });
+    }
+}
+
+// Helper function to show alerts
+function showAlert(message, type) {
+    const alertDiv = $(`<div class="alert alert-${type} alert-dismissible fade show" role="alert">
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>`);
+    
+    $('.container-fluid').prepend(alertDiv);
+    setTimeout(() => alertDiv.alert('close'), 3000);
+}
+
+// Make functions globally available
+window.editCollege = editCollege;
+window.deleteCollege = deleteCollege;
+window.updateCollege = updateCollege;
+window.editDepartment = editDepartment;
+window.deleteDepartment = deleteDepartment;
+window.updateDepartment = updateDepartment;

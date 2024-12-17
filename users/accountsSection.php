@@ -1,5 +1,5 @@
 <div class="container">
-    <h3>Accounts Management</h3>
+    
     <div id="accountTable">
         <?php include 'view_accounts.php'; ?>
     </div>

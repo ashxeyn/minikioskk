@@ -9,15 +9,22 @@ if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || $_SESSION['role
 <!DOCTYPE html> 
 <html lang="en">
 <head>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UniEats</title>
     
-    <!-- DataTables CSS -->
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap5.min.css">
+    <!-- CSS -->
+    <link href="../assets/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../assets/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="../assets/datatables/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Amaranth">
     
-    <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+    * {
+        font-family: 'Amaranth', sans-serif;
+    }
+    </style>
 </head>
 <body>
     <div class="container-fluid">
@@ -28,13 +35,12 @@ if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || $_SESSION['role
 
     <?php include 'program_modals.php'; ?>
 
-    <!-- Load scripts in correct order -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/vendor/datatables-1.11.5/js/jquery.dataTables.min.js"></script>
-<script src="/vendor/datatables-1.11.5/js/dataTables.bootstrap5.min.js"></script>
-<script src="/vendor/datatables-1.11.5/js/dataTables.responsive.min.js"></script>
-<script src="/vendor/datatables-1.11.5/js/responsive.bootstrap5.min.js"></script>
+    <!-- JavaScript -->
+    <script src="../assets/jquery/jquery.min.js"></script>
+    <script src="../assets/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="../assets/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="../assets/datatables/js/dataTables.bootstrap5.min.js"></script>
+    
     <!-- Custom JS - Must be loaded after jQuery and Bootstrap -->
     <script src="../js/program.js"></script>
     

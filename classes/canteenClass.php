@@ -30,23 +30,15 @@ class Canteen
                 return false; // Canteen name already exists
             }
             
-           
-            $sql = "INSERT INTO canteens (name, campus_location, description, opening_time, closing_time, status) 
-                    VALUES (:name, :campus_location, :description, :opening_time, :closing_time, :status)";
+            $sql = "INSERT INTO canteens (name, campus_location) VALUES (:name, :campus_location)";
+            $stmt = $conn->prepare($sql);
             
-            $query = $conn->prepare($sql);
+            $result = $stmt->execute([
+                'name' => $this->name,
+                'campus_location' => $this->campus_location
+            ]);
 
-            $query->bindParam(':name', $this->name);
-            $query->bindParam(':campus_location', $this->campus_location);
-            $query->bindParam(':description', $this->description);
-            $query->bindParam(':opening_time', $this->opening_time);
-            $query->bindParam(':closing_time', $this->closing_time);
-            $query->bindParam(':status', $this->status);
-
-            if ($query->execute()) {
-                return $conn->lastInsertId();
-            }
-            return false;
+            return $result ? $conn->lastInsertId() : false;
             
         } catch (PDOException $e) {
             error_log("Error in addCanteen: " . $e->getMessage());
@@ -76,42 +68,51 @@ class Canteen
         return $canteens;
     }
 
-    function fetchCanteenById($canteen_id)
+    public function fetchCanteenById($canteen_id)
     {
-        $sql = "SELECT * FROM canteens WHERE canteen_id = :canteen_id";
-        $query = $this->db->connect()->prepare($sql);
-        $query->bindParam(':canteen_id', $canteen_id);
-        $query->execute();
-        return $query->fetch();
+        try {
+            $sql = "SELECT * FROM canteens WHERE canteen_id = :canteen_id";
+            $stmt = $this->db->connect()->prepare($sql);
+            $stmt->execute(['canteen_id' => $canteen_id]);
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error fetching canteen: " . $e->getMessage());
+            return false;
+        }
     }
 
-    function editCanteen($canteen_id, $name, $campus_location)
+    public function editCanteen($canteen_id, $name, $campus_location)
     {
-        $sql = "UPDATE canteens SET 
-                name = :name, 
-                campus_location = :campus_location,
-                description = :description,
-                opening_time = :opening_time,
-                closing_time = :closing_time,
-                status = :status 
-                WHERE canteen_id = :canteen_id";
-        $query = $this->db->connect()->prepare($sql);
-        $query->bindParam(':name', $name);
-        $query->bindParam(':campus_location', $campus_location);
-        $query->bindParam(':description', $this->description);
-        $query->bindParam(':opening_time', $this->opening_time);
-        $query->bindParam(':closing_time', $this->closing_time);
-        $query->bindParam(':status', $this->status);
-        $query->bindParam(':canteen_id', $canteen_id);
-        return $query->execute();
+        try {
+            $sql = "UPDATE canteens 
+                    SET name = :name, 
+                        campus_location = :campus_location 
+                    WHERE canteen_id = :canteen_id";
+                    
+            $stmt = $this->db->connect()->prepare($sql);
+            $result = $stmt->execute([
+                'canteen_id' => $canteen_id,
+                'name' => $name,
+                'campus_location' => $campus_location
+            ]);
+            
+            return $result;
+        } catch (PDOException $e) {
+            error_log("Error updating canteen: " . $e->getMessage());
+            return false;
+        }
     }
 
-    function deleteCanteen($canteen_id)
+    public function deleteCanteen($canteen_id)
     {
-        $sql = "DELETE FROM canteens WHERE canteen_id = :canteen_id";
-        $query = $this->db->connect()->prepare($sql);
-        $query->bindParam(':canteen_id', $canteen_id);
-        return $query->execute();
+        try {
+            $sql = "DELETE FROM canteens WHERE canteen_id = :canteen_id";
+            $stmt = $this->db->connect()->prepare($sql);
+            return $stmt->execute(['canteen_id' => $canteen_id]);
+        } catch (PDOException $e) {
+            error_log("Error deleting canteen: " . $e->getMessage());
+            return false;
+        }
     }
 
     function searchCanteens($keyword = '') {
@@ -206,12 +207,20 @@ class Canteen
         }
     }
 
-    function getAllCanteens()
-    {
-        $sql = "SELECT * FROM canteens ORDER BY name ASC";
-        $stmt = $this->db->connect()->prepare($sql);
-        $stmt->execute();
-        return $stmt->fetchAll();
+    public function getAllCanteens() {
+        try {
+            $sql = "SELECT canteen_id, name, campus_location, status, 
+                    DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') as created_at 
+                    FROM canteens 
+                    ORDER BY created_at DESC";
+            
+            $stmt = $this->db->connect()->prepare($sql);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error in getAllCanteens: " . $e->getMessage());
+            return [];
+        }
     }
 
     function isOpen($canteen_id) {

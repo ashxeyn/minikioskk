@@ -1,26 +1,27 @@
 <div class="modal fade" id="editCanteenModal" tabindex="-1" aria-labelledby="editCanteenModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form id="editCanteenForm">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="editCanteenModalLabel">Edit Canteen</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editCanteenModalLabel">Edit Canteen</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editCanteenForm">
                     <input type="hidden" id="editCanteenId" name="canteen_id">
                     <div class="mb-3">
-                        <label for="editCanteenName" class="form-label">Canteen Name</label>
-                        <input type="text" id="editCanteenName" name="name" class="form-control" required>
+                        <label for="edit_name" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="edit_name" name="name" required>
                     </div>
                     <div class="mb-3">
-                        <label for="editCampusLocation" class="form-label">Location</label>
-                        <input type="text" id="editCampusLocation" name="campus_location" class="form-control" required>
+                        <label for="edit_location" class="form-label">Location</label>
+                        <input type="text" class="form-control" id="edit_location" name="location" required>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
-                </div>
-            </form>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>

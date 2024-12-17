@@ -1,23 +1,29 @@
 <?php
 require_once '../classes/orderClass.php';
 
-
 $orderObj = new Order();
 $orders = $orderObj->fetchAllOrders();
 ?>
+
+<!-- Add jQuery first -->
+<script src="../assets/jquery/jquery.min.js"></script>
+<script src="../assets/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+<!-- Add DataTables CSS -->
+<link rel="stylesheet" href="../assets/datatables/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="../assets/datatables/css/responsive.bootstrap5.min.css">
+
+<!-- Add DataTables JS -->
+<script src="../assets/datatables/js/jquery.dataTables.min.js"></script>
+<script src="../assets/datatables/js/dataTables.bootstrap5.min.js"></script>
+<script src="../assets/datatables/js/dataTables.responsive.min.js"></script>
+<script src="../assets/datatables/js/responsive.bootstrap5.min.js"></script>
 
 <div class="container-fluid">
     <h2>Order Management</h2>
     
     <div class="row mb-3">
-        <div class="col-md-4">
-            <div class="input-group">
-                <input type="text" id="searchInput" class="form-control" placeholder="Search orders...">
-                <span class="input-group-text"><i class="bi bi-search"></i></span>
-            </div>
-        </div>
-        
-        <div class="col-md-4">
+        <div class="col-md-6">
             <select id="statusFilter" class="form-select">
                 <option value="">All Statuses</option>
                 <option value="placed">Placed</option>
@@ -29,7 +35,7 @@ $orders = $orderObj->fetchAllOrders();
             </select>
         </div>
         
-        <div class="col-md-4">
+        <div class="col-md-6">
             <select id="productFilter" class="form-select">
                 <option value="">All Products</option>
                 <?php 
@@ -43,9 +49,12 @@ $orders = $orderObj->fetchAllOrders();
         </div>
     </div>
 
+    <!-- Add some spacing between filters and table -->
+    <div class="mb-4"></div>
+
     <div class="table-responsive">
         <?php if (!empty($orders)): ?>
-            <table class="table table-hover">
+            <table class="table table-hover display" id="ordersTable">
                 <thead>
                     <tr>
                         <th>#</th>
@@ -217,127 +226,133 @@ td .btn-sm {
     display: inline-block;
     vertical-align: middle;
 }
+
+/* Filter styles */
+.form-select {
+    height: 38px;
+    border-radius: 4px;
+    border: 1px solid #ced4da;
+    padding: 0.375rem 2.25rem 0.375rem 0.75rem;
+    background-color: #fff;
+    margin-bottom: 10px;
+}
+
+.form-select:focus {
+    border-color: #86b7fe;
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Spacing for mobile responsiveness */
+@media (max-width: 768px) {
+    .col-md-6 {
+        margin-bottom: 1rem;
+    }
+}
 </style>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const searchInput = document.getElementById('searchInput');
-    const statusFilter = document.getElementById('statusFilter');
-    const productFilter = document.getElementById('productFilter');
-    
-    function filterTable() {
-        const searchTerm = searchInput.value.toLowerCase().trim();
-        const statusTerm = statusFilter.value.toLowerCase().trim();
-        const productTerm = productFilter.value.toLowerCase().trim();
-        
-        const rows = document.querySelectorAll('tbody tr');
-        
-        rows.forEach(row => {
-            let showRow = true;
-            
-            if (searchTerm) {
-                const canteen = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
-                const username = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
-                const customerName = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
-                
-                showRow = canteen.includes(searchTerm) ||
-                         username.includes(searchTerm) || 
-                         customerName.includes(searchTerm);
-            }
-            
-            if (showRow && statusTerm) {
-                const status = row.querySelector('.badge').textContent.toLowerCase().trim();
-                showRow = status === statusTerm;
-            }
-            
-            if (showRow && productTerm) {
-                const products = row.querySelector('td:nth-child(5)').textContent.toLowerCase();
-                showRow = products.includes(productTerm);
-            }
-            
-            if (showRow) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
-        });
-        
-        const visibleRows = document.querySelectorAll('tbody tr[style=""]').length;
-        const noOrdersMessage = document.querySelector('.alert-info');
-        if (noOrdersMessage) {
-            noOrdersMessage.style.display = visibleRows === 0 ? '' : 'none';
-        }
+$(document).ready(function() {
+    // Destroy existing DataTable if it exists
+    if ($.fn.DataTable.isDataTable('#ordersTable')) {
+        $('#ordersTable').DataTable().destroy();
     }
-    
-    searchInput.addEventListener('input', filterTable);
-    statusFilter.addEventListener('change', filterTable);
-    productFilter.addEventListener('change', filterTable);
-    
-    filterTable();
+
+    // Initialize DataTable
+    const table = $('#ordersTable').DataTable({
+        "responsive": true,
+        "pageLength": 10,
+        "order": [[0, "desc"]], // Order by ID descending
+        "columnDefs": [
+            {
+                "targets": [10], // Actions column
+                "orderable": false
+            }
+        ],
+        "initComplete": function() {
+            // Setup - add a text input to each header cell
+            $('#searchInput').on('keyup', function() {
+                table.search(this.value).draw();
+            });
+
+            $('#statusFilter').on('change', function() {
+                table.column(7).search(this.value).draw();
+            });
+
+            $('#productFilter').on('change', function() {
+                table.column(4).search(this.value).draw();
+            });
+        }
+    });
+
+    // Initialize Bootstrap modals
+    const editStatusModal = new bootstrap.Modal(document.getElementById('editStatusModal'));
+    const deleteOrderModal = new bootstrap.Modal(document.getElementById('deleteOrderModal'));
+
+    // Edit status modal handler
+    window.openEditStatusModal = function(orderId, currentStatus) {
+        $('#editOrderId').val(orderId);
+        $('#orderStatus').val(currentStatus);
+        editStatusModal.show();
+    };
+
+    // Delete modal handler
+    window.openDeleteOrderModal = function(orderId) {
+        $('#deleteOrderId').val(orderId);
+        deleteOrderModal.show();
+    };
+
+    // Update status handler
+    window.updateOrderStatus = function() {
+        const orderId = $('#editOrderId').val();
+        const status = $('#orderStatus').val();
+        
+        fetch('../ajax/update_order_status.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ order_id: orderId, status: status })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                editStatusModal.hide();
+                table.ajax.reload();
+            } else {
+                alert(data.message || 'Error updating order status');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to update order status. Please try again.');
+        });
+    };
+
+    // Delete order handler
+    window.deleteOrder = function() {
+        const orderId = $('#deleteOrderId').val();
+        
+        fetch('../ajax/delete_order.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ order_id: orderId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                deleteOrderModal.hide();
+                table.ajax.reload();
+            } else {
+                alert(data.message || 'Error deleting order');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to delete order. Please try again.');
+        });
+    };
 });
-
-const editStatusModal = new bootstrap.Modal(document.getElementById('editStatusModal'));
-const deleteOrderModal = new bootstrap.Modal(document.getElementById('deleteOrderModal'));
-
-function openEditStatusModal(orderId, currentStatus) {
-    document.getElementById('editOrderId').value = orderId;
-    document.getElementById('orderStatus').value = currentStatus;
-    editStatusModal.show();
-}
-
-function openDeleteOrderModal(orderId) {
-    document.getElementById('deleteOrderId').value = orderId;
-    deleteOrderModal.show();
-}
-
-function updateOrderStatus() {
-    const orderId = document.getElementById('editOrderId').value;
-    const status = document.getElementById('orderStatus').value;
-    
-    fetch('../ajax/update_order_status.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ order_id: orderId, status: status })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            editStatusModal.hide();
-            location.reload();
-        } else {
-            alert(data.message || 'Error updating order status');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Failed to update order status. Please try again.');
-    });
-}
-
-function deleteOrder() {
-    const orderId = document.getElementById('deleteOrderId').value;
-    
-    fetch('../ajax/delete_order.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ order_id: orderId })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            deleteOrderModal.hide();
-            location.reload();
-        } else {
-            alert(data.message || 'Error deleting order');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Failed to delete order. Please try again.');
-    });
-}
 </script> 

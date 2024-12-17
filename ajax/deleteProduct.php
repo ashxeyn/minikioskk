@@ -1,38 +1,27 @@
 <?php
-session_start();
-require_once '../classes/productClass.php';
+require_once '../classes/adminProductClass.php';
 
 header('Content-Type: application/json');
 
-
-
-if (!isset($_POST['product_id']) || empty($_POST['product_id'])) {
-    echo json_encode([
-        'success' => false,
-        'message' => 'Product ID is required'
-    ]);
-    exit;
-}
-
 try {
-    $product = new Product();
-    $result = $product->deleteProductWithRelations($_POST['product_id']);
-    
-    if ($result) {
-        echo json_encode([
-            'success' => true,
-            'message' => 'Product deleted successfully'
-        ]);
-    } else {
-        echo json_encode([
-            'success' => false,
-            'message' => 'Failed to delete product'
-        ]);
+    if (!isset($_POST['product_id']) || empty($_POST['product_id'])) {
+        throw new Exception('Product ID is required');
     }
+
+    $productId = (int)$_POST['product_id'];
+    $adminProduct = new AdminProduct();
+    
+    if ($adminProduct->deleteProduct($productId)) {
+        echo json_encode(['success' => true, 'message' => 'Product deleted successfully']);
+    } else {
+        throw new Exception('Failed to delete product');
+    }
+    
 } catch (Exception $e) {
+    error_log('Error in deleteProduct.php: ' . $e->getMessage());
     echo json_encode([
-        'success' => false,
-        'message' => 'Error deleting product: ' . $e->getMessage()
+        'success' => false, 
+        'message' => $e->getMessage()
     ]);
 }
 ?> 

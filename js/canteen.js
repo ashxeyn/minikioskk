@@ -1,16 +1,85 @@
-
-
 function loadCanteenTable() {
     $.ajax({
         url: '../canteen/view_canteen.php',
         method: 'GET',
         success: function (response) {
-            $('#canteenTable').html(response);
-            initializeCanteenButtons(); // Initialize buttons after loading the table
+            $('#canteenTableContainer').html(response);
+            // Destroy existing DataTable if it exists
+            if ($.fn.DataTable.isDataTable('#canteenTable')) {
+                $('#canteenTable').DataTable().destroy();
+            }
+            // Reinitialize DataTable
+            initializeDataTable();
         },
         error: function () {
-            $('#canteenTable').html('<p class="text-danger">Failed to load canteen table.</p>');
+            $('#canteenTableContainer').html('<p class="text-danger">Failed to load canteen table.</p>');
         }
+    });
+}
+
+function initializeDataTable() {
+    $('#canteenTable').DataTable({
+        processing: true,
+        serverSide: false,
+        responsive: true,
+        ajax: {
+            url: '../ajax/search_canteens.php',
+            type: 'GET',
+            dataSrc: function(json) {
+                if (json.error) {
+                    console.error('Error:', json.error);
+                    return [];
+                }
+                return json;
+            }
+        },
+        columns: [
+            { 
+                data: null,
+                render: function (data, type, row, meta) {
+                    return meta.row + 1;
+                }
+            },
+            { data: 'name' },
+            { data: 'campus_location' },
+            { 
+                data: 'status',
+                render: function(data) {
+                    const statusClasses = {
+                        'open': 'success',
+                        'closed': 'danger',
+                        'maintenance': 'warning'
+                    };
+                    return `<span class="badge bg-${statusClasses[data] || 'secondary'}">${data}</span>`;
+                }
+            },
+            {
+                data: 'canteen_id',
+                render: function(data) {
+                    return `
+                        <button class="btn btn-warning btn-sm" onclick="openEditModal(${data})" title="Edit">
+                            <i class="bi bi-pencil-square"></i>
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="openDeleteModal(${data})" title="Delete">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    `;
+                }
+            }
+        ],
+        order: [[1, 'asc']],
+        pageLength: 10,
+        language: {
+            emptyTable: 'No canteens found',
+            zeroRecords: 'No matching canteens found'
+        },
+        columnDefs: [
+            {
+                targets: [0, 4],
+                searchable: false,
+                orderable: false
+            }
+        ]
     });
 }
 
@@ -158,5 +227,5 @@ function initializeCanteenButtons() {
 }
 
 $(document).ready(function () {
-    loadCanteenTable();
+    initializeDataTable();
 });

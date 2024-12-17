@@ -241,5 +241,53 @@ class Program
             return [];
         }
     }
+
+    public function updateCollege($college_id, $college_name, $abbreviation, $description) {
+        try {
+            $sql = "UPDATE colleges 
+                    SET college_name = ?, abbreviation = ?, description = ? 
+                    WHERE college_id = ?";
+            $stmt = $this->db->connect()->prepare($sql);
+            return $stmt->execute([$college_name, $abbreviation, $description, $college_id]);
+        } catch (PDOException $e) {
+            error_log("Error updating college: " . $e->getMessage());
+            throw new Exception("Failed to update college");
+        }
+    }
+
+    public function deleteCollege($college_id) {
+        try {
+            $sql = "DELETE FROM colleges WHERE college_id = ?";
+            $stmt = $this->db->connect()->prepare($sql);
+            return $stmt->execute([$college_id]);
+        } catch (PDOException $e) {
+            error_log("Error deleting college: " . $e->getMessage());
+            throw new Exception("Failed to delete college");
+        }
+    }
+
+    public function updateDepartment($department_id, $department_name, $college_id, $description) {
+        try {
+            $sql = "UPDATE departments 
+                    SET department_name = ?, college_id = ?, description = ? 
+                    WHERE department_id = ?";
+            $stmt = $this->db->connect()->prepare($sql);
+            return $stmt->execute([$department_name, $college_id, $description, $department_id]);
+        } catch (PDOException $e) {
+            error_log("Error updating department: " . $e->getMessage());
+            throw new Exception("Failed to update department");
+        }
+    }
+
+    public function deleteDepartment($department_id) {
+        try {
+            $sql = "DELETE FROM departments WHERE department_id = ?";
+            $stmt = $this->db->connect()->prepare($sql);
+            return $stmt->execute([$department_id]);
+        } catch (PDOException $e) {
+            error_log("Error deleting department: " . $e->getMessage());
+            throw new Exception("Failed to delete department");
+        }
+    }
 }
 ?>

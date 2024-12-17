@@ -17,10 +17,11 @@ function loadDashboardSection() {
         method: 'GET',
         success: function (response) {
             $('#contentArea').html(response);
+            initializeDashboardChart();
         },
         error: function (xhr, status, error) {
-            console.error('Error loading accounts section:', error);
-            $('#contentArea').html('<p class="text-danger">Failed to load Accounts section. Please try again.</p>');
+            console.error('Error loading dashboard section:', error);
+            $('#contentArea').html('<p class="text-danger">Failed to load Dashboard section. Please try again.</p>');
         }
     });
 }
@@ -72,6 +73,7 @@ function loadCanteenSection() {
         method: 'GET',
         success: function (response) {
             $('#contentArea').html(response);
+            // DataTable is initialized in canteenSection.php
         },
         error: function (xhr, status, error) {
             console.error('Error loading canteen section:', error);
@@ -123,17 +125,30 @@ function loadRegistrationSection() {
     });
 }
 
-document.addEventListener("DOMContentLoaded", function () {
-    const ctx = document.getElementById('ordersByCollegeChart').getContext('2d');
+function initializeDashboardChart() {
+    const chartCanvas = document.getElementById('ordersByCollegeChart');
+    if (!chartCanvas) {
+        console.warn('Chart canvas not found');
+        return;
+    }
 
-    const colleges = JSON.parse(document.getElementById('collegesData').textContent);
-    const orderCounts = JSON.parse(document.getElementById('orderCountsData').textContent);
+    const ctx = chartCanvas.getContext('2d');
+    const collegesElement = document.getElementById('collegesData');
+    const orderCountsElement = document.getElementById('orderCountsData');
+
+    if (!collegesElement || !orderCountsElement) {
+        console.warn('Chart data elements not found');
+        return;
+    }
+
+    const colleges = JSON.parse(collegesElement.textContent);
+    const orderCounts = JSON.parse(orderCountsElement.textContent);
 
     const data = {
-        labels: colleges, 
+        labels: colleges,
         datasets: [{
             label: 'Orders by College',
-            data: orderCounts, 
+            data: orderCounts,
             backgroundColor: [
                 '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40',
                 '#8E44AD', '#1ABC9C', '#F39C12', '#2ECC71', '#E74C3C', '#3498DB',
@@ -151,12 +166,12 @@ document.addEventListener("DOMContentLoaded", function () {
             maintainAspectRatio: false,
             plugins: {
                 legend: {
-                    display: false 
+                    display: false
                 },
                 tooltip: {
                     callbacks: {
-                        label: function (tooltipItem) {
-                            const dataset = tooltipItem.dataset; 
+                        label: function(tooltipItem) {
+                            const dataset = tooltipItem.dataset;
                             const value = dataset.data[tooltipItem.dataIndex];
                             const label = tooltipItem.chart.data.labels[tooltipItem.dataIndex];
                             return `${label}: ${value} orders`;
@@ -172,10 +187,10 @@ document.addEventListener("DOMContentLoaded", function () {
                     },
                     ticks: {
                         autoSkip: false,
-                        maxRotation: 90, 
-                        minRotation: 45, 
+                        maxRotation: 90,
+                        minRotation: 45,
                         font: {
-                            size: 10 
+                            size: 10
                         }
                     }
                 },
@@ -185,7 +200,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         text: 'Number of Orders'
                     },
                     beginAtZero: true,
-                    max: 1000, 
+                    max: 1000,
                     ticks: {
                         stepSize: 100
                     }
@@ -195,7 +210,13 @@ document.addEventListener("DOMContentLoaded", function () {
     };
 
     new Chart(ctx, config);
-});
+}
+
+function reloadCanteenTable() {
+    if (window.canteenTable) {
+        window.canteenTable.ajax.reload(null, false);
+    }
+}
 
 $(document).ready(function() {
     // Handle all section loading through data attributes

@@ -188,28 +188,48 @@ class AdminProduct {
             $db = $this->db->connect();
             $db->beginTransaction();
 
-            // Delete related records first
-            $sql = "DELETE FROM stocks WHERE product_id = :product_id";
-            $stmt = $db->prepare($sql);
-            $stmt->execute(['product_id' => $productId]);
+            // First check if product exists
+            $checkQuery = "SELECT product_id FROM products WHERE product_id = ?";
+            $stmt = $db->prepare($checkQuery);
+            $stmt->execute([$productId]);
+            
+            if (!$stmt->fetch()) {
+                throw new Exception("Product not found");
+            }
 
-            // Delete the product
-            $sql = "DELETE FROM products WHERE product_id = :product_id";
-            $stmt = $db->prepare($sql);
-            $result = $stmt->execute(['product_id' => $productId]);
+            // Delete from order_items first
+            $deleteOrderItemsQuery = "DELETE FROM order_items WHERE product_id = ?";
+            $stmt = $db->prepare($deleteOrderItemsQuery);
+            $stmt->execute([$productId]);
 
-            if (!$result) {
+            // Delete from cart_items
+            $deleteCartItemsQuery = "DELETE FROM cart_items WHERE product_id = ?";
+            $stmt = $db->prepare($deleteCartItemsQuery);
+            $stmt->execute([$productId]);
+
+            // Delete from stocks
+            $deleteStocksQuery = "DELETE FROM stocks WHERE product_id = ?";
+            $stmt = $db->prepare($deleteStocksQuery);
+            $stmt->execute([$productId]);
+
+            // Finally delete the product
+            $deleteProductQuery = "DELETE FROM products WHERE product_id = ?";
+            $stmt = $db->prepare($deleteProductQuery);
+            $result = $stmt->execute([$productId]);
+
+            if ($result) {
+                $db->commit();
+                return true;
+            } else {
                 throw new Exception("Failed to delete product");
             }
 
-            $db->commit();
-            return true;
-        } catch (PDOException $e) {
+        } catch (Exception $e) {
             if ($db->inTransaction()) {
                 $db->rollBack();
             }
-            error_log("Error in deleteProduct: " . $e->getMessage());
-            throw new Exception("Failed to delete product: " . $e->getMessage());
+            error_log("Error deleting product: " . $e->getMessage());
+            throw new Exception($e->getMessage());
         }
     }
 

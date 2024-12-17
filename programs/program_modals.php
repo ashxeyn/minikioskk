@@ -206,4 +206,72 @@
             </div>
         </div>
     </div>
+</div>
+
+<!-- Edit College Modal -->
+<div class="modal fade" id="editCollegeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit College</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editCollegeForm">
+                    <input type="hidden" id="edit_college_id" name="college_id">
+                    <div class="mb-3">
+                        <label for="edit_college_name" class="form-label">College Name</label>
+                        <input type="text" class="form-control" id="edit_college_name" name="college_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_abbreviation" class="form-label">Abbreviation</label>
+                        <input type="text" class="form-control" id="edit_abbreviation" name="abbreviation" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_college_description" class="form-label">Description</label>
+                        <textarea class="form-control" id="edit_college_description" name="description" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="updateCollege()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Department Modal -->
+<div class="modal fade" id="editDepartmentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Department</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editDepartmentForm">
+                    <input type="hidden" id="edit_department_id" name="department_id">
+                    <div class="mb-3">
+                        <label for="edit_department_name" class="form-label">Department Name</label>
+                        <input type="text" class="form-control" id="edit_department_name" name="department_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_department_college_id" class="form-label">College</label>
+                        <select class="form-select" id="edit_department_college_id" name="college_id" required>
+                            <!-- Options will be loaded dynamically -->
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_department_description" class="form-label">Description</label>
+                        <textarea class="form-control" id="edit_department_description" name="description" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="updateDepartment()">Save Changes</button>
+            </div>
+        </div>
+    </div>
 </div> 

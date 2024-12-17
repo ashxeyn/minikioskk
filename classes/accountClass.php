@@ -344,38 +344,34 @@ class Account
         return $query->fetchAll(PDO::FETCH_ASSOC); 
     }
     
-    function searchUsers($keyword = '', $role = '') {
+    function searchUsers($search = '', $role = '') {
         try {
-            $sql = "SELECT user_id, username, email, role, status, 
-                           last_name, given_name, middle_name
+            $sql = "SELECT user_id, last_name, given_name, middle_name, email, username, role, 
+                    DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') as created_at 
                     FROM users 
                     WHERE 1=1";
-
+            
             $params = [];
             
-            if ($keyword) {
-                $sql .= " AND (username LIKE :keyword 
-                          OR email LIKE :keyword 
-                          OR last_name LIKE :keyword 
-                          OR given_name LIKE :keyword 
-                          OR middle_name LIKE :keyword)";
-                $params[':keyword'] = "%$keyword%";
+            if (!empty($search)) {
+                $sql .= " AND (last_name LIKE ? OR given_name LIKE ? OR email LIKE ? OR username LIKE ?)";
+                $searchTerm = "%$search%";
+                $params = array_merge($params, [$searchTerm, $searchTerm, $searchTerm, $searchTerm]);
             }
             
-            if ($role) {
-                $sql .= " AND role = :role";
-                $params[':role'] = $role;
+            if (!empty($role)) {
+                $sql .= " AND role = ?";
+                $params[] = $role;
             }
             
-            $sql .= " ORDER BY last_name ASC, given_name ASC";
+            $sql .= " ORDER BY last_name, given_name";
             
-            $query = $this->db->connect()->prepare($sql);
-            $query->execute($params);
-            
-            return $query->fetchAll(PDO::FETCH_ASSOC);
+            $stmt = $this->db->connect()->prepare($sql);
+            $stmt->execute($params);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
-            error_log("Error searching users: " . $e->getMessage());
-            throw $e;
+            error_log("Error in searchUsers: " . $e->getMessage());
+            throw new Exception("Failed to search users");
         }
     }
     
@@ -572,82 +568,53 @@ class Account
             $conn = $this->db->connect();
             $conn->beginTransaction();
 
-            // First check if username already exists
-            $checkSql = "SELECT COUNT(*) FROM users WHERE username = :username";
+            // Check if username or email already exists
+            $checkSql = "SELECT username, email FROM users WHERE username = ? OR email = ?";
             $checkStmt = $conn->prepare($checkSql);
-            $checkStmt->execute([':username' => $this->username]);
-            if ($checkStmt->fetchColumn() > 0) {
-                throw new Exception("Username already exists");
+            $checkStmt->execute([$this->username, $this->email]);
+            $existing = $checkStmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($existing) {
+                if ($existing['username'] === $this->username) {
+                    throw new Exception("Username already exists");
+                }
+                if ($existing['email'] === $this->email) {
+                    throw new Exception("Email already exists");
+                }
             }
 
+            // Hash the password
+            $hashedPassword = password_hash($this->password, PASSWORD_DEFAULT);
+
             // Insert into users table
-            $sql = "INSERT INTO users (last_name, given_name, middle_name, email, username, password, role, status) 
-                    VALUES (:last_name, :given_name, :middle_name, :email, :username, :password, :role, :status)";
+            $sql = "INSERT INTO users (last_name, given_name, middle_name, email, username, password, role) 
+                    VALUES (:last_name, :given_name, :middle_name, :email, :username, :password, :role)";
             
             $stmt = $conn->prepare($sql);
-            $params = [
+            $result = $stmt->execute([
                 ':last_name' => $this->last_name,
                 ':given_name' => $this->given_name,
                 ':middle_name' => $this->middle_name,
                 ':email' => $this->email,
                 ':username' => $this->username,
-                ':password' => password_hash($this->password, PASSWORD_DEFAULT),
-                ':role' => $this->role,
-                ':status' => 'active'
-            ];
-            
-            if ($stmt->execute($params)) {
-                $user_id = $conn->lastInsertId();
-                
-                // Handle role-specific tables
-                switch ($this->role) {
-                    case 'student':
-                        if ($this->program_id) {
-                            $sql = "INSERT INTO students (user_id, program_id) VALUES (:user_id, :program_id)";
-                            $stmt = $conn->prepare($sql);
-                            $stmt->execute([
-                                ':user_id' => $user_id,
-                                ':program_id' => $this->program_id
-                            ]);
-                        }
-                        break;
-                        
-                    case 'employee':
-                        if ($this->department_id) {
-                            $sql = "INSERT INTO employees (user_id, department_id) VALUES (:user_id, :department_id)";
-                            $stmt = $conn->prepare($sql);
-                            $stmt->execute([
-                                ':user_id' => $user_id,
-                                ':department_id' => $this->department_id
-                            ]);
-                        }
-                        break;
-                        
-                    case 'manager':
-                        if ($this->canteen_id) {
-                            $sql = "INSERT INTO managers (user_id, canteen_id) VALUES (:user_id, :canteen_id)";
-                            $stmt = $conn->prepare($sql);
-                            $stmt->execute([
-                                ':user_id' => $user_id,
-                                ':canteen_id' => $this->canteen_id
-                            ]);
-                        }
-                        break;
-                }
-                
+                ':password' => $hashedPassword,
+                ':role' => $this->role
+            ]);
+
+            if ($result) {
                 $conn->commit();
                 return true;
             }
-            
+
             $conn->rollBack();
-            return false;
-            
+            throw new Exception("Failed to insert user record");
+
         } catch (PDOException $e) {
             if (isset($conn) && $conn->inTransaction()) {
                 $conn->rollBack();
             }
             error_log("Error in addUser: " . $e->getMessage());
-            throw new Exception("Failed to add user: " . $e->getMessage());
+            throw new Exception("Database error occurred while adding user");
         }
     }
 
