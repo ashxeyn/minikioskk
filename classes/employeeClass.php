@@ -47,9 +47,9 @@ class Employee {
                 throw new Exception("Email or username already exists");
             }
 
-            // Insert into users table with approved status
-            $userSql = "INSERT INTO users (username, email, password, role, status, last_name, given_name, middle_name, canteen_id) 
-                        VALUES (:username, :email, :password, 'manager', 'approved', :last_name, :given_name, :middle_name, :canteen_id)";
+            // Insert into users table with accepted status
+            $userSql = "INSERT INTO users (username, email, password, role, status, last_name, given_name, middle_name) 
+                        VALUES (:username, :email, :password, 'manager', 'approved', :last_name, :given_name, :middle_name)";
             
             $userStmt = $db->prepare($userSql);
             $result = $userStmt->execute([
@@ -58,8 +58,7 @@ class Employee {
                 'password' => password_hash($data['password'], PASSWORD_DEFAULT),
                 'last_name' => $data['last_name'],
                 'given_name' => $data['given_name'],
-                'middle_name' => $data['middle_name'] ?? null,
-                'canteen_id' => $data['canteen_id']
+                'middle_name' => $data['middle_name'] ?? null
             ]);
 
             if (!$result) {
@@ -68,9 +67,9 @@ class Employee {
 
             $userId = $db->lastInsertId();
 
-            // Insert into managers table
+            // Insert into managers table with accepted status
             $managerSql = "INSERT INTO managers (user_id, canteen_id, start_date, status) 
-                          VALUES (:user_id, :canteen_id, CURDATE(), 'approved')";
+                          VALUES (:user_id, :canteen_id, CURDATE(), 'accepted')";
             
             $managerStmt = $db->prepare($managerSql);
             $result = $managerStmt->execute([
