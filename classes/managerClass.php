@@ -14,20 +14,18 @@ class Manager
 
     function getTotalSales()
     {
-        $sql = "SELECT SUM(oi.subtotal) AS total_sales 
-                FROM order_items oi
-                JOIN orders o ON oi.order_id = o.order_id
-                WHERE o.canteen_id = :canteen_id AND o.status = 'completed'";
+        $sql = "SELECT COALESCE(SUM(o.total_amount), 0) AS total_sales 
+        FROM order_items oi
+        JOIN orders o ON oi.order_id = o.order_id
+        WHERE o.canteen_id = :canteen_id 
+        AND o.status = 'completed'
+        ";
         
         $query = $this->db->connect()->prepare($sql);
-        $query->bindValue(':canteen_id', $this->canteenId); 
-    
-        $totalSales = 0;
-        if ($query->execute()) {
-            $totalSales = $query->fetchColumn();
-        }
-    
-        return $totalSales ?? 0;
+        $query->bindValue(':canteen_id', $this->canteenId);
+        $query->execute();
+        
+        return $query->fetchColumn() ?? 0;
     }
 
     function getCustomerCount()
@@ -87,22 +85,30 @@ class Manager
     }
 
     function getMonthlySales() {
-        $sql = "SELECT MONTH(o.created_at) AS month, SUM(oi.subtotal) AS sales
+        $sql = "SELECT 
+                    MONTH(o.created_at) AS month, 
+                    COALESCE(SUM(oi.subtotal), 0) AS sales
                 FROM orders o
                 JOIN order_items oi ON o.order_id = oi.order_id
-                WHERE o.canteen_id = :canteen_id AND o.status = 'completed'
-                GROUP BY MONTH(o.created_at)";
+                WHERE o.canteen_id = :canteen_id 
+                AND o.status = 'completed'
+                AND YEAR(o.created_at) = YEAR(CURRENT_DATE)
+                GROUP BY MONTH(o.created_at)
+                ORDER BY month";
         
         $query = $this->db->connect()->prepare($sql);
         $query->bindParam(':canteen_id', $this->canteenId);
         $query->execute();
         
-        $result = $query->fetchAll();
+        $result = $query->fetchAll(PDO::FETCH_ASSOC);
         
+        // Initialize array with zeros for all months
         $sales = array_fill(0, 12, 0); 
-
+        
+        // Fill in actual values
         foreach ($result as $row) {
-            $sales[$row['month'] - 1] = $row['sales']; 
+            $monthIndex = (int)$row['month'] - 1; // Convert to 0-based index
+            $sales[$monthIndex] = (float)$row['sales'];
         }
         
         return $sales;
@@ -143,9 +149,8 @@ function getCompletedOrdersByDate($startDate, $endDate)
 
 function getTotalSalesByDate($startDate, $endDate)
 {
-    $sql = "SELECT SUM(oi.subtotal) AS total_sales 
-            FROM order_items oi
-            JOIN orders o ON oi.order_id = o.order_id
+    $sql = "SELECT COALESCE(SUM(o.total_amount), 0) AS total_sales 
+            FROM orders o
             WHERE o.canteen_id = :canteen_id 
             AND o.status = 'completed'
             AND DATE(o.created_at) BETWEEN :start_date AND :end_date";
@@ -183,13 +188,15 @@ function getTopSellingProductsByDate($startDate, $endDate)
 
 function getMonthlySalesByDate($startDate, $endDate)
 {
-    $sql = "SELECT MONTH(o.created_at) AS month, SUM(oi.subtotal) AS sales
+    $sql = "SELECT 
+                MONTH(o.created_at) AS month, 
+                COALESCE(SUM(o.total_amount), 0) AS sales
             FROM orders o
-            JOIN order_items oi ON o.order_id = oi.order_id
             WHERE o.canteen_id = :canteen_id 
             AND o.status = 'completed'
             AND DATE(o.created_at) BETWEEN :start_date AND :end_date
-            GROUP BY MONTH(o.created_at)";
+            GROUP BY MONTH(o.created_at)
+            ORDER BY month";
     
     $query = $this->db->connect()->prepare($sql);
     $query->bindParam(':canteen_id', $this->canteenId);
@@ -197,11 +204,12 @@ function getMonthlySalesByDate($startDate, $endDate)
     $query->bindParam(':end_date', $endDate);
     $query->execute();
     
-    $result = $query->fetchAll();
+    $result = $query->fetchAll(PDO::FETCH_ASSOC);
     $sales = array_fill(0, 12, 0);
 
     foreach ($result as $row) {
-        $sales[$row['month'] - 1] = $row['sales'];
+        $monthIndex = (int)$row['month'] - 1;
+        $sales[$monthIndex] = (float)$row['sales'];
     }
 
     return $sales;

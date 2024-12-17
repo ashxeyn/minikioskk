@@ -1,33 +1,31 @@
 <?php
+session_start();
 require_once '../classes/managerClass.php';
-require_once '../tools/functions.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    session_start();
+if (!isset($_SESSION['canteen_id']) || !isset($_POST['start_date']) || !isset($_POST['end_date'])) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Missing required parameters']);
+    exit;
+}
 
-    if (!isset($_SESSION['canteen_id'])) {
-        echo json_encode(['error' => 'Unauthorized access.']);
-        exit;
-    }
-
+try {
     $canteenId = $_SESSION['canteen_id'];
-    $manager = new Manager($canteenId);
-
     $startDate = $_POST['start_date'];
     $endDate = $_POST['end_date'];
-
-    $customerCount = $manager->getCustomerCountByDate($startDate, $endDate);
-    $completedOrders = $manager->getCompletedOrdersByDate($startDate, $endDate);
-    $totalSales = $manager->getTotalSalesByDate($startDate, $endDate);
-    $topSellingProducts = $manager->getTopSellingProductsByDate($startDate, $endDate);
-    $monthlySales = $manager->getMonthlySalesByDate($startDate, $endDate);
-
-    echo json_encode([
-        'customer_count' => $customerCount,
-        'completed_orders' => $completedOrders,
-        'total_sales' => $totalSales,
-        'top_selling_products' => $topSellingProducts,
-        'monthly_sales' => $monthlySales
-    ]);
+    
+    $manager = new Manager($canteenId);
+    
+    $response = [
+        'customer_count' => $manager->getCustomerCountByDate($startDate, $endDate),
+        'completed_orders' => $manager->getCompletedOrdersByDate($startDate, $endDate),
+        'total_sales' => $manager->getTotalSalesByDate($startDate, $endDate),
+        'top_selling_products' => $manager->getTopSellingProductsByDate($startDate, $endDate),
+        'monthly_sales' => $manager->getMonthlySalesByDate($startDate, $endDate)
+    ];
+    
+    echo json_encode($response);
+} catch (Exception $e) {
+    http_response_code(500);
+    echo json_encode(['error' => 'Internal server error: ' . $e->getMessage()]);
 }
 ?>

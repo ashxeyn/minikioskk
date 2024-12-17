@@ -35,6 +35,7 @@ require_once '../includes/_head.php';
     <link href="../assets/datatables/css/jquery.dataTables.min.css" rel="stylesheet">
     <link href="../assets/datatables/css/responsive.dataTables.min.css" rel="stylesheet">
     <link href="../assets/datatables/css/buttons.dataTables.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="../js/manager.js"></script>
     <title>Manager Dashboard</title>
 </head>

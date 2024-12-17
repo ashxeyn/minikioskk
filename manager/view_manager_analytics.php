@@ -157,6 +157,9 @@ $monthlySales = $manager->getMonthlySales();
                     <h5 class="card-title mb-0">Monthly Sales Report</h5>
                 </div>
                 <div class="card-body">
+                    <script id="monthlySalesData" type="application/json">
+                        <?php echo json_encode($monthlySales); ?>
+                    </script>
                     <canvas id="monthlySalesChart" style="height: 300px;"></canvas>
                 </div>
             </div>
@@ -226,91 +229,3 @@ $monthlySales = $manager->getMonthlySales();
 }
 
 </style>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize the monthly sales chart
-    const monthlySalesData = <?= json_encode($monthlySales) ?>;
-    const ctx = document.getElementById('monthlySalesChart').getContext('2d');
-    const months = ['January', 'February', 'March', 'April', 'May', 'June', 
-                   'July', 'August', 'September', 'October', 'November', 'December'];
-    
-    const chart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: months,
-            datasets: [{
-                label: 'Monthly Sales',
-                data: monthlySalesData,
-                borderColor: '#0d6efd',
-                backgroundColor: 'rgba(13, 110, 253, 0.1)',
-                fill: true,
-                tension: 0.4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(value) {
-                            return '₱' + value.toLocaleString();
-                        }
-                    }
-                }
-            }
-        }
-    });
-
-    // Handle filter form submission
-    document.getElementById('filterForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const startDate = document.getElementById('startDate').value;
-        const endDate = document.getElementById('endDate').value;
-
-        // Fetch filtered data
-        fetch('../ajax/filterAnalytics.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                start_date: startDate,
-                end_date: endDate,
-                canteen_id: <?= $canteenId ?>
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            // Update stats
-            document.getElementById('customerCount').textContent = data.customerCount.toLocaleString();
-            document.getElementById('completedOrders').textContent = data.completedOrders.toLocaleString();
-            document.getElementById('totalSales').textContent = '₱' + data.totalSales.toLocaleString(undefined, {minimumFractionDigits: 2});
-
-            // Update top selling products
-            const tbody = document.getElementById('topSellingProducts');
-            tbody.innerHTML = data.topSellingProducts.map(product => `
-                <tr>
-                    <td>${product.product_name}</td>
-                    <td class="text-end">${product.total_sold.toLocaleString()}</td>
-                </tr>
-            `).join('');
-
-            // Update chart
-            chart.data.datasets[0].data = data.monthlySales;
-            chart.update();
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error fetching filtered data');
-        });
-    });
-});
-</script>
