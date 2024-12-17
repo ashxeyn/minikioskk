@@ -153,34 +153,43 @@ class Order
         }
     }
 
-    public function cancelOrder($order_id) {
+    public function cancelOrder($orderId) {
         $db = null;
         try {
             $db = $this->db->connect();
             $db->beginTransaction();
 
-           
-            $sql = "SELECT product_id, quantity FROM order_items WHERE order_id = :order_id";
+            // First check if the order exists and can be cancelled
+            $sql = "SELECT status FROM orders WHERE order_id = :order_id";
             $stmt = $db->prepare($sql);
-            $stmt->execute(['order_id' => $order_id]);
-            $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $stmt->execute(['order_id' => $orderId]);
+            $order = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            
+            if (!$order) {
+                throw new Exception("Order not found");
+            }
+
+            // Only allow cancellation of 'placed' orders
+            if ($order['status'] !== 'placed') {
+                throw new Exception("Only pending orders can be cancelled");
+            }
+
+            // Update order status
             $sql = "UPDATE orders 
                     SET status = 'cancelled', 
                         updated_at = NOW() 
-                    WHERE order_id = :order_id";
+                    WHERE order_id = :order_id 
+                    AND status = 'placed'"; // Extra safety check
             
             $stmt = $db->prepare($sql);
-            $stmt->execute(['order_id' => $order_id]);
+            $result = $stmt->execute(['order_id' => $orderId]);
 
-            $stocksObj = new Stocks();
-            foreach ($items as $item) {
-                $stocksObj->updateStock(
-                    $item['product_id'], 
-                    $item['quantity']
-                );
+            if (!$result) {
+                throw new Exception("Failed to update order status");
             }
+
+            // Restore stock quantities
+            $this->restoreStockForCancelledOrder($orderId);
 
             $db->commit();
             return true;
@@ -190,7 +199,7 @@ class Order
                 $db->rollBack();
             }
             error_log("Error cancelling order: " . $e->getMessage());
-            return false;
+            throw $e;
         }
     }
 
@@ -262,10 +271,11 @@ class Order
         }
     }
 
-    public function getOrderById($orderId, $canteenId) {
+    public function getOrderById($orderId, $canteenId = null) {
         try {
             $sql = "SELECT o.*, u.username, 
-                    CONCAT(u.given_name, ' ', u.last_name) as customer_name 
+                    CONCAT(u.given_name, ' ', u.last_name) as customer_name,
+                    u.user_id 
                     FROM orders o 
                     JOIN users u ON o.user_id = u.user_id 
                     WHERE o.order_id = :order_id";
@@ -283,7 +293,7 @@ class Order
             
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
             if (!$result) {
-                throw new Exception("Order not found");
+                return null;
             }
             
             return $result;
@@ -325,20 +335,20 @@ class Order
         try {
             $db = $this->db->connect();
             
-           
+            // Get the order items
             $sql = "SELECT product_id, quantity FROM order_items WHERE order_id = :order_id";
             $stmt = $db->prepare($sql);
             $stmt->execute([':order_id' => $orderId]);
             $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-          
+            // Update stock for each item
             foreach ($items as $item) {
-                $sql = "UPDATE stocks 
-                        SET quantity = quantity + :restore_quantity 
-                        WHERE product_id = :product_id";
-                $stmt = $db->prepare($sql);
-                $stmt->execute([
-                    ':restore_quantity' => $item['quantity'],
+                $updateSql = "UPDATE stocks 
+                             SET quantity = quantity + :quantity 
+                             WHERE product_id = :product_id";
+                $updateStmt = $db->prepare($updateSql);
+                $updateStmt->execute([
+                    ':quantity' => $item['quantity'],
                     ':product_id' => $item['product_id']
                 ]);
             }
@@ -625,6 +635,8 @@ class Order
 
         return true;
     }
-}
+
+    }
+
 
 ?>

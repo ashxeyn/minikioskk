@@ -73,6 +73,13 @@ if (isset($_SESSION['user_id'])) {
                                 <p><strong>Created At:</strong></p>
                                 <p><?= date('F j, Y, g:i a', strtotime($order['created_at'])); ?></p>
                             </div>
+                            <?php if ($order['status'] === 'placed'): ?>
+                                <div class="reorder-section">
+                                    <button class="btn btn-danger cancel-btn" onclick="cancelOrder(<?= $order['order_id']; ?>)">
+                                        <i class="bi bi-x-circle"></i> Cancel Order
+                                    </button>
+                                </div>
+                            <?php endif; ?>
                         </div>
                     <?php 
                         endif;
@@ -179,6 +186,26 @@ if (isset($_SESSION['user_id'])) {
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Order Modal -->
+<div class="modal fade" id="cancelOrderModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cancel Order</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to cancel this order?</p>
+                <p class="text-danger">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No, Keep Order</button>
+                <button type="button" class="btn btn-danger" id="confirmCancel">Yes, Cancel Order</button>
             </div>
         </div>
     </div>
@@ -346,9 +373,28 @@ if (isset($_SESSION['user_id'])) {
 .text-danger {
     color: #dc3545 !important;
 }
+
+.cancel-btn {
+    width: 100%;
+    padding: 8px 15px;
+    background-color: #dc3545;
+    border-color: #dc3545;
+    transition: all 0.3s ease;
+    margin-top: 15px;
+}
+
+.cancel-btn:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+    transform: translateY(-2px);
+}
+
+.cancel-btn i {
+    margin-right: 5px;
+}
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="../js/orderStatus.js" type="module"></script>
+<script src="../js/orderActions.js"></script>
 </body>
 </html>
