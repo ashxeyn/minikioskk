@@ -24,7 +24,10 @@ class Account
 
     function UserInfo() {
         try {
-            $sql = "SELECT u.*, m.status as manager_status, m.canteen_id 
+            $sql = "SELECT u.*, 
+                    m.status as manager_status,
+                    m.canteen_id,
+                    COALESCE(u.rejection_reason, m.rejection_reason) as rejection_reason
                     FROM users u 
                     LEFT JOIN managers m ON u.user_id = m.user_id 
                     WHERE u.user_id = :user_id";
@@ -35,13 +38,20 @@ class Account
             if ($query->execute()) {
                 $result = $query->fetch(PDO::FETCH_ASSOC);
                 if ($result) {
-                    if ($result['role'] !== 'manager') {
-                        $result['manager_status'] = $result['status'];
-                    }
+                    // Debug log
+                    error_log("UserInfo result: " . print_r($result, true));
+                    
+                    // Set default values if not set
+                    $result['status'] = $result['status'] ?? 'pending';
+                    $result['manager_status'] = $result['manager_status'] ?? $result['status'];
+                    $result['rejection_reason'] = $result['rejection_reason'] ?? null;
+                    
                     return $result;
                 }
             }
-            throw new Exception("User not found");
+            
+            error_log("No user found for ID: " . $this->user_id);
+            return false;
             
         } catch (Exception $e) {
             error_log("Error in UserInfo: " . $e->getMessage());
@@ -448,27 +458,56 @@ class Account
         }
     }
     
-    function reject($user_id)
+    function reject($user_id, $reason)
     {
         try {
-            $this->db->connect()->beginTransaction();
+            $conn = $this->db->connect();
+            $conn->beginTransaction();
             
-            $sql = "UPDATE users SET status = 'rejected' WHERE user_id = :user_id";
-            $query = $this->db->connect()->prepare($sql);
-            $query->bindParam(':user_id', $user_id);
-            $query->execute();
+            // Debug log
+            error_log("Rejecting user ID: $user_id with reason: $reason");
             
-            $sql = "UPDATE managers SET status = 'rejected' WHERE user_id = :user_id";
-            $query = $this->db->connect()->prepare($sql);
-            $query->bindParam(':user_id', $user_id);
-            $query->execute();
+            // Update users table
+            $sql = "UPDATE users 
+                    SET status = 'rejected', 
+                        rejection_reason = :reason 
+                    WHERE user_id = :user_id";
+            $stmt = $conn->prepare($sql);
+            $result1 = $stmt->execute([
+                ':user_id' => $user_id,
+                ':reason' => $reason
+            ]);
             
-            $this->db->connect()->commit();
-            return true;
+            // Debug log
+            error_log("Users table update result: " . ($result1 ? 'success' : 'failure'));
+            
+            // Update managers table
+            $sql = "UPDATE managers 
+                    SET status = 'rejected',
+                        rejection_reason = :reason 
+                    WHERE user_id = :user_id";
+            $stmt = $conn->prepare($sql);
+            $result2 = $stmt->execute([
+                ':user_id' => $user_id,
+                ':reason' => $reason
+            ]);
+            
+            // Debug log
+            error_log("Managers table update result: " . ($result2 ? 'success' : 'failure'));
+            
+            if ($result1 && $result2) {
+                $conn->commit();
+                return true;
+            } else {
+                throw new Exception("Failed to update one or more tables");
+            }
             
         } catch (Exception $e) {
-            $this->db->connect()->rollBack();
-            throw $e;
+            if ($conn && $conn->inTransaction()) {
+                $conn->rollBack();
+            }
+            error_log("Error rejecting manager: " . $e->getMessage());
+            return false;
         }
     }
     

@@ -42,13 +42,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $status = strtolower($user['manager_status'] ?? $user['status'] ?? 'pending');
                 error_log("DEBUG: Manager login attempt - Username: $username, Status: $status, User data: " . print_r($user, true));
                 
-                if ($status === 'pending') {
+                if ($status === 'rejected') {
+                    $_SESSION['role'] = 'manager';
+                    $_SESSION['user_id'] = $user['user_id'];
+                    header('Location: pending.php');
+                    exit();
+                } else if ($status === 'pending') {
                     $_SESSION['role'] = 'pending_manager';
                     $_SESSION['canteen_id'] = $accountObj->getManagerCanteen($username);
                     error_log("DEBUG: Redirecting pending manager to pending.php");
                     header('Location: pending.php');
                     exit();
-                } elseif ($status === 'accepted') {
+                } else if ($status === 'accepted') {
                     $_SESSION['role'] = 'manager';
                     $canteen_id = $accountObj->getManagerCanteen($username);
                     error_log("DEBUG: Manager canteen_id: " . print_r($canteen_id, true));

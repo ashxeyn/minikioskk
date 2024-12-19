@@ -9,26 +9,42 @@ if (!isset($_SESSION['user_id'])) {
 $account = new Account();
 $account->user_id = $_SESSION['user_id'];
 $userInfo = $account->UserInfo();
+
 if (!$userInfo) {
     $statusMessage = 'Error retrieving account information. Please try again later.';
     $statusClass = 'error';
-    $userInfo = ['status' => 'error', 'role' => ''];
+    $userInfo = [
+        'status' => 'error',
+        'role' => '',
+        'manager_status' => 'error',
+        'rejection_reason' => null
+    ];
 } else {
-    
     if ($userInfo['role'] === 'manager') {
         if ($userInfo['status'] === 'approved' && $userInfo['manager_status'] === 'accepted') {
-            // Set canteen_id in session for manager
             $_SESSION['canteen_id'] = $userInfo['canteen_id'];
             header('Location: ../manager/managerDashboard.php');
             exit;
         }
         
         if ($userInfo['status'] === 'rejected' || $userInfo['manager_status'] === 'rejected') {
-            $statusMessage = 'Your account has been rejected. Please contact the administrator.';
+            $statusMessage = 'Your application has been rejected.';
             $statusClass = 'rejected';
         } else {
             $statusMessage = 'Your account is pending approval from the administrator.';
             $statusClass = 'pending';
+        }
+    } else {
+        // Handle non-manager roles
+        if ($userInfo['status'] === 'rejected') {
+            $statusMessage = 'Your account has been rejected.';
+            $statusClass = 'rejected';
+        } else if ($userInfo['status'] === 'pending') {
+            $statusMessage = 'Your account is pending approval.';
+            $statusClass = 'pending';
+        } else {
+            $statusMessage = 'Your account status is: ' . ucfirst($userInfo['status']);
+            $statusClass = $userInfo['status'];
         }
     }
 }
@@ -118,13 +134,32 @@ if (!$userInfo) {
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
+
+        .rejection-details {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .rejection-reason {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 5px;
+            color: #721c24;
+        }
+
+        .rejection-reason h4 {
+            margin-bottom: 10px;
+            color: #721c24;
+        }
     </style>
 </head>
 <body>
     <div class="pending-container">
         <div class="<?= htmlspecialchars($statusClass) ?>">
             <div class="status-icon">
-                <?php if ($userInfo['status'] === 'rejected'): ?>
+                <?php if ($userInfo['status'] === 'rejected' || $userInfo['manager_status'] === 'rejected'): ?>
                     ❌
                 <?php elseif ($userInfo['status'] === 'error'): ?>
                     ⚠️
@@ -132,8 +167,21 @@ if (!$userInfo) {
                     ⏳
                 <?php endif; ?>
             </div>
-            <h1><?= htmlspecialchars(ucfirst($userInfo['status'])) ?></h1>
-            <p class="message"><?= htmlspecialchars($statusMessage) ?></p>
+            <?php if ($userInfo['status'] === 'rejected' || $userInfo['manager_status'] === 'rejected'): ?>
+                <div class="rejection-details">
+                    <h1>Application Rejected</h1>
+                    <p class="message"><?= htmlspecialchars($statusMessage) ?></p>
+                    <?php if (!empty($userInfo['rejection_reason'])): ?>
+                        <div class="rejection-reason">
+                            <h4>Reason for Rejection:</h4>
+                            <p><?= htmlspecialchars($userInfo['rejection_reason']) ?></p>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            <?php else: ?>
+                <h1><?= htmlspecialchars(ucfirst($userInfo['status'])) ?></h1>
+                <p class="message"><?= htmlspecialchars($statusMessage) ?></p>
+            <?php endif; ?>
             <a href="logout.php" class="logout-btn">Omkie po</a>
         </div>
     </div>

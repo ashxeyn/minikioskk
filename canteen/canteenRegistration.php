@@ -93,6 +93,31 @@ $pendingManagers = $accountObj->getPendingManagers();
         </div>
     </div>
 
+    <!-- Rejection Reason Modal -->
+    <div class="modal fade" id="rejectionReasonModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Rejection Reason</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="rejectionForm">
+                        <input type="hidden" id="reject_user_id">
+                        <div class="mb-3">
+                            <label for="rejection_reason" class="form-label">Please provide a reason for rejection:</label>
+                            <textarea class="form-control" id="rejection_reason" rows="3" required></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" onclick="submitRejection()">Submit Rejection</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
     function showResponseModal(message, success) {
         const responseMessage = $('#responseMessage');
@@ -126,21 +151,34 @@ $pendingManagers = $accountObj->getPendingManagers();
     }
 
     function rejectManager(userId) {
-        // Show confirmation modal
-        const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
-        $('#confirmMessage').text('Are you sure you want to reject this registration?');
-        $('#confirmAction').off('click').on('click', function() {
-            confirmModal.hide();
-            
-            $.post('../canteen/rejectRegistration.php', { user_id: userId }, function(response) {
-                if (response === 'success') {
-                    showResponseModal('Manager registration rejected successfully!', true);
-                } else {
-                    showResponseModal('Failed to reject manager registration.', false);
-                }
-            });
+        $('#reject_user_id').val(userId);
+        $('#rejectionReasonModal').modal('show');
+    }
+
+    function submitRejection() {
+        const userId = $('#reject_user_id').val();
+        const reason = $('#rejection_reason').val();
+        
+        if (!reason.trim()) {
+            alert('Please provide a rejection reason');
+            return;
+        }
+
+        $.post('../canteen/rejectRegistration.php', { 
+            user_id: userId,
+            reason: reason 
+        })
+        .done(function(response) {
+            if (response === 'success') {
+                $('#rejectionReasonModal').modal('hide');
+                showResponseModal('Manager registration rejected successfully!', true);
+            } else {
+                showResponseModal('Failed to reject manager registration.', false);
+            }
+        })
+        .fail(function(xhr, status, error) {
+            showResponseModal('Error: ' + error, false);
         });
-        confirmModal.show();
     }
     </script>
 </body>
