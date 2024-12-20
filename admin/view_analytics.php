@@ -6,14 +6,14 @@ require_once '../tools/functions.php';
 $admin = new Admin();
 $reportData = $admin->reports();
 $topSellingProducts = $admin->getTopSellingProducts();
-$totalOrdersByCollege = $admin->getTotalOrdersByCollege();
+$topCanteens = $admin->getTopCanteensByRevenue();
 
-$colleges = [];
-$orderCounts = [];
-
-foreach ($totalOrdersByCollege as $data) {
-    $colleges[] = $data['college'];
-    $orderCounts[] = (int)$data['total_orders'];
+// Process data for the chart
+$chartData = [];
+foreach ($topCanteens as $data) {
+    $chartData['labels'][] = $data['canteen_name'] . ' (' . $data['month'] . ')';
+    $chartData['revenue'][] = floatval($data['total_revenue']);
+    $chartData['orders'][] = intval($data['total_orders']);
 }
 ?>
 
@@ -109,16 +109,81 @@ foreach ($totalOrdersByCollege as $data) {
         </div>
                 <div class="table_2 card card-h-100 p-3">
                     <div class="d-flex card-header justify-content-between align-items-center w-100">
-                        <h3 class="header-title mb-0">College Monthly Orders</h3>
+                        <h3 class="header-title mb-0">Monthly Top Canteens by Revenue</h3>
                     </div>
-                <!-- Responsive canvas container -->
+                    <!-- Responsive canvas container -->
                     <div class="chart-container" style="position: relative; width: 100%; height: 100%; margin: 50px auto;">
-                        <canvas id="ordersByCollegeChart"></canvas>
+                        <canvas id="revenueChart"></canvas>
                     </div>
                 </div>
             </div>
 <script id="collegesData" type="application/json"><?php echo json_encode($colleges); ?></script>
 <script id="orderCountsData" type="application/json"><?php echo json_encode($orderCounts); ?></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+    const chartData = <?php echo json_encode($chartData); ?>;
+    
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: chartData.labels,
+            datasets: [
+                {
+                    label: 'Revenue (₱)',
+                    data: chartData.revenue,
+                    backgroundColor: 'rgba(8, 127, 140, 0.6)',
+                    borderColor: 'rgba(8, 127, 140, 1)',
+                    borderWidth: 1,
+                    yAxisID: 'y'
+                },
+                {
+                    label: 'Number of Orders',
+                    data: chartData.orders,
+                    backgroundColor: 'rgba(255, 127, 17, 0.6)',
+                    borderColor: 'rgba(255, 127, 17, 1)',
+                    borderWidth: 1,
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    type: 'linear',
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Revenue (₱)'
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'Number of Orders'
+                    },
+                    grid: {
+                        drawOnChartArea: false
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top'
+                },
+                title: {
+                    display: true,
+                    text: 'Monthly Top Canteens Performance'
+                }
+            }
+        }
+    });
+});
+</script>
 </html>
 
 <style>

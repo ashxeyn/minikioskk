@@ -128,5 +128,27 @@ class Admin
         return $data;
     }
     
+    public function getTopCanteensByRevenue() {
+        try {
+            $sql = "SELECT 
+                    c.name as canteen_name,
+                    SUM(o.total_amount) as total_revenue,
+                    COUNT(o.order_id) as total_orders,
+                    DATE_FORMAT(o.created_at, '%Y-%m') as month
+                    FROM orders o
+                    JOIN canteens c ON o.canteen_id = c.canteen_id
+                    WHERE o.status = 'completed'
+                    GROUP BY c.canteen_id, DATE_FORMAT(o.created_at, '%Y-%m')
+                    ORDER BY month DESC, total_revenue DESC
+                    LIMIT 10";
+                    
+            $stmt = $this->db->connect()->prepare($sql);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            error_log("Error getting top canteens by revenue: " . $e->getMessage());
+            return [];
+        }
+    }
 }
 ?>

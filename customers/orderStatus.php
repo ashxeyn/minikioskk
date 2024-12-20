@@ -79,7 +79,7 @@ if (isset($_SESSION['user_id'])) {
                             </div>
                             <div class="order-row">
                                 <p><strong>Canteen:</strong></p>
-                                <p><?= htmlspecialchars($order['name'] ?? 'Not Available'); ?></p>
+                                <p><?= htmlspecialchars($order['    name'] ?? 'Not Available'); ?></p>
                             </div>
                             <div class="order-row">
                                 <p><strong>Items:</strong></p>
